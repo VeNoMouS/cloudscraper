@@ -34,7 +34,7 @@ Alternatively, clone this repository and run `python setup.py install`.
 Dependencies
 ============
 
-* Python 2.6 - 3.x
+* Python 2.7 - 3.x
 * **[Requests](https://github.com/kennethreitz/requests)** >= 2.0
 
 Have the ability to choose between Javascript Translators.
