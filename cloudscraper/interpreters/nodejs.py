@@ -10,7 +10,7 @@ BUG_REPORT = 'Cloudflare may have changed their technique, or there may be a bug
 
 ##########################################################################################################################################################
 
-class nodejs_interrupter():
+class nodejs():
 
     ##########################################################################################################################################################
     
@@ -18,7 +18,6 @@ class nodejs_interrupter():
         try:
             js = "var atob = function(str) {return Buffer.from(str, 'base64').toString('binary');}; var injection = atob('%s'); " \
                  "console.log(require('vm').runInNewContext(injection, Object.create(null), {timeout: 5000}));" % base64.b64encode('{}{}'.format(jsEnv, js))
-            
             
             return subprocess.check_output(["node", "-e", js]).strip()
         
