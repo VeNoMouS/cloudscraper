@@ -13,7 +13,6 @@ from collections import OrderedDict
 from requests.sessions import Session
 from .javascript_interrupter import JavaScript_Interrupter
 
-
 try:
     from requests_toolbelt.utils import dump
 except ImportError:
@@ -139,7 +138,7 @@ class CloudScraper(Session):
                     self.delay = delay
             except:
                 pass
-        print ('Delay is {}'.format(self.delay))
+        
         sleep(self.delay)
 
         parsed_url = urlparse(resp.url)

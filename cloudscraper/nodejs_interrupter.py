@@ -1,5 +1,7 @@
 import re
 import sys
+import base64
+import logging
 import subprocess
 
 ##########################################################################################################################################################
@@ -14,8 +16,10 @@ class nodejs_interrupter():
     
     def solveJS(self, jsEnv, js):
         try:
-            js = re.sub(r"[\n\\']", "", '{}{}'.format(jsEnv, js))
-            js = "console.log(require('vm').runInNewContext('%s', Object.create(null), {timeout: 5000}));" % js
+            js = "var atob = function(str) {return Buffer.from(str, 'base64').toString('binary');}; var injection = atob('%s'); " \
+                 "console.log(require('vm').runInNewContext(injection, Object.create(null), {timeout: 5000}));" % base64.b64encode('{}{}'.format(jsEnv, js))
+            
+            
             return subprocess.check_output(["node", "-e", js]).strip()
         
         except OSError as e:
