@@ -1,6 +1,8 @@
+
 import re
 import sys
 import logging
+
 
 ##########################################################################################################################################################
 
@@ -45,37 +47,19 @@ class JavaScript_Interrupter():
         except Exception:
             raise ValueError("Unable to identify Cloudflare IUAM Javascript on website. {}".format(BUG_REPORT))
 
-        js = re.sub(r"a\.value = ((.+).toFixed\(10\))?", r"\1", js)
-        js = re.sub(r'(e\s=\sfunction\(s\)\s{.*?};)', '', js, flags=re.DOTALL | re.MULTILINE)
-        js = re.sub(r"\s{3,}[a-z](?: = |\.).+", "", js).replace("t.length", str(len(domain)))
-
-        js = js.replace('; 121', '')
-
-        # Strip characters that could be used to exit the string context
-        # These characters are not currently used in Cloudflare's arithmetic snippet
-        js = re.sub(r"[\n\\']", "", js)
+        js = re.sub(r'\s{2,}', ' ', js, flags=re.MULTILINE | re.DOTALL)
+        js += '\na.value;';
 
         if 'toFixed' not in js:
             raise ValueError("Error parsing Cloudflare IUAM Javascript challenge. {}".format(BUG_REPORT))
 
         try:
             jsEnv = """
-            var t = "{domain}";
-            var g = String.fromCharCode;
-
-            o = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
-            e = function(s) {{
-                s += "==".slice(2 - (s.length & 3));
-                var bm, r = "", r1, r2, i = 0;
-                for (; i < s.length;) {{
-                    bm = o.indexOf(s.charAt(i++)) << 18 | o.indexOf(s.charAt(i++)) << 12 | (r1 = o.indexOf(s.charAt(i++))) << 6 | (r2 = o.indexOf(s.charAt(i++)));
-                    r += r1 === 64 ? g(bm >> 16 & 255) : r2 === 64 ? g(bm >> 16 & 255, bm >> 8 & 255) : g(bm >> 16 & 255, bm >> 8 & 255, bm & 255);
-                }}
-                return r;
-            }};
-
             function italics (str) {{ return "<i>" + this + "</i>"; }};
             var document = {{
+                createElement: function () {{
+                    return {{ firstChild: {{ href: "http://{domain}/" }} }}
+                }},
                 getElementById: function () {{
                     return {{"innerHTML": "{innerHTML}"}};
                 }}
@@ -88,9 +72,12 @@ class JavaScript_Interrupter():
                 body,
                 re.MULTILINE | re.DOTALL
             )
-            innerHTML = innerHTML.group(2).replace("'", r"\'") if innerHTML else ""
+            innerHTML = innerHTML.group(2) if innerHTML else ""
             
-            return self.interrupter.solveJS(jsEnv.format(domain=domain, innerHTML=innerHTML), js)
+            return self.interrupter.solveJS(
+                re.sub(r'\s{2,}', ' ', jsEnv.format(domain=domain, innerHTML=innerHTML), flags=re.MULTILINE | re.DOTALL),
+                js
+            )
         
         except Exception :
             logging.error("Error executing Cloudflare IUAM Javascript. {}".format(BUG_REPORT))
