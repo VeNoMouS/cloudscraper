@@ -36,9 +36,9 @@ Dependencies
 
 * Python 2.6 - 3.x
 * **[Requests](https://github.com/kennethreitz/requests)** >= 2.0
-* Choose between Javascript Translators.*
-    **[js2py](https://github.com/PiotrDabkowski/Js2Py)**
-    **[Node.js](https://nodejs.org/)**
+* Choose between Javascript Translators.
+*    **[js2py](https://github.com/PiotrDabkowski/Js2Py)**
+*    **[Node.js](https://nodejs.org/)**
         * Your computer or server may already have it (check with `node -v`). If not, you can install it with `apt-get install nodejs` on Ubuntu. Debian requires `nodejs-legacy`. Otherwise, please read [Node's installation instructions](https://nodejs.org/en/download/package-manager/).
 
 `python setup.py install` will install the Python dependencies automatically. Node is the only application you need to install yourself.
