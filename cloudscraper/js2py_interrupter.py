@@ -10,7 +10,9 @@ class js2py_interrupter():
     ##########################################################################################################################################################
     
     def solveJS(self, jsEnv, js):
-        js = jsunfuck(js)
+        if js2py.eval_js('(+(+!+[]+[+!+[]]+(!![]+[])[!+[]+!+[]+!+[]]+[!+[]+!+[]]+[+[]])+[])[+!+[]]') == '1':
+            print ('Please upgrade your js2py https://github.com/PiotrDabkowski/Js2Py, applying work around.')
+            js = jsunfuck(js)
 
         def atob(s):
             return base64.b64decode('{}'.format(s)).decode('utf-8')
