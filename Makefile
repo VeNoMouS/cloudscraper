@@ -10,7 +10,7 @@ ci:
 	pipenv run py.test -n 8 --boxed --junitxml=report.xml
 
 flake8:
-	pipenv run flake8 cloudscraper
+	pipenv run flake8 --ignore E501,N806,W503,W504 cloudscraper
 
 coverage:
 	pipenv run py.test --cov-config .coveragerc --verbose --cov-report term --cov-report xml --cov=cloudscraper tests
