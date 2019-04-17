@@ -1,17 +1,14 @@
+import re
 import logging
 import random
-import re
 
-import base64
-
-from pprint import pprint
 
 from copy import deepcopy
 from time import sleep
 from collections import OrderedDict
 
 from requests.sessions import Session
-from .javascript_interrupter import JavaScript_Interrupter
+from .javascript_interpreter import JavaScript_Interpreter
 
 try:
     from requests_toolbelt.utils import dump
@@ -46,10 +43,9 @@ BUG_REPORT = 'Cloudflare may have changed their technique, or there may be a bug
 
 class CloudScraper(Session):
     def __init__(self, *args, **kwargs):
+        self.debug = kwargs.pop('debug', False)
         self.delay = kwargs.pop('delay', None)
-        self.debug = False
-        
-        self.interrupter = None
+        self.interpreter = kwargs.pop('interpreter', 'js2py')
 
         super(CloudScraper, self).__init__(*args, **kwargs)
 
@@ -58,18 +54,7 @@ class CloudScraper(Session):
             self.headers['User-Agent'] = random.choice(DEFAULT_USER_AGENTS)
 
     ##########################################################################################################################################################
-    
-    def setInterrupter(self, interrupter):       
-        self.interrupter = interrupter
-        
-    ##########################################################################################################################################################
-    
-    def setChallengeDelay(self, delay):
-        if isinstance(delay, (int, float)) and delay > 0:
-            self.delay = delay
-            
-    ##########################################################################################################################################################
-    
+
     def debugRequest(self, req):
         try:
             print (dump.dump_all(req).decode('utf-8'))
@@ -77,7 +62,7 @@ class CloudScraper(Session):
             pass
 
     ##########################################################################################################################################################
-    
+
     def request(self, method, url, *args, **kwargs):
         self.headers = (
             OrderedDict(
@@ -99,7 +84,7 @@ class CloudScraper(Session):
             self.debugRequest(resp)
 
         # Check if Cloudflare anti-bot is on
-        if self.isChallenge(resp):
+        if self.isChallengeRequest(resp):
             # Work around if the initial request is not a GET,
             # Superseed with a GET then re-request the orignal METHOD.
             if resp.request.method != 'GET':
@@ -111,8 +96,8 @@ class CloudScraper(Session):
         return resp
 
     ##########################################################################################################################################################
-    
-    def isChallenge(self, resp):
+
+    def isChallengeRequest(self, resp):
         if resp.headers.get('Server', '').startswith('cloudflare'):
             if b'why_captcha' in resp.content or b'/cdn-cgi/l/chk_captcha' in resp.content:
                 raise ValueError('Captcha')
@@ -124,9 +109,9 @@ class CloudScraper(Session):
             )
 
         return False
-    
+
     ##########################################################################################################################################################
-    
+
     def sendChallengeResposne(self, resp, **original_kwargs):
         body = resp.text
 
@@ -138,7 +123,7 @@ class CloudScraper(Session):
                     self.delay = delay
             except:
                 pass
-        
+
         sleep(self.delay)
 
         parsed_url = urlparse(resp.url)
@@ -146,7 +131,6 @@ class CloudScraper(Session):
         submit_url = '{}://{}/cdn-cgi/l/chk_jschl'.format(parsed_url.scheme, domain)
 
         cloudflare_kwargs = deepcopy(original_kwargs)
-        #headers = cloudflare_kwargs.setdefault('headers', {'Referer': resp.url})
 
         try:
             params = cloudflare_kwargs.setdefault(
@@ -160,23 +144,18 @@ class CloudScraper(Session):
             )
 
         except Exception as e:
-            # Something is wrong with the page.
-            # This may indicate Cloudflare has changed their anti-bot
-            # technique. If you see this and are running the latest version,
-            # please open a GitHub issue so I can update the code accordingly.
             raise ValueError("Unable to parse Cloudflare anti-bots page: {} {}".format(e.message, BUG_REPORT))
 
         # Solve the Javascript challenge
-        params['jschl_answer'] = self.solveChallenge(body, domain)
+        params['jschl_answer'] = JavaScript_Interpreter(self.interpreter).solveChallenge(body, domain)
 
         # Requests transforms any request into a GET after a redirect,
         # so the redirect has to be handled manually here to allow for
         # performing other types of requests even as the first request.
-        method = resp.request.method
 
         cloudflare_kwargs['allow_redirects'] = False
 
-        redirect = self.request(method, submit_url, **cloudflare_kwargs)
+        redirect = self.request(resp.request.method, submit_url, **cloudflare_kwargs)
         redirect_location = urlparse(redirect.headers['Location'])
         if not redirect_location.netloc:
             redirect_url = urlunparse(
@@ -189,24 +168,9 @@ class CloudScraper(Session):
                     redirect_location.fragment
                 )
             )
-            return self.request(method, redirect_url, **original_kwargs)
+            return self.request(resp.request.method, redirect_url, **original_kwargs)
 
-        return self.request(method, redirect.headers['Location'], **original_kwargs)
-
-    ##########################################################################################################################################################
-    
-    def solveChallenge(self, body, domain):
-        if not self.interrupter:
-            self.setInterrupter('js2py')
-            
-        result = JavaScript_Interrupter(self.interrupter).solveJS(body, domain)
-        
-        try:
-            float(result)
-        except Exception:
-            raise ValueError("Cloudflare IUAM challenge returned unexpected answer. {}".format(BUG_REPORT))
-
-        return result
+        return self.request(resp.request.method, redirect.headers['Location'], **original_kwargs)
 
     ##########################################################################################################################################################
 
@@ -225,9 +189,9 @@ class CloudScraper(Session):
                     setattr(scraper, attr, val)
 
         return scraper
-    
+
     ##########################################################################################################################################################
-    
+
     # Functions for integrating cloudscraper with other applications and scripts
     @classmethod
     def get_tokens(cls, url, user_agent=None, debug=False, **kwargs):
@@ -263,7 +227,7 @@ class CloudScraper(Session):
         )
 
     ##########################################################################################################################################################
-    
+
     @classmethod
     def get_cookie_string(cls, url, user_agent=None, debug=False, **kwargs):
         """
