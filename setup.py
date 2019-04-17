@@ -6,8 +6,7 @@ from io import open
 base_path = os.path.dirname(__file__)
 
 with open(os.path.join(base_path, 'cloudscraper', '__init__.py')) as fp:
-    VERSION = re.compile(r'.*__version__ = "(.*?)"',
-                         re.S).match(fp.read()).group(1)
+    VERSION = re.compile(r'.*__version__ = "(.*?)"', re.S).match(fp.read()).group(1)
 
 with open('README.md') as fp:
     readme = fp.read()
@@ -22,16 +21,16 @@ setup(
     author_email = 'venom@gen-x.co.nz',
     url = 'https://github.com/venomous/cloudscraper',
     keywords = [
-      'cloudflare',
-      'scraping',
-      'ddos',
-      'scrape',
-      'webscraper',
-      'anti-bot',
-      'waf',
-      'iuam',
-      'bypass',
-      'challenge'
+        'cloudflare',
+        'scraping',
+        'ddos',
+        'scrape',
+        'webscraper',
+        'anti-bot',
+        'waf',
+        'iuam',
+        'bypass',
+        'challenge'
     ],
     include_package_data = True,
     install_requires = [
@@ -40,18 +39,18 @@ setup(
         'requests_toolbelt >= 0.8.0'
     ],
     classifiers=[
-      'Development Status :: 4 - Beta',
-      'Intended Audience :: Developers',
-      'Natural Language :: English',
-      "License :: OSI Approved :: MIT License",
-      "Operating System :: OS Independent",
-      'Programming Language :: Python',
-      'Programming Language :: Python :: 2',
-      'Programming Language :: Python :: 2.7',
-      'Programming Language :: Python :: 3',
-      'Programming Language :: Python :: 3.4',
-      'Programming Language :: Python :: 3.5',
-      'Programming Language :: Python :: 3.6',
-      'Programming Language :: Python :: 3.7'
+        'Development Status :: 4 - Beta',
+        'Intended Audience :: Developers',
+        'Natural Language :: English',
+        "License :: OSI Approved :: MIT License",
+        "Operating System :: OS Independent",
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7'
     ]
 )

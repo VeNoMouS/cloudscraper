@@ -11,7 +11,7 @@ from time import sleep
 from collections import OrderedDict
 
 from requests.sessions import Session
-from .javascript_interrupter import JavaScript_Interrupter
+from .javascript_interpreter import JavaScript_Interpreter
 
 try:
     from requests_toolbelt.utils import dump
@@ -49,7 +49,7 @@ class CloudScraper(Session):
         self.delay = kwargs.pop('delay', None)
         self.debug = False
         
-        self.interrupter = None
+        self.interpreter = 'None'
 
         super(CloudScraper, self).__init__(*args, **kwargs)
 
@@ -59,8 +59,8 @@ class CloudScraper(Session):
 
     ##########################################################################################################################################################
     
-    def setInterrupter(self, interrupter):       
-        self.interrupter = interrupter
+    def setInterrupter(self, interpreter):       
+        self.interpreter = interpreter
         
     ##########################################################################################################################################################
     
@@ -195,11 +195,8 @@ class CloudScraper(Session):
 
     ##########################################################################################################################################################
     
-    def solveChallenge(self, body, domain):
-        if not self.interrupter:
-            self.setInterrupter('js2py')
-            
-        result = JavaScript_Interrupter(self.interrupter).solveJS(body, domain)
+    def solveChallenge(self, body, domain):            
+        result = JavaScript_Interpreter(self.interpreter).solveJS(body, domain)
         
         try:
             float(result)
