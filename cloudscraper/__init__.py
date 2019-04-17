@@ -2,13 +2,12 @@ import re
 import logging
 import random
 
-
 from copy import deepcopy
 from time import sleep
 from collections import OrderedDict
 
 from requests.sessions import Session
-from .javascript_interpreter import JavaScript_Interpreter
+from .interpreters import JavaScriptInterpreter
 
 try:
     from requests_toolbelt.utils import dump
@@ -38,6 +37,7 @@ DEFAULT_USER_AGENTS = [
 
 BUG_REPORT = 'Cloudflare may have changed their technique, or there may be a bug in the script.'
 
+
 ##########################################################################################################################################################
 
 
@@ -55,15 +55,18 @@ class CloudScraper(Session):
 
     ##########################################################################################################################################################
 
-    def debugRequest(self, req):
+    @staticmethod
+    def debugRequest(req):
         try:
-            print (dump.dump_all(req).decode('utf-8'))
-        except:
+            print(dump.dump_all(req).decode('utf-8'))
+        except:  # noqa
             pass
 
     ##########################################################################################################################################################
 
     def request(self, method, url, *args, **kwargs):
+        # @TODO: move this to __init__
+        # noinspection PyAttributeOutsideInit
         self.headers = (
             OrderedDict(
                 [
@@ -71,7 +74,7 @@ class CloudScraper(Session):
                     ('Accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'),
                     ('Accept-Language', 'en-US,en;q=0.5'),
                     ('Accept-Encoding', 'gzip, deflate'),
-                    ('Connection',  'close'),
+                    ('Connection', 'close'),
                     ('Upgrade-Insecure-Requests', '1')
                 ]
             )
@@ -86,18 +89,19 @@ class CloudScraper(Session):
         # Check if Cloudflare anti-bot is on
         if self.isChallengeRequest(resp):
             # Work around if the initial request is not a GET,
-            # Superseed with a GET then re-request the orignal METHOD.
+            # Supersede with a GET then re-request the original METHOD.
             if resp.request.method != 'GET':
                 self.request('GET', resp.url)
                 resp = self.request(method, url, *args, **kwargs)
             else:
-                resp = self.sendChallengeResposne(resp, **kwargs)
+                resp = self.sendChallengeResponse(resp, **kwargs)
 
         return resp
 
     ##########################################################################################################################################################
 
-    def isChallengeRequest(self, resp):
+    @staticmethod
+    def isChallengeRequest(resp):
         if resp.headers.get('Server', '').startswith('cloudflare'):
             if b'why_captcha' in resp.content or b'/cdn-cgi/l/chk_captcha' in resp.content:
                 raise ValueError('Captcha')
@@ -112,7 +116,7 @@ class CloudScraper(Session):
 
     ##########################################################################################################################################################
 
-    def sendChallengeResposne(self, resp, **original_kwargs):
+    def sendChallengeResponse(self, resp, **original_kwargs):
         body = resp.text
 
         # Cloudflare requires a delay before solving the challenge
@@ -121,7 +125,7 @@ class CloudScraper(Session):
                 delay = float(re.search(r'submit\(\);\r?\n\s*},\s*([0-9]+)', body).group(1)) / float(1000)
                 if isinstance(delay, (int, float)):
                     self.delay = delay
-            except:
+            except:  # noqa
                 pass
 
         sleep(self.delay)
@@ -147,7 +151,8 @@ class CloudScraper(Session):
             raise ValueError("Unable to parse Cloudflare anti-bots page: {} {}".format(e.message, BUG_REPORT))
 
         # Solve the Javascript challenge
-        params['jschl_answer'] = JavaScript_Interpreter(self.interpreter).solveChallenge(body, domain)
+        interpreter = JavaScriptInterpreter.dynamicImport(self.interpreter)
+        params['jschl_answer'] = interpreter.solveChallenge(body, domain)
 
         # Requests transforms any request into a GET after a redirect,
         # so the redirect has to be handled manually here to allow for
@@ -204,11 +209,12 @@ class CloudScraper(Session):
         try:
             resp = scraper.get(url, **kwargs)
             resp.raise_for_status()
-        except Exception as e:
+        except Exception:
             logging.error("'{}' returned an error. Could not collect tokens.".format(url))
             raise
 
         domain = urlparse(resp.url).netloc
+        # noinspection PyUnusedLocal
         cookie_domain = None
 
         for d in scraper.cookies.list_domains():
