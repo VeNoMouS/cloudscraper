@@ -2,13 +2,6 @@ import re
 import sys
 import logging
 import abc
-import os
-
-from io import open
-
-interpreters = dict()
-with open(os.path.join(os.path.dirname(__file__), 'interpreters.lst')) as fp:
-    interpreters.update((k, None) for k in fp.read().split('\n'))
 
 if sys.version_info >= (3, 4):
     ABC = abc.ABC  # noqa
@@ -21,42 +14,31 @@ BUG_REPORT = 'Cloudflare may have changed their technique, or there may be a bug
 
 ##########################################################################################################################################################
 
+interpreters = {}
+
 
 class JavaScriptInterpreter(ABC):
     @abc.abstractmethod
     def __init__(self, name):
-        try:
-            if interpreters[name] is not None:
-                raise ValueError('Attempted to reload interpreter: "{}"'.format(name))
-
-            interpreters[name] = self  # noqa
-        except KeyError:
-            raise ValueError('Attempted to register unknown interpreter: "{}"'.format(name))
+        interpreters[name] = self
 
     @classmethod
     def dynamicImport(cls, name):
-        try:
-            if interpreters[name] is not None:
-                return interpreters[name]
-        except KeyError:
-            sys.tracebacklimit = None if sys.version_info[0] == 3 else 0
-            raise ValueError(
-                'Unknown interpreter "{}", please select one of the following interpreters [ {} ]'.format(
-                    name,
-                    ', '.join(interpreters.keys())
-                )
-            )
+        jsInterpreter = getattr(interpreters, name, None)
+        if jsInterpreter is not None:
+            return jsInterpreter
 
         try:
             __import__('cloudscraper.interpreters.{}'.format(name))
-        except ImportError:
+            jsInterpreter = interpreters[name]
+
+            if not isinstance(jsInterpreter, JavaScriptInterpreter):
+                raise ValueError('{} failed to register properly'.format(name))
+
+            return jsInterpreter
+        except (ImportError, KeyError):
             logging.error('Unable to load {} interpreter'.format(name))
             raise
-
-        if not isinstance(interpreters[name], JavaScriptInterpreter):
-            raise ValueError('{} failed to register properly'.format(name))
-
-        return interpreters[name]
 
     @abc.abstractmethod
     def eval(self, jsEnv, js):
