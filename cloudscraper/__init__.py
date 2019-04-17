@@ -222,8 +222,7 @@ class CloudScraper(Session):
                 cookie_domain = d
                 break
         else:
-            raise ValueError(
-                "Unable to find Cloudflare cookies. Does the site actually have Cloudflare IUAM (\"I'm Under Attack Mode\") enabled?")
+            raise ValueError("Unable to find Cloudflare cookies. Does the site actually have Cloudflare IUAM (\"I'm Under Attack Mode\") enabled?")
 
         return (
             {
