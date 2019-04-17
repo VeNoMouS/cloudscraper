@@ -1,0 +1,21 @@
+[[source]]
+url = "https://pypi.org/simple/"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+requests = "*"
+js2py = "*"
+requests_toolbelt = "*"
+
+[dev-packages]
+pytest = "*"
+pytest-cov = "*"
+pytest-xdist = "*"
+pytest-httpbin = "*"
+"flake8" = "*"
+httpbin = "*"
+tox = "*"
+detox = "*"
+coverage = "*"
+coveralls = "*"
