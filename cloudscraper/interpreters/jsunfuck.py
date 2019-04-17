@@ -80,18 +80,18 @@ CONSTRUCTORS = {
     'RegExp': 'Function("return/"+false+"/")()'
 }
 
+
 def jsunfuck(jsfuckString):
-    
     for key in sorted(MAPPING, key=lambda k: len(MAPPING[k]), reverse=True):
         if MAPPING.get(key) in jsfuckString:
             jsfuckString = jsfuckString.replace(MAPPING.get(key), '"{}"'.format(key))
-    
+
     for key in sorted(SIMPLE, key=lambda k: len(SIMPLE[k]), reverse=True):
         if SIMPLE.get(key) in jsfuckString:
             jsfuckString = jsfuckString.replace(SIMPLE.get(key), '{}'.format(key))
-            
-    #for key in sorted(CONSTRUCTORS, key=lambda k: len(CONSTRUCTORS[k]), reverse=True):
+
+    # for key in sorted(CONSTRUCTORS, key=lambda k: len(CONSTRUCTORS[k]), reverse=True):
     #    if CONSTRUCTORS.get(key) in jsfuckString:
     #        jsfuckString = jsfuckString.replace(CONSTRUCTORS.get(key), '{}'.format(key))
-    
+
     return jsfuckString

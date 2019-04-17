@@ -22,12 +22,12 @@ class JavaScript_Interpreter():
             isfile(join(join(dirname(realpath(__file__)), 'interpreters'), f))
         ]
         self.loadInterpreter(interpreter)
-           
+
     ##########################################################################################################################################################
-    
+
     def loadInterpreter(self, interpreter):
         interpreter = 'js2py' if interpreter == 'None' else interpreter
-        
+
         if interpreter not in self.interpreters:
             sys.tracebacklimit = None if sys.version_info[0] == 3 else 0
             raise ValueError(
@@ -36,7 +36,7 @@ class JavaScript_Interpreter():
                     ', '.join(self.interpreters)
                 )
             )
-        
+
         try:
             interpreter = '{}_interpreter'.format(interpreter)
             mod = __import__('cloudscraper.interpreters.{}'.format(interpreter), fromlist=[interpreter])
@@ -44,9 +44,9 @@ class JavaScript_Interpreter():
         except (ImportError, AttributeError) as e:
             logging.error('Unable to load {} interpreter'.format(interpreter))
             raise
-            
+
     ##########################################################################################################################################################
-    
+
     def solveJS(self, body, domain):
         try:
             js = re.search(
@@ -56,8 +56,7 @@ class JavaScript_Interpreter():
         except Exception:
             raise ValueError("Unable to identify Cloudflare IUAM Javascript on website. {}".format(BUG_REPORT))
 
-        js = re.sub(r'\s{2,}', ' ', js, flags=re.MULTILINE | re.DOTALL)
-        js = js.replace('\'; 121\'', '')
+        js = re.sub(r'\s{2,}', ' ', js, flags=re.MULTILINE | re.DOTALL).replace('\'; 121\'', '')
         js += '\na.value;';
 
         if 'toFixed' not in js:
@@ -74,16 +73,16 @@ class JavaScript_Interpreter():
                     return {{"innerHTML": "{innerHTML}"}};
                 }}
             }};
-            
+
             """
 
             innerHTML = re.search(
-                '<div(?: [^<>]*)? id="([^<>]*?)">([^<>]*?)<\/div>',
+                r'<div(?: [^<>]*)? id="([^<>]*?)">([^<>]*?)<\/div>',
                 body,
                 re.MULTILINE | re.DOTALL
             )
             innerHTML = innerHTML.group(2) if innerHTML else ""
-            
+
             result = self.interpreter.solveJS(
                 re.sub(r'\s{2,}', ' ', jsEnv.format(domain=domain, innerHTML=innerHTML), flags=re.MULTILINE | re.DOTALL),
                 js
@@ -91,11 +90,11 @@ class JavaScript_Interpreter():
         except:
             logging.error("Error extracting Cloudflare IUAM Javascript.".format(BUG_REPORT))
             raise
-        
+
         try:
             float(result)
-        except Exception :
+        except Exception:
             logging.error("Error executing Cloudflare IUAM Javascript. {}".format(BUG_REPORT))
             raise
-        
+
         return result

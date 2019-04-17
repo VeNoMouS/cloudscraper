@@ -2,10 +2,6 @@ import logging
 import random
 import re
 
-import base64
-
-from pprint import pprint
-
 from copy import deepcopy
 from time import sleep
 from collections import OrderedDict
@@ -48,7 +44,7 @@ class CloudScraper(Session):
     def __init__(self, *args, **kwargs):
         self.delay = kwargs.pop('delay', None)
         self.debug = False
-        
+
         self.interpreter = 'None'
 
         super(CloudScraper, self).__init__(*args, **kwargs)
@@ -58,18 +54,18 @@ class CloudScraper(Session):
             self.headers['User-Agent'] = random.choice(DEFAULT_USER_AGENTS)
 
     ##########################################################################################################################################################
-    
-    def setInterrupter(self, interpreter):       
+
+    def setInterrupter(self, interpreter):
         self.interpreter = interpreter
-        
+
     ##########################################################################################################################################################
-    
+
     def setChallengeDelay(self, delay):
         if isinstance(delay, (int, float)) and delay > 0:
             self.delay = delay
-            
+
     ##########################################################################################################################################################
-    
+
     def debugRequest(self, req):
         try:
             print (dump.dump_all(req).decode('utf-8'))
@@ -77,7 +73,7 @@ class CloudScraper(Session):
             pass
 
     ##########################################################################################################################################################
-    
+
     def request(self, method, url, *args, **kwargs):
         self.headers = (
             OrderedDict(
@@ -111,7 +107,7 @@ class CloudScraper(Session):
         return resp
 
     ##########################################################################################################################################################
-    
+
     def isChallenge(self, resp):
         if resp.headers.get('Server', '').startswith('cloudflare'):
             if b'why_captcha' in resp.content or b'/cdn-cgi/l/chk_captcha' in resp.content:
@@ -124,9 +120,9 @@ class CloudScraper(Session):
             )
 
         return False
-    
+
     ##########################################################################################################################################################
-    
+
     def sendChallengeResposne(self, resp, **original_kwargs):
         body = resp.text
 
@@ -138,7 +134,7 @@ class CloudScraper(Session):
                     self.delay = delay
             except:
                 pass
-        
+
         sleep(self.delay)
 
         parsed_url = urlparse(resp.url)
@@ -146,7 +142,6 @@ class CloudScraper(Session):
         submit_url = '{}://{}/cdn-cgi/l/chk_jschl'.format(parsed_url.scheme, domain)
 
         cloudflare_kwargs = deepcopy(original_kwargs)
-        #headers = cloudflare_kwargs.setdefault('headers', {'Referer': resp.url})
 
         try:
             params = cloudflare_kwargs.setdefault(
@@ -194,10 +189,10 @@ class CloudScraper(Session):
         return self.request(method, redirect.headers['Location'], **original_kwargs)
 
     ##########################################################################################################################################################
-    
-    def solveChallenge(self, body, domain):            
+
+    def solveChallenge(self, body, domain):
         result = JavaScript_Interpreter(self.interpreter).solveJS(body, domain)
-        
+
         try:
             float(result)
         except Exception:
@@ -222,9 +217,9 @@ class CloudScraper(Session):
                     setattr(scraper, attr, val)
 
         return scraper
-    
+
     ##########################################################################################################################################################
-    
+
     # Functions for integrating cloudscraper with other applications and scripts
     @classmethod
     def get_tokens(cls, url, user_agent=None, debug=False, **kwargs):
@@ -260,7 +255,7 @@ class CloudScraper(Session):
         )
 
     ##########################################################################################################################################################
-    
+
     @classmethod
     def get_cookie_string(cls, url, user_agent=None, debug=False, **kwargs):
         """
