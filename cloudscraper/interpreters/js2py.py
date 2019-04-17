@@ -1,16 +1,20 @@
+from __future__ import absolute_import
+
 import js2py
 import logging
+import base64
+
+from . import JavaScriptInterpreter
 
 from .jsunfuck import jsunfuck
 
-##########################################################################################################################################################
 
+class ChallengeInterpreter(JavaScriptInterpreter):
 
-class js2py_interpreter():
+    def __init__(self):
+        super(ChallengeInterpreter, self).__init__('js2py')
 
-    ##########################################################################################################################################################
-
-    def solveJS(self, jsEnv, js):
+    def eval(self, jsEnv, js):
         if js2py.eval_js('(+(+!+[]+[+!+[]]+(!![]+[])[!+[]+!+[]+!+[]]+[!+[]+!+[]]+[+[]])+[])[+!+[]]') == '1':
             logging.warning('WARNING - Please upgrade your js2py https://github.com/PiotrDabkowski/Js2Py, applying work around for the meantime.')
             js = jsunfuck(js)
@@ -24,4 +28,5 @@ class js2py_interpreter():
 
         return result
 
-    ##########################################################################################################################################################
+
+ChallengeInterpreter()
