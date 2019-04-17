@@ -1,4 +1,3 @@
-
 import re
 import sys
 import logging
@@ -14,7 +13,7 @@ BUG_REPORT = 'Cloudflare may have changed their technique, or there may be a bug
 
 
 class JavaScript_Interpreter():
-    def __init__(self, interpreter='js2py'):
+    def __init__(self, interpreter):
         self.interpreter = None
         self.interpreters = [
             f.replace('_interpreter.py', '') for f in listdir(join(dirname(realpath(__file__)), 'interpreters'))
@@ -26,8 +25,6 @@ class JavaScript_Interpreter():
     ##########################################################################################################################################################
 
     def loadInterpreter(self, interpreter):
-        interpreter = 'js2py' if interpreter == 'None' else interpreter
-
         if interpreter not in self.interpreters:
             sys.tracebacklimit = None if sys.version_info[0] == 3 else 0
             raise ValueError(
@@ -47,7 +44,7 @@ class JavaScript_Interpreter():
 
     ##########################################################################################################################################################
 
-    def solveJS(self, body, domain):
+    def solveChallenge(self, body, domain):
         try:
             js = re.search(
                 r"setTimeout\(function\(\){\s+(var s,t,o,p,b,r,e,a,k,i,n,g,f.+?\r?\n[\s\S]+?a\.value =.+?)\r?\n",
