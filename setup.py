@@ -36,7 +36,7 @@ setup(
     install_requires = [
         'requests >= 2.9.2',
         'js2py >= 0.60',
-        'requests_toolbelt >= 0.8.0'
+        'requests_toolbelt >= 0.9.1'
     ],
     classifiers=[
         'Development Status :: 4 - Beta',
