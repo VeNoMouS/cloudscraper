@@ -1,12 +1,15 @@
 -i https://pypi.org/simple/
-certifi==2019.3.9
-chardet==3.0.4
-idna==2.8
-js2py==0.60
-pyjsparser==2.5.2
-pytz==2019.1
-requests-toolbelt==0.9.1
-requests==2.21.0
-six==1.12.0
-tzlocal==1.5.1
-urllib3==1.24.1
+# Production
+requests >= 2.9.2
+js2py >= 0.60
+requests_toolbelt >= 0.9.1
+# Development
+pytest >= 4.4.1
+pytest-cov >= 2.6.1
+pytest-httpbin >= 1.0.0
+pytest-xdist >= 1.28.0
+flake8 >= 3.7.7
+httpbin >= 0.7.0
+tox >= 3.6.1
+detox >= 0.19
+coveralls >= 1.7.0
