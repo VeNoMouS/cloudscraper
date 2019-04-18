@@ -1,20 +1,19 @@
 init:
-	pip install pipenv -U
-	pipenv install --dev
+	pip install -r requirements.txt
 
 test:
 	# This runs all of the tests, on both Python 2 and Python 3.
 	detox
 
 ci:
-	pipenv run py.test -n 8 --boxed --junitxml=report.xml
+	py.test -n 8 --boxed --junitxml=report.xml
 
 flake8:
-	pipenv run flake8 --ignore E501,N806,W503,W504 cloudscraper
+	flake8 --ignore E501,N806,W503,W504 cloudscraper
 
 coverage:
-	pipenv run py.test --cov-config .coveragerc --verbose --cov-report term --cov-report xml --cov=cloudscraper tests
-	pipenv run coveralls
+	py.test --cov-config .coveragerc --verbose --cov-report term --cov-report xml --cov=cloudscraper tests
+	coveralls
 
 publish:
 	pip install 'twine>=1.5.0'
