@@ -13,3 +13,4 @@ httpbin >= 0.7.0
 tox >= 3.6.1
 detox >= 0.19
 coveralls >= 1.7.0
+autopep8 >= 1.4.4
