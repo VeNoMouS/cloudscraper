@@ -23,10 +23,10 @@ class ChallengeInterpreter(JavaScriptInterpreter):
                  'var context = {atob: atob};' \
                  'var options = {filename: "iuam-challenge.js", timeout: 4000};' \
                  'var answer = require("vm").runInNewContext(challenge, context, options);' \
-                 'console.log(answer);' \
+                 'process.stdout.write(String(answer));' \
                  % base64.b64encode('{}{}'.format(jsEnv, js).encode('UTF-8')).decode('ascii')
 
-            return subprocess.check_output(['node', '-e', js]).strip()
+            return subprocess.check_output(['node', '-e', js])
 
         except OSError as e:
             if e.errno == 2:
