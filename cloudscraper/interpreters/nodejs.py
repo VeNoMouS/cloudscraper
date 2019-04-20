@@ -18,8 +18,13 @@ class ChallengeInterpreter(JavaScriptInterpreter):
 
     def eval(self, jsEnv, js):
         try:
-            js = 'var atob = function(str) {return Buffer.from(str, "base64").toString("binary");}; var injection = atob("%s"); ' \
-                 'console.log(require("vm").runInNewContext(injection, void 0, {timeout: 5000}));' % base64.b64encode('{}{}'.format(jsEnv, js).encode('UTF-8')).decode('ascii')
+            js = 'var atob = function(str) {return Buffer.from(str, "base64").toString("binary");};' \
+                 'var challenge = atob("%s");' \
+                 'var context = {atob: atob};' \
+                 'var options = {filename: "iuam-challenge.js", timeout: 4000};' \
+                 'var answer = require("vm").runInNewContext(challenge, context, options);' \
+                 'console.log(answer);' \
+                 % base64.b64encode('{}{}'.format(jsEnv, js).encode('UTF-8')).decode('ascii')
 
             return subprocess.check_output(['node', '-e', js]).strip()
 
