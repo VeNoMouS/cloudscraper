@@ -23,16 +23,16 @@ except ImportError:
 
 ##########################################################################################################################################################
 
-__version__ = "1.0.0"
+__version__ = '1.0.0'
 
 DEFAULT_USER_AGENTS = [
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36",
-    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/65.0.3325.181 Chrome/65.0.3325.181 Safari/537.36",
-    "Mozilla/5.0 (Linux; Android 7.0; Moto G (5) Build/NPPS25.137-93-8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.137 Mobile Safari/537.36",
-    "Mozilla/5.0 (iPhone; CPU iPhone OS 7_0_4 like Mac OS X) AppleWebKit/537.51.1 (KHTML, like Gecko) Version/7.0 Mobile/11B554a Safari/9537.53",
-    "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:60.0) Gecko/20100101 Firefox/60.0",
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:59.0) Gecko/20100101 Firefox/59.0",
-    "Mozilla/5.0 (Windows NT 6.3; Win64; x64; rv:57.0) Gecko/20100101 Firefox/57.0",
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36',
+    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/65.0.3325.181 Chrome/65.0.3325.181 Safari/537.36',
+    'Mozilla/5.0 (Linux; Android 7.0; Moto G (5) Build/NPPS25.137-93-8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.137 Mobile Safari/537.36',
+    'Mozilla/5.0 (iPhone; CPU iPhone OS 7_0_4 like Mac OS X) AppleWebKit/537.51.1 (KHTML, like Gecko) Version/7.0 Mobile/11B554a Safari/9537.53',
+    'Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:60.0) Gecko/20100101 Firefox/60.0',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:59.0) Gecko/20100101 Firefox/59.0',
+    'Mozilla/5.0 (Windows NT 6.3; Win64; x64; rv:57.0) Gecko/20100101 Firefox/57.0',
 ]
 
 BUG_REPORT = 'Cloudflare may have changed their technique, or there may be a bug in the script.'
@@ -108,8 +108,8 @@ class CloudScraper(Session):
 
             return (
                 resp.status_code in [429, 503]
-                and b"jschl_vc" in resp.content
-                and b"jschl_answer" in resp.content
+                and b'jschl_vc' in resp.content
+                and b'jschl_answer' in resp.content
             )
 
         return False
@@ -151,7 +151,7 @@ class CloudScraper(Session):
             params = cloudflare_kwargs.setdefault('params', params)
 
         except Exception as e:
-            raise ValueError("Unable to parse Cloudflare anti-bots page: {} {}".format(e.message, BUG_REPORT))
+            raise ValueError('Unable to parse Cloudflare anti-bots page: {} {}'.format(e.message, BUG_REPORT))
 
         # Solve the Javascript challenge
         interpreter = JavaScriptInterpreter.dynamicImport(self.interpreter)
@@ -213,7 +213,7 @@ class CloudScraper(Session):
             resp = scraper.get(url, **kwargs)
             resp.raise_for_status()
         except Exception:
-            logging.error("'{}' returned an error. Could not collect tokens.".format(url))
+            logging.error('"{}" returned an error. Could not collect tokens.'.format(url))
             raise
 
         domain = urlparse(resp.url).netloc
@@ -225,7 +225,7 @@ class CloudScraper(Session):
                 cookie_domain = d
                 break
         else:
-            raise ValueError("Unable to find Cloudflare cookies. Does the site actually have Cloudflare IUAM (\"I'm Under Attack Mode\") enabled?")
+            raise ValueError('Unable to find Cloudflare cookies. Does the site actually have Cloudflare IUAM ("I\'m Under Attack Mode") enabled?')
 
         return (
             {
@@ -243,7 +243,7 @@ class CloudScraper(Session):
         Convenience function for building a Cookie HTTP header value.
         """
         tokens, user_agent = cls.get_tokens(url, user_agent=user_agent, debug=debug, **kwargs)
-        return "; ".join("=".join(pair) for pair in tokens.items()), user_agent
+        return '; '.join('='.join(pair) for pair in tokens.items()), user_agent
 
 
 ##########################################################################################################################################################
