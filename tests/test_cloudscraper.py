@@ -7,7 +7,7 @@ from sure import expect
 from . import challenge_responses, requested_page, url
 
 delay = 0.01
-debug = True
+debug = False
 
 
 class TestCloudScraper:
@@ -20,7 +20,6 @@ class TestCloudScraper:
         else:
             pytest.skip('js2py.internals.simplex.JsException: TypeError: \'undefined\' is not a function')
 
-    @pytest.mark.skip(reason='ReferenceError: atob is not defined')
     @challenge_responses(filename='js_challenge_21_03_2019.html', jschl_answer='13.0802397598')
     def test_js_challenge_21_03_2019(self, interpreter):
         scraper = cloudscraper.CloudScraper(delay=delay, debug=debug, interpreter=interpreter)
