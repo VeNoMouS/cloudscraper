@@ -56,8 +56,9 @@ class JavaScriptInterpreter(ABC):
         js = re.sub(r'\s{2,}', ' ', js, flags=re.MULTILINE | re.DOTALL).replace('\'; 121\'', '')
         js += '\na.value;'
 
-        if 'toFixed' not in js:
-            raise ValueError("Error parsing Cloudflare IUAM Javascript challenge. {}".format(BUG_REPORT))
+        # Disabled for challenge backwards compatibility
+        # if 'toFixed' not in js:
+        #    raise ValueError("Error parsing Cloudflare IUAM Javascript challenge. {}".format(BUG_REPORT))
 
         try:
             jsEnv = """

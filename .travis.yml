@@ -17,4 +17,5 @@ matrix:
 
 cache: pip
 install: make
-script: make ci
+# make ci is currently failing due to https://github.com/pytest-dev/pytest-xdist/issues/187
+script: make coverage
