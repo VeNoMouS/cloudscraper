@@ -2,13 +2,12 @@
 
 import pytest
 import cloudscraper
-import sys
 
 from sure import expect
 from . import challenge_responses, requested_page, url
 
-delay = 0.1
-debug = False
+delay = 0.01
+debug = True
 
 
 class TestCloudScraper:

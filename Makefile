@@ -5,15 +5,24 @@ init:
 
 test:
 	# This runs all of the tests, on both Python 2 and Python 3.
-	detox
+	tox --parallel auto
+
+watch:
+	# This automatically selects and re-executes only tests affected by recent changes.
+	ptw -- --testmon
+
+retry:
+	# This will retry failed tests on every file change.
+	py.test -n auto --forked --looponfail
 
 ci:
-	py.test -n 8 --boxed --junitxml=report.xml
+	py.test -n 8 --forked --junitxml=report.xml
 
-flake8:
-	flake8 --ignore $(pep8-rules) cloudscraper
+lint:
+	flake8 --ignore $(pep8-rules) cloudscraper tests
 
-autopep8:
+format:
+	# Automatic reformatting
 	autopep8 -aaa --ignore $(pep8-rules) --in-place --recursive cloudscraper tests
 
 coverage:
