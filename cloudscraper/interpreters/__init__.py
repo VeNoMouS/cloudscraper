@@ -24,21 +24,16 @@ class JavaScriptInterpreter(ABC):
 
     @classmethod
     def dynamicImport(cls, name):
-        jsInterpreter = getattr(interpreters, name, None)
-        if jsInterpreter is not None:
-            return jsInterpreter
+        if name not in interpreters:
+            try:
+                __import__('cloudscraper.interpreters.{}'.format(name))
+                if not isinstance(interpreters.get(name), JavaScriptInterpreter):
+                    raise ImportError('The interpreter was not initialized.')
+            except ImportError:
+                logging.error('Unable to load {} interpreter'.format(name))
+                raise
 
-        try:
-            __import__('cloudscraper.interpreters.{}'.format(name))
-            jsInterpreter = interpreters[name]
-
-            if not isinstance(jsInterpreter, JavaScriptInterpreter):
-                raise ValueError('{} failed to register properly'.format(name))
-
-            return jsInterpreter
-        except (ImportError, KeyError):
-            logging.error('Unable to load {} interpreter'.format(name))
-            raise
+        return interpreters[name]
 
     @abc.abstractmethod
     def eval(self, jsEnv, js):
