@@ -34,3 +34,6 @@ coverage.xml
 
 # Prevent unintended .env commits
 .env
+
+# Temp files
+*.swp

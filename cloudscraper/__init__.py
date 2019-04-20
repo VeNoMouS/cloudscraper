@@ -137,15 +137,18 @@ class CloudScraper(Session):
         cloudflare_kwargs = deepcopy(original_kwargs)
 
         try:
-            params = cloudflare_kwargs.setdefault(
-                'params', OrderedDict(
-                    [
-                        ('s', re.search(r'name="s"\svalue="(?P<s_value>[^"]+)', body).group('s_value')),
-                        ('jschl_vc', re.search(r'name="jschl_vc" value="(\w+)"', body).group(1)),
-                        ('pass', re.search(r'name="pass" value="(.+?)"', body).group(1)),
-                    ]
-                )
-            )
+            params = OrderedDict()
+
+            s = re.search(r'name="s"\svalue="(?P<s_value>[^"]+)', body)
+            if s:
+                params['s'] = s.group('s_value')
+
+            params.update([
+                ('jschl_vc', re.search(r'name="jschl_vc" value="(\w+)"', body).group(1)),
+                ('pass', re.search(r'name="pass" value="(.+?)"', body).group(1))
+            ])
+
+            params = cloudflare_kwargs.setdefault('params', params)
 
         except Exception as e:
             raise ValueError("Unable to parse Cloudflare anti-bots page: {} {}".format(e.message, BUG_REPORT))

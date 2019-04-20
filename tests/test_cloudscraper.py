@@ -1,12 +1,49 @@
 # -*- coding: utf-8 -*-
 
-"""Placeholder for real tests"""
-
-import cloudscraper
-
 import pytest
+import cloudscraper
+import sys
+
+from sure import expect
+from . import challenge_responses, requested_page, url
+
+delay = 0.1
+debug = False
+
 
 class TestCloudScraper:
 
-    def test_scraper(self):
-        scraper = cloudscraper.CloudScraper()
+    @challenge_responses(filename='js_challenge_10_04_2019.html', jschl_answer='18.8766915031')
+    def test_js_challenge_10_04_2019(self, interpreter):
+        if interpreter != 'js2py':
+            scraper = cloudscraper.CloudScraper(delay=delay, debug=debug, interpreter=interpreter)
+            expect(scraper.get(url).content).to.equal(requested_page)
+        else:
+            pytest.skip('js2py.internals.simplex.JsException: TypeError: \'undefined\' is not a function')
+
+    @pytest.mark.skip(reason='ReferenceError: atob is not defined')
+    @challenge_responses(filename='js_challenge_21_03_2019.html', jschl_answer='13.0802397598')
+    def test_js_challenge_21_03_2019(self, interpreter):
+        scraper = cloudscraper.CloudScraper(delay=delay, debug=debug, interpreter=interpreter)
+        expect(scraper.get(url).content).to.equal(requested_page)
+
+    @challenge_responses(filename='js_challenge_13_03_2019.html', jschl_answer='38.5879578333')
+    def test_js_challenge_13_03_2019(self, interpreter):
+        scraper = cloudscraper.CloudScraper(delay=delay, debug=debug, interpreter=interpreter)
+        expect(scraper.get(url).content).to.equal(requested_page)
+
+    @challenge_responses(filename='js_challenge_03_12_2018.html', jschl_answer='10.66734594')
+    def test_js_challenge_03_12_2018(self, interpreter):
+        scraper = cloudscraper.CloudScraper(delay=delay, debug=debug, interpreter=interpreter)
+        expect(scraper.get(url).content).to.equal(requested_page)
+
+    @challenge_responses(filename='js_challenge_09_06_2016.html', jschl_answer='6648')
+    def test_js_challenge_09_06_2016(self, interpreter):
+        scraper = cloudscraper.CloudScraper(delay=delay, debug=debug, interpreter=interpreter)
+        expect(scraper.get(url).content).to.equal(requested_page)
+
+    @pytest.mark.skip(reason='Unable to identify Cloudflare IUAM Javascript on website.')
+    @challenge_responses(filename='js_challenge_21_05_2015.html', jschl_answer='649')
+    def test_js_challenge_21_05_2015(self, interpreter):
+        scraper = cloudscraper.CloudScraper(delay=delay, debug=debug, interpreter=interpreter)
+        expect(scraper.get(url).content).to.equal(requested_page)
