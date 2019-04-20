@@ -51,8 +51,7 @@ class JavaScriptInterpreter(ABC):
         js = re.sub(r'\s{2,}', ' ', js, flags=re.MULTILINE | re.DOTALL).replace('\'; 121\'', '')
         js += '\na.value;'
 
-        try:
-            jsEnv = '''
+        jsEnv = '''
             function italics (str) {{ return "<i>" + this + "</i>"; }};
             var document = {{
                 createElement: function () {{
@@ -62,9 +61,9 @@ class JavaScriptInterpreter(ABC):
                     return {{"innerHTML": "{innerHTML}"}};
                 }}
             }};
+        '''
 
-            '''
-
+        try:
             innerHTML = re.search(
                 r'<div(?: [^<>]*)? id="([^<>]*?)">([^<>]*?)</div>',
                 body,
@@ -72,15 +71,16 @@ class JavaScriptInterpreter(ABC):
             )
             innerHTML = innerHTML.group(2) if innerHTML else ''
 
-            result = self.eval(
-                re.sub(r'\s{2,}', ' ', jsEnv.format(domain=domain, innerHTML=innerHTML), flags=re.MULTILINE | re.DOTALL),
-                js
-            )
         except:  # noqa
             logging.error('Error extracting Cloudflare IUAM Javascript. {}'.format(BUG_REPORT))
             raise
 
         try:
+            result = self.eval(
+                re.sub(r'\s{2,}', ' ', jsEnv.format(domain=domain, innerHTML=innerHTML), flags=re.MULTILINE | re.DOTALL),
+                js
+            )
+
             float(result)
         except Exception:
             logging.error('Error executing Cloudflare IUAM Javascript. {}'.format(BUG_REPORT))
