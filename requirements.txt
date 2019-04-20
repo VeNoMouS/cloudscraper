@@ -6,10 +6,10 @@ requests_toolbelt >= 0.9.1
 # Development
 pytest >= 4.4.1
 pytest-cov >= 2.6.1
-pytest-httpbin >= 1.0.0
 pytest-xdist >= 1.28.0
+responses >= 0.10.6
+sure >= 1.4.11
 flake8 >= 3.7.7
-httpbin >= 0.7.0
 tox >= 3.6.1
 detox >= 0.19
 coveralls >= 1.7.0
