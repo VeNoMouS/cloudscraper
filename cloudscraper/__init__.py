@@ -8,6 +8,7 @@ from collections import OrderedDict
 
 from requests.sessions import Session
 from .interpreters import JavaScriptInterpreter
+from .user_agent import User_Agent
 
 try:
     from requests_toolbelt.utils import dump
@@ -25,18 +26,7 @@ except ImportError:
 
 __version__ = '1.0.0'
 
-DEFAULT_USER_AGENTS = [
-    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36',
-    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/65.0.3325.181 Chrome/65.0.3325.181 Safari/537.36',
-    'Mozilla/5.0 (Linux; Android 7.0; Moto G (5) Build/NPPS25.137-93-8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.137 Mobile Safari/537.36',
-    'Mozilla/5.0 (iPhone; CPU iPhone OS 7_0_4 like Mac OS X) AppleWebKit/537.51.1 (KHTML, like Gecko) Version/7.0 Mobile/11B554a Safari/9537.53',
-    'Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:60.0) Gecko/20100101 Firefox/60.0',
-    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:59.0) Gecko/20100101 Firefox/59.0',
-    'Mozilla/5.0 (Windows NT 6.3; Win64; x64; rv:57.0) Gecko/20100101 Firefox/57.0',
-]
-
 BUG_REPORT = 'Cloudflare may have changed their technique, or there may be a bug in the script.'
-
 
 ##########################################################################################################################################################
 
@@ -46,12 +36,13 @@ class CloudScraper(Session):
         self.debug = kwargs.pop('debug', False)
         self.delay = kwargs.pop('delay', None)
         self.interpreter = kwargs.pop('interpreter', 'js2py')
-
+        self.allow_br = kwargs.pop('allow_br', False)
+        
         super(CloudScraper, self).__init__(*args, **kwargs)
-
+            
         if 'requests' in self.headers['User-Agent']:
             # Set a random User-Agent if no custom User-Agent has been set
-            self.headers['User-Agent'] = random.choice(DEFAULT_USER_AGENTS)
+            self.headers = User_Agent(allow_br=self.allow_br).headers
 
     ##########################################################################################################################################################
 
@@ -67,18 +58,6 @@ class CloudScraper(Session):
     def request(self, method, url, *args, **kwargs):
         # @TODO: move this to __init__
         # noinspection PyAttributeOutsideInit
-        self.headers = (
-            OrderedDict(
-                [
-                    ('User-Agent', self.headers['User-Agent']),
-                    ('Accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'),
-                    ('Accept-Language', 'en-US,en;q=0.5'),
-                    ('Accept-Encoding', 'gzip, deflate'),
-                    ('Connection', 'close'),
-                    ('Upgrade-Insecure-Requests', '1')
-                ]
-            )
-        )
 
         resp = super(CloudScraper, self).request(method, url, *args, **kwargs)
 
@@ -88,12 +67,13 @@ class CloudScraper(Session):
 
         # Check if Cloudflare anti-bot is on
         if self.isChallengeRequest(resp):
-            # Work around if the initial request is not a GET,
-            # Supersede with a GET then re-request the original METHOD.
             if resp.request.method != 'GET':
+                # Work around if the initial request is not a GET,
+                # Supersede with a GET then re-request the original METHOD.
                 self.request('GET', resp.url)
                 resp = self.request(method, url, *args, **kwargs)
             else:
+                # Solve Challenge
                 resp = self.sendChallengeResponse(resp, **kwargs)
 
         return resp
@@ -143,10 +123,12 @@ class CloudScraper(Session):
             if s:
                 params['s'] = s.group('s_value')
 
-            params.update([
-                ('jschl_vc', re.search(r'name="jschl_vc" value="(\w+)"', body).group(1)),
-                ('pass', re.search(r'name="pass" value="(.+?)"', body).group(1))
-            ])
+            params.update(
+                [
+                    ('jschl_vc', re.search(r'name="jschl_vc" value="(\w+)"', body).group(1)),
+                    ('pass', re.search(r'name="pass" value="(.+?)"', body).group(1))
+                ]
+            )
 
             params = cloudflare_kwargs.setdefault('params', params)
 
@@ -154,8 +136,7 @@ class CloudScraper(Session):
             raise ValueError('Unable to parse Cloudflare anti-bots page: {} {}'.format(e.message, BUG_REPORT))
 
         # Solve the Javascript challenge
-        interpreter = JavaScriptInterpreter.dynamicImport(self.interpreter)
-        params['jschl_answer'] = interpreter.solveChallenge(body, domain)
+        params['jschl_answer'] = JavaScriptInterpreter.dynamicImport(self.interpreter).solveChallenge(body, domain)
 
         # Requests transforms any request into a GET after a redirect,
         # so the redirect has to be handled manually here to allow for
