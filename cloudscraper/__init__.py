@@ -3,7 +3,6 @@ import re
 import brotli
 import logging
 import random
-from pprint import pprint
 
 from copy import deepcopy
 from time import sleep
@@ -41,9 +40,9 @@ class CloudScraper(Session):
         self.delay = kwargs.pop('delay', None)
         self.interpreter = kwargs.pop('interpreter', 'js2py')
         self.allow_brotli = kwargs.pop('allow_brotli', False)
-        
+
         super(CloudScraper, self).__init__(*args, **kwargs)
-            
+
         if 'requests' in self.headers['User-Agent']:
             # Set a random User-Agent if no custom User-Agent has been set
             self.headers = User_Agent(allow_brotli=self.allow_brotli).headers
@@ -69,9 +68,9 @@ class CloudScraper(Session):
             if self.allow_brotli and resp._content:
                 resp._content = brotli.decompress(resp.content)
             else:
-               logging.warning('Brotili content detected, But option is disabled, we will not continue.')
+               logging.warning('Brotli content detected, But option is disabled, we will not continue.')
                return resp
-        
+
         # Debug request
         if self.debug:
             self.debugRequest(resp)
@@ -96,7 +95,7 @@ class CloudScraper(Session):
         if resp.headers.get('Server', '').startswith('cloudflare'):
             if b'why_captcha' in resp.content or b'/cdn-cgi/l/chk_captcha' in resp.content:
                 raise ValueError('Captcha')
-            
+
             return (
                 resp.status_code in [429, 503]
                 and all(s in resp.content for s in [b'jschl_vc',  b'jschl_answer'])
