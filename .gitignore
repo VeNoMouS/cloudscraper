@@ -28,9 +28,14 @@ report.xml
 coverage.xml
 .coverage
 .tox/
+.testmondata
 
 # IDE
 .idea/
 
-# Prevent unintended .env commits
+# Prevent unintended commits
 .env
+Pipfile*
+
+# Temp files
+*.swp
