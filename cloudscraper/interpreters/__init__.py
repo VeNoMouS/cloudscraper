@@ -26,7 +26,7 @@ class JavaScriptInterpreter(ABC):
     def dynamicImport(cls, name):
         if name not in interpreters:
             try:
-                __import__('cloudscraper.interpreters.{}'.format(name))
+                __import__('{}.{}'.format(cls.__module__, name))
                 if not isinstance(interpreters.get(name), JavaScriptInterpreter):
                     raise ImportError('The interpreter was not initialized.')
             except ImportError:
