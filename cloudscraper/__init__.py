@@ -1,8 +1,6 @@
-import sys
 import re
 import brotli
 import logging
-import random
 
 from copy import deepcopy
 from time import sleep
@@ -65,8 +63,8 @@ class CloudScraper(Session):
             if self.allow_brotli and resp._content:
                 resp._content = brotli.decompress(resp.content)
             else:
-               logging.warning('Brotli content detected, But option is disabled, we will not continue.')
-               return resp
+                logging.warning('Brotli content detected, But option is disabled, we will not continue.')
+                return resp
 
         # Debug request
         if self.debug:
@@ -95,7 +93,7 @@ class CloudScraper(Session):
 
             return (
                 resp.status_code in [429, 503]
-                and all(s in resp.content for s in [b'jschl_vc',  b'jschl_answer'])
+                and all(s in resp.content for s in [b'jschl_vc', b'jschl_answer'])
             )
 
         return False
