@@ -36,7 +36,8 @@ setup(
     install_requires = [
         'requests >= 2.9.2',
         'js2py >= 0.60',
-        'requests_toolbelt >= 0.9.1'
+        'requests_toolbelt >= 0.9.1',
+        'brotlipy >= 0.7.0'
     ],
     classifiers=[
         'Development Status :: 4 - Beta',
