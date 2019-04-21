@@ -59,9 +59,6 @@ class CloudScraper(Session):
     ##########################################################################################################################################################
 
     def request(self, method, url, *args, **kwargs):
-        # @TODO: move this to __init__
-        # noinspection PyAttributeOutsideInit
-
         resp = super(CloudScraper, self).request(method, url, *args, **kwargs)
 
         if resp.headers.get('Content-Encoding') == 'br':
