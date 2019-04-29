@@ -96,7 +96,6 @@ class CloudScraper(Session):
         self.cipherSuite = ''
 
         ctx = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
-        ctx.set_ciphers('ALL')
 
         for cipher in ciphers:
             try:
