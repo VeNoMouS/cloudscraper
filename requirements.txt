@@ -1,0 +1,20 @@
+-i https://pypi.org/simple/
+# Production
+requests >= 2.9.2
+js2py == 0.60
+requests_toolbelt >= 0.9.1
+brotli >= 1.0.7
+# Development
+pytest >= 4.4.1
+pytest-cov >= 2.6.1
+pytest-xdist >= 1.28.0
+pytest-forked >= 1.0.2
+pytest-testmon >= 0.9.16
+pytest-watch >= 4.2.0
+pytest-timeout >= 1.3.3
+responses >= 0.10.6
+sure >= 1.4.11
+flake8 >= 3.7.7
+tox >= 3.9.0
+coveralls >= 1.7.0
+autopep8 >= 1.4.4

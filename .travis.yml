@@ -1,0 +1,24 @@
+language: python
+
+dist: trusty
+sudo: false
+
+matrix:
+    include:
+        - python: '2.7'
+          script: make lint && make ci
+        - python: '3.4'
+          script: pytest tests
+        - python: '3.5'
+          script: pytest tests
+        - python: '3.6'
+          script: make ci
+        - python: '3.7'
+          script: make ci
+          dist: xenial
+          sudo: true
+
+cache: pip
+install: make
+
+after_success: make coverage
