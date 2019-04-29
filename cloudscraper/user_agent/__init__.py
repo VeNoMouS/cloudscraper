@@ -7,16 +7,17 @@ from collections import OrderedDict
 
 ##########################################################################################################################################################
 
+
 class User_Agent():
-    
+
     ##########################################################################################################################################################
-    
+
     def __init__(self, *args, **kwargs):
         self.headers = None
         self.loadUserAgent(*args, **kwargs)
-    
+
     ##########################################################################################################################################################
-    
+
     def loadUserAgent(self, *args, **kwargs):
         browser = kwargs.pop('browser', 'chrome')
 
@@ -30,10 +31,10 @@ class User_Agent():
             raise
 
         user_agent = random.choice(user_agents.get(browser))
-        
-        self.headers= user_agent.get('headers')
+
+        self.headers = user_agent.get('headers')
         self.headers['User-Agent'] = random.choice(user_agent.get('User-Agent'))
-        
+
         if not kwargs.get('allow_brotli', False):
             if 'br' in self.headers['Accept-Encoding']:
                 self.headers['Accept-Encoding'] = ','.join([encoding for encoding in self.headers['Accept-Encoding'].split(',') if encoding.strip() != 'br']).strip()

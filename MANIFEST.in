@@ -1,1 +1,1 @@
-include LICENSE README.md
+include LICENSE README.md cloudscraper/user_agent/browsers.json

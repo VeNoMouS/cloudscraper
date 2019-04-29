@@ -29,8 +29,21 @@ coverage:
 	py.test --cov-config .coveragerc --verbose --cov-report term --cov-report xml --cov=cloudscraper tests
 	coveralls
 
-publish:
-	pip install 'twine>=1.5.0'
-	python setup.py sdist bdist_wheel
-	twine upload dist/*
+clean:
 	rm -fr build dist .egg cloudscraper.egg-info
+
+build:
+	make clean
+	python3 setup.py sdist bdist_wheel --universal
+	
+publish:
+	make build
+	pip3 install 'twine>=1.5.0'
+	twine upload dist/*
+	make clean
+
+publish_test:
+	make build
+	pip3 install 'twine>=1.5.0'
+	twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+	make clean
