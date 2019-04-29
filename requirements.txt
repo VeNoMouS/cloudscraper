@@ -3,7 +3,7 @@
 requests >= 2.9.2
 js2py == 0.60
 requests_toolbelt >= 0.9.1
-brotlipy >= 0.7.0
+brotli >= 1.0.7
 # Development
 pytest >= 4.4.1
 pytest-cov >= 2.6.1

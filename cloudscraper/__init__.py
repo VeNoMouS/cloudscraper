@@ -1,14 +1,15 @@
-import sys
 import re
+import ssl
 import brotli
 import logging
-import random
 
 from copy import deepcopy
 from time import sleep
 from collections import OrderedDict
 
 from requests.sessions import Session
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.ssl_ import create_urllib3_context
 
 from .interpreters import JavaScriptInterpreter
 from .user_agent import User_Agent
@@ -27,9 +28,30 @@ except ImportError:
 
 ##########################################################################################################################################################
 
-__version__ = '1.0.0'
+__version__ = '1.1.0'
 
 BUG_REPORT = 'Cloudflare may have changed their technique, or there may be a bug in the script.'
+
+##########################################################################################################################################################
+
+
+class cipherSuiteAdapter(HTTPAdapter):
+
+    def __init__(self, cipherSuite=None, **kwargs):
+        self.cipherSuite = cipherSuite
+        super(cipherSuiteAdapter, self).__init__(**kwargs)
+
+    ##########################################################################################################################################################
+
+    def init_poolmanager(self, *args, **kwargs):
+        kwargs['ssl_context'] = create_urllib3_context(ciphers=self.cipherSuite)
+        return super(cipherSuiteAdapter, self).init_poolmanager(*args, **kwargs)
+
+    ##########################################################################################################################################################
+
+    def proxy_manager_for(self, *args, **kwargs):
+        kwargs['ssl_context'] = create_urllib3_context(ciphers=self.cipherSuite)
+        return super(cipherSuiteAdapter, self).proxy_manager_for(*args, **kwargs)
 
 ##########################################################################################################################################################
 
@@ -39,7 +61,8 @@ class CloudScraper(Session):
         self.debug = kwargs.pop('debug', False)
         self.delay = kwargs.pop('delay', None)
         self.interpreter = kwargs.pop('interpreter', 'js2py')
-        self.allow_brotli = kwargs.pop('allow_brotli', False)
+        self.allow_brotli = kwargs.pop('allow_brotli', True)
+        self.cipherSuite = None
 
         super(CloudScraper, self).__init__(*args, **kwargs)
 
@@ -58,15 +81,45 @@ class CloudScraper(Session):
 
     ##########################################################################################################################################################
 
+    def loadCipherSuite(self):
+        if self.cipherSuite:
+            return self.cipherSuite
+
+        ciphers = [
+            'GREASE_3A', 'GREASE_6A', 'AES128-GCM-SHA256', 'AES256-GCM-SHA256', 'AES256-GCM-SHA384', 'CHACHA20-POLY1305-SHA256',
+            'ECDHE-ECDSA-AES128-GCM-SHA256', 'ECDHE-RSA-AES128-GCM-SHA256', 'ECDHE-ECDSA-AES256-GCM-SHA384',
+            'ECDHE-RSA-AES256-GCM-SHA384', 'ECDHE-ECDSA-CHACHA20-POLY1305-SHA256', 'ECDHE-RSA-CHACHA20-POLY1305-SHA256',
+            'ECDHE-RSA-AES128-CBC-SHA', 'ECDHE-RSA-AES256-CBC-SHA', 'RSA-AES128-GCM-SHA256', 'RSA-AES256-GCM-SHA384',
+            'ECDHE-RSA-AES128-GCM-SHA256', 'RSA-AES256-SHA', '3DES-EDE-CBC'
+        ]
+
+        self.cipherSuite = ''
+
+        ctx = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
+        ctx.set_ciphers('ALL')
+
+        for cipher in ciphers:
+            try:
+                ctx.set_ciphers(cipher)
+                self.cipherSuite = '{}:{}'.format(self.cipherSuite, cipher).rstrip(':')
+            except ssl.SSLError:
+                pass
+
+        return self.cipherSuite
+
+    ##########################################################################################################################################################
+
     def request(self, method, url, *args, **kwargs):
-        resp = super(CloudScraper, self).request(method, url, *args, **kwargs)
+        ourSuper = super(CloudScraper, self)
+        ourSuper.mount('https://', cipherSuiteAdapter(self.loadCipherSuite()))
+        resp = ourSuper.request(method, url, *args, **kwargs)
 
         if resp.headers.get('Content-Encoding') == 'br':
             if self.allow_brotli and resp._content:
                 resp._content = brotli.decompress(resp.content)
             else:
-               logging.warning('Brotli content detected, But option is disabled, we will not continue.')
-               return resp
+                logging.warning('Brotli content detected, But option is disabled, we will not continue.')
+                return resp
 
         # Debug request
         if self.debug:
@@ -78,7 +131,7 @@ class CloudScraper(Session):
                 # Work around if the initial request is not a GET,
                 # Supersede with a GET then re-request the original METHOD.
                 self.request('GET', resp.url)
-                resp = self.request(method, url, *args, **kwargs)
+                resp = ourSuper.request(method, url, *args, **kwargs)
             else:
                 # Solve Challenge
                 resp = self.sendChallengeResponse(resp, **kwargs)
@@ -95,7 +148,7 @@ class CloudScraper(Session):
 
             return (
                 resp.status_code in [429, 503]
-                and all(s in resp.content for s in [b'jschl_vc',  b'jschl_answer'])
+                and all(s in resp.content for s in [b'jschl_vc', b'jschl_answer'])
             )
 
         return False
@@ -189,12 +242,13 @@ class CloudScraper(Session):
 
     # Functions for integrating cloudscraper with other applications and scripts
     @classmethod
-    def get_tokens(cls, url, user_agent=None, debug=False, **kwargs):
-        scraper = cls.create_scraper()
-        scraper.debug = debug
-
-        if user_agent:
-            scraper.headers['User-Agent'] = user_agent
+    def get_tokens(cls, url, **kwargs):
+        scraper = cls.create_scraper(
+            debug=kwargs.pop('debug', False),
+            delay=kwargs.pop('delay', None),
+            interpreter=kwargs.pop('interpreter', 'js2py'),
+            allow_brotli=kwargs.pop('allow_brotli', True),
+        )
 
         try:
             resp = scraper.get(url, **kwargs)
@@ -225,11 +279,11 @@ class CloudScraper(Session):
     ##########################################################################################################################################################
 
     @classmethod
-    def get_cookie_string(cls, url, user_agent=None, debug=False, **kwargs):
+    def get_cookie_string(cls, url, **kwargs):
         """
         Convenience function for building a Cookie HTTP header value.
         """
-        tokens, user_agent = cls.get_tokens(url, user_agent=user_agent, debug=debug, **kwargs)
+        tokens, user_agent = cls.get_tokens(url, **kwargs)
         return '; '.join('='.join(pair) for pair in tokens.items()), user_agent
 
 

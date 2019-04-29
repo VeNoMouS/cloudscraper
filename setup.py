@@ -1,24 +1,23 @@
 import os
 import re
-from setuptools import setup
+from setuptools import setup, find_packages
 from io import open
 
-base_path = os.path.dirname(__file__)
+with open(os.path.join(os.path.dirname(__file__), 'cloudscraper', '__init__.py')) as fp:
+    VERSION = re.match(r'.*__version__ = \'(.*?)\'', fp.read(), re.S).group(1)
 
-with open(os.path.join(base_path, 'cloudscraper', '__init__.py')) as fp:
-    VERSION = re.compile(r'.*__version__ = "(.*?)"', re.S).match(fp.read()).group(1)
-
-with open('README.md') as fp:
+with open('README.md', 'r', encoding='utf-8') as fp:
     readme = fp.read()
 
 setup(
     name = 'cloudscraper',
-    packages = ['cloudscraper'],
-    long_description=readme,
-    long_description_content_type='text/markdown',
-    description = 'A Python module to bypass Cloudflare\'s anti-bot page. See https://github.com/venomous/cloudscraper for more information.',
     author = 'VeNoMouS',
     author_email = 'venom@gen-x.co.nz',
+    version=VERSION,
+    packages = find_packages(),
+    description = 'A Python module to bypass Cloudflare\'s anti-bot page.',
+    long_description=readme,
+    long_description_content_type='text/markdown',
     url = 'https://github.com/venomous/cloudscraper',
     keywords = [
         'cloudflare',
@@ -37,7 +36,7 @@ setup(
         'requests >= 2.9.2',
         'js2py >= 0.60',
         'requests_toolbelt >= 0.9.1',
-        'brotlipy >= 0.7.0'
+        'brotli >= 1.0.7'
     ],
     classifiers=[
         'Development Status :: 4 - Beta',
