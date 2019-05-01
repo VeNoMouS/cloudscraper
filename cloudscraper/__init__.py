@@ -1,7 +1,7 @@
-import re
-import ssl
-import brotli
 import logging
+import re
+import sys
+import ssl
 
 from copy import deepcopy
 from time import sleep
@@ -16,6 +16,11 @@ from .user_agent import User_Agent
 
 try:
     from requests_toolbelt.utils import dump
+except ImportError:
+    pass
+
+try:
+    import brotli
 except ImportError:
     pass
 
@@ -61,7 +66,7 @@ class CloudScraper(Session):
         self.debug = kwargs.pop('debug', False)
         self.delay = kwargs.pop('delay', None)
         self.interpreter = kwargs.pop('interpreter', 'js2py')
-        self.allow_brotli = kwargs.pop('allow_brotli', True)
+        self.allow_brotli = kwargs.pop('allow_brotli', True if 'brotli' in sys.modules.keys() else False)
         self.cipherSuite = None
 
         super(CloudScraper, self).__init__(*args, **kwargs)
