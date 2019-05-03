@@ -52,10 +52,10 @@ class JavaScriptInterpreter(ABC):
         js += '\na.value;'
 
         jsEnv = '''
-            function italics (str) {{ return "<i>" + this + "</i>"; }};
+            String.prototype.italics=function(str) {return "<i>" + this + "</i>";};
             var document = {{
                 createElement: function () {{
-                    return {{ firstChild: {{ href: "http://{domain}/" }} }}
+                    return {{ firstChild: {{ href: "https://{domain}/" }} }}
                 }},
                 getElementById: function () {{
                     return {{"innerHTML": "{innerHTML}"}};
