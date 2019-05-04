@@ -52,7 +52,7 @@ class JavaScriptInterpreter(ABC):
         js += '\na.value;'
 
         jsEnv = '''
-            String.prototype.italics=function(str) {return "<i>" + this + "</i>";};
+            String.prototype.italics=function(str) {{return "<i>" + this + "</i>";}};
             var document = {{
                 createElement: function () {{
                     return {{ firstChild: {{ href: "https://{domain}/" }} }}
