@@ -33,7 +33,7 @@ except ImportError:
 
 ##########################################################################################################################################################
 
-__version__ = '1.1.8'
+__version__ = '1.1.9'
 
 BUG_REPORT = 'Cloudflare may have changed their technique, or there may be a bug in the script.'
 
@@ -41,9 +41,15 @@ BUG_REPORT = 'Cloudflare may have changed their technique, or there may be a bug
 
 
 class CipherSuiteAdapter(HTTPAdapter):
-    def __init__(self, **kwargs):
+
+    def __init__(self, cipherSuite=None, **kwargs):
+        self.cipherSuite = cipherSuite
+
         if hasattr(ssl, 'PROTOCOL_TLS'):
-            self.ssl_context = create_urllib3_context(ssl_version=getattr(ssl, 'PROTOCOL_TLSv1_3', ssl.PROTOCOL_TLSv1_2))
+            self.ssl_context = create_urllib3_context(
+                ssl_version=getattr(ssl, 'PROTOCOL_TLSv1_3', ssl.PROTOCOL_TLSv1_2),
+                ciphers=self.cipherSuite
+            )
         else:
             self.ssl_context = create_urllib3_context(ssl_version=ssl.PROTOCOL_TLSv1)
 
@@ -70,6 +76,7 @@ class CloudScraper(Session):
         self.delay = kwargs.pop('delay', None)
         self.interpreter = kwargs.pop('interpreter', 'js2py')
         self.allow_brotli = kwargs.pop('allow_brotli', True if 'brotli' in sys.modules.keys() else False)
+        self.cipherSuite = None
 
         super(CloudScraper, self).__init__(*args, **kwargs)
 
@@ -77,7 +84,7 @@ class CloudScraper(Session):
             # Set a random User-Agent if no custom User-Agent has been set
             self.headers = User_Agent(allow_brotli=self.allow_brotli).headers
 
-        self.mount('https://', CipherSuiteAdapter())
+        self.mount('https://', CipherSuiteAdapter(self.loadCipherSuite()))
 
     ##########################################################################################################################################################
 
@@ -87,6 +94,36 @@ class CloudScraper(Session):
             print(dump.dump_all(req).decode('utf-8'))
         except:  # noqa
             pass
+
+    ##########################################################################################################################################################
+
+    def loadCipherSuite(self):
+        if self.cipherSuite:
+            return self.cipherSuite
+
+        self.cipherSuite = ''
+
+        if hasattr(ssl, 'PROTOCOL_TLS'):
+            ciphers = [
+                'ECDHE-ECDSA-AES128-GCM-SHA256', 'ECDHE-RSA-AES128-GCM-SHA256', 'ECDHE-ECDSA-AES256-GCM-SHA384',
+                'ECDHE-RSA-AES256-GCM-SHA384', 'ECDHE-ECDSA-CHACHA20-POLY1305-SHA256', 'ECDHE-RSA-CHACHA20-POLY1305-SHA256',
+                'ECDHE-RSA-AES128-CBC-SHA', 'ECDHE-RSA-AES256-CBC-SHA', 'RSA-AES128-GCM-SHA256', 'RSA-AES256-GCM-SHA384',
+                'ECDHE-RSA-AES128-GCM-SHA256', 'RSA-AES256-SHA', '3DES-EDE-CBC'
+            ]
+
+            if hasattr(ssl, 'PROTOCOL_TLSv1_3'):
+                ciphers.insert(0, ['GREASE_3A', 'GREASE_6A', 'AES128-GCM-SHA256', 'AES256-GCM-SHA256', 'AES256-GCM-SHA384', 'CHACHA20-POLY1305-SHA256'])
+
+            ctx = ssl.SSLContext(getattr(ssl, 'PROTOCOL_TLSv1_3', ssl.PROTOCOL_TLSv1_2))
+
+            for cipher in ciphers:
+                try:
+                    ctx.set_ciphers(cipher)
+                    self.cipherSuite = '{}:{}'.format(self.cipherSuite, cipher).rstrip(':')
+                except ssl.SSLError:
+                    pass
+
+        return self.cipherSuite
 
     ##########################################################################################################################################################
 
