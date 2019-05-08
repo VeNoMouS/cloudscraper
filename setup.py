@@ -33,6 +33,7 @@ setup(
     ],
     include_package_data = True,
     install_requires = [
+        'pyopenssl >= 17.0',
         'requests >= 2.9.2',
         'js2py >= 0.60',
         'requests_toolbelt >= 0.9.1',
