@@ -33,7 +33,7 @@ except ImportError:
 
 ##########################################################################################################################################################
 
-__version__ = '1.1.5'
+__version__ = '1.1.6'
 
 BUG_REPORT = 'Cloudflare may have changed their technique, or there may be a bug in the script.'
 
@@ -44,18 +44,24 @@ class CipherSuiteAdapter(HTTPAdapter):
 
     def __init__(self, cipherSuite=None, **kwargs):
         self.cipherSuite = cipherSuite
+
+        if hasattr(ssl, 'PROTOCOL_TLS'):
+            self.ssl_context = create_urllib3_context(ssl_version=getattr(ssl, 'PROTOCOL_TLSv1_3', ssl.PROTOCOL_TLSv1_2), ciphers=self.cipherSuite)
+        else:
+            self.ssl_context = create_urllib3_context(ssl_version=ssl.PROTOCOL_TLSv1)
+
         super(CipherSuiteAdapter, self).__init__(**kwargs)
 
     ##########################################################################################################################################################
 
     def init_poolmanager(self, *args, **kwargs):
-        kwargs['ssl_context'] = create_urllib3_context(ciphers=self.cipherSuite)
+        kwargs['ssl_context'] = self.ssl_context
         return super(CipherSuiteAdapter, self).init_poolmanager(*args, **kwargs)
 
     ##########################################################################################################################################################
 
     def proxy_manager_for(self, *args, **kwargs):
-        kwargs['ssl_context'] = create_urllib3_context(ciphers=self.cipherSuite)
+        kwargs['ssl_context'] = self.ssl_context
         return super(CipherSuiteAdapter, self).proxy_manager_for(*args, **kwargs)
 
 ##########################################################################################################################################################
