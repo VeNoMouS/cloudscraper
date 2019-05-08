@@ -33,7 +33,7 @@ except ImportError:
 
 ##########################################################################################################################################################
 
-__version__ = '1.1.6'
+__version__ = '1.1.7'
 
 BUG_REPORT = 'Cloudflare may have changed their technique, or there may be a bug in the script.'
 
