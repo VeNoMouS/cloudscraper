@@ -35,11 +35,14 @@ Dependencies
 
 * Python 2.7 - 3.x
 * **[Requests](https://github.com/kennethreitz/requests)** >= 2.9.2
+* **[pyOpenSSL](https://pypi.org/project/pyOpenSSL/)** >= 17.0
 * **[Brotli](https://pypi.org/project/Brotli/)** >= 1.0.7
 * **[requests_toolbelt](https://pypi.org/project/requests-toolbelt/)** >= 0.9.1
 
 Have the ability to choose between Javascript Interpreters.
 * **[js2py](https://github.com/PiotrDabkowski/Js2Py)** >=0.60
+* **[ChakraCore](https://github.com/microsoft/ChakraCore)**
+  - Library binaries can also be located [here](https://www.github.com/VeNoMouS/cloudscraper/tree/ChakraCore/).
 * **[Node.js](https://nodejs.org/)**
   - Your computer or server may already have it (check with `node -v`). If not, you can install it with `apt-get install nodejs` on Ubuntu. Debian requires `nodejs-legacy`. Otherwise, please read [Node's installation instructions](https://nodejs.org/en/download/package-manager/).
 
@@ -134,16 +137,18 @@ scraper.delay = 10
 
 ### JavaScript Interpreters 
 
-Cloudscraper currently supports two JavaScript Interpreters
+Cloudscraper currently supports three JavaScript Interpreters
 
 * **[js2py](https://github.com/PiotrDabkowski/Js2Py)**
 * **[Node.js](https://nodejs.org/)**
+* **[ChakraCore](https://github.com/microsoft/ChakraCore)**
 
-The default interpreter is set to `js2py`,  you can set which to use by defining the `interpreter` parameter.
+The default interpreter is set to `js2py`,  you can set which to use by defining the `interpreter` parameter with one of the following values `js2py`, `nodejs` or `chakracore`.
 
 ```python
 scraper = cloudscraper.create_scraper(interpreter='nodejs')
 ```
+
 or
 
 ```python
