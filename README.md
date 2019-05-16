@@ -43,10 +43,12 @@ Have the ability to choose between Javascript Interpreters.
 * **[js2py](https://github.com/PiotrDabkowski/Js2Py)** >=0.60
 * **[ChakraCore](https://github.com/microsoft/ChakraCore)**
   - Library binaries can also be located [here](https://www.github.com/VeNoMouS/cloudscraper/tree/ChakraCore/).
+* **[V8](https://v8.dev)**
+  - We use the python [v8eval](https://github.com/sony/v8eval/) module by Sony, which takes a billion years (~90 minutes) to compile and install V8.
 * **[Node.js](https://nodejs.org/)**
-  - Your computer or server may already have it (check with `node -v`). If not, you can install it with `apt-get install nodejs` on Ubuntu. Debian requires `nodejs-legacy`. Otherwise, please read [Node's installation instructions](https://nodejs.org/en/download/package-manager/).
 
-`python setup.py install` will install the Python dependencies automatically. Node is the only application you need to install yourself.
+
+`python setup.py install` will install the Python dependencies automatically. The javascript interpreters you decide to use are the only things you need to install yourself excluding js2py.
 
 Updates
 =======
@@ -137,13 +139,14 @@ scraper.delay = 10
 
 ### JavaScript Interpreters 
 
-Cloudscraper currently supports three JavaScript Interpreters
+Cloudscraper currently supports the following JavaScript Interpreters
 
 * **[js2py](https://github.com/PiotrDabkowski/Js2Py)**
 * **[Node.js](https://nodejs.org/)**
 * **[ChakraCore](https://github.com/microsoft/ChakraCore)**
+* **[V8](https://github.com/sony/v8eval/)**
 
-The default interpreter is set to `js2py`,  you can set which to use by defining the `interpreter` parameter with one of the following values `js2py`, `nodejs` or `chakracore`.
+The default interpreter is set to `js2py`,  you can set which to use by defining the `interpreter` parameter with one of the following values `js2py`, `nodejs`, `chakracore` or `v8`.
 
 ```python
 scraper = cloudscraper.create_scraper(interpreter='nodejs')
