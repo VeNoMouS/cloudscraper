@@ -1,0 +1,5 @@
+[run]
+source = cloudscraper
+omit =
+    *test*
+    cloudscraper/interperters/jsfuck.py
