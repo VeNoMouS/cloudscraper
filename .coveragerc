@@ -2,4 +2,4 @@
 source = cloudscraper
 omit =
     *test*
-    cloudscraper/interperters/jsfuck.py
+    cloudscraper/interpreters/jsfuck.py
