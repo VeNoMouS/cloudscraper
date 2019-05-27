@@ -30,10 +30,10 @@ class User_Agent():
             logging.error('Sorry "{}" browser User-Agent was not found.'.format(browser))
             raise
 
-        user_agent = random.choice(user_agents.get(browser))
+        user_agent_version = random.SystemRandom().choice(list(user_agents.get(browser)))
 
-        self.headers = user_agent.get('headers')
-        self.headers['User-Agent'] = random.choice(user_agent.get('User-Agent'))
+        self.headers = user_agents.get(browser).get(user_agent_version).get('headers')
+        self.headers['User-Agent'] = random.SystemRandom().choice(user_agents.get(browser).get(user_agent_version).get('User-Agent'))
 
         if not kwargs.get('allow_brotli', False):
             if 'br' in self.headers['Accept-Encoding']:
