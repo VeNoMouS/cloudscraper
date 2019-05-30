@@ -12,6 +12,7 @@ from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.ssl_ import create_urllib3_context
 
 from .interpreters import JavaScriptInterpreter
+from .reCaptcha import reCaptcha
 from .user_agent import User_Agent
 
 try:
@@ -33,7 +34,7 @@ except ImportError:
 
 ##########################################################################################################################################################
 
-__version__ = '1.1.12'
+__version__ = '1.1.13'
 
 BUG_REPORT = 'Cloudflare may have changed their technique, or there may be a bug in the script.'
 
@@ -72,10 +73,12 @@ class CipherSuiteAdapter(HTTPAdapter):
 
 class CloudScraper(Session):
     def __init__(self, *args, **kwargs):
+        self.allow_brotli = kwargs.pop('allow_brotli', True if 'brotli' in sys.modules.keys() else False)
         self.debug = kwargs.pop('debug', False)
         self.delay = kwargs.pop('delay', None)
         self.interpreter = kwargs.pop('interpreter', 'js2py')
-        self.allow_brotli = kwargs.pop('allow_brotli', True if 'brotli' in sys.modules.keys() else False)
+        self.recaptcha = kwargs.pop('recaptcha', {})
+
         self.cipherSuite = None
 
         super(CloudScraper, self).__init__(*args, **kwargs)
@@ -144,10 +147,11 @@ class CloudScraper(Session):
 
         # Check if Cloudflare anti-bot is on
         if self.isChallengeRequest(resp):
+            self.proxies = kwargs.get('proxies')
             if resp.request.method != 'GET':
                 # Work around if the initial request is not a GET,
                 # Supersede with a GET then re-request the original METHOD.
-                self.request('GET', resp.url)
+                self.request('GET', resp.url, proxies=self.proxies)
                 resp = ourSuper.request(method, url, *args, **kwargs)
             else:
                 # Solve Challenge
@@ -160,12 +164,13 @@ class CloudScraper(Session):
     @staticmethod
     def isChallengeRequest(resp):
         if resp.headers.get('Server', '').startswith('cloudflare'):
-            if b'why_captcha' in resp.content or b'/cdn-cgi/l/chk_captcha' in resp.content:
-                raise ValueError('Captcha')
-
             return (
-                resp.status_code in [429, 503]
-                and all(s in resp.content for s in [b'jschl_vc', b'jschl_answer'])
+                resp.status_code in [403, 429, 503]
+                and (
+                    all(s in resp.content for s in [b'jschl_vc', b'jschl_answer'])
+                    or
+                    all(s in resp.content for s in [b'why_captcha', b'/cdn-cgi/l/chk_captcha'])
+                )
             )
 
         return False
@@ -175,44 +180,49 @@ class CloudScraper(Session):
     def sendChallengeResponse(self, resp, **original_kwargs):
         body = resp.text
 
-        # Cloudflare requires a delay before solving the challenge
-        if not self.delay:
-            try:
-                delay = float(re.search(r'submit\(\);\r?\n\s*},\s*([0-9]+)', body).group(1)) / float(1000)
-                if isinstance(delay, (int, float)):
-                    self.delay = delay
-            except:  # noqa
-                pass
-
-        sleep(self.delay)
-
         parsed_url = urlparse(resp.url)
         domain = parsed_url.netloc
-        submit_url = '{}://{}/cdn-cgi/l/chk_jschl'.format(parsed_url.scheme, domain)
 
         cloudflare_kwargs = deepcopy(original_kwargs)
 
-        try:
-            params = OrderedDict()
+        params = OrderedDict()
 
-            s = re.search(r'name="s"\svalue="(?P<s_value>[^"]+)', body)
-            if s:
-                params['s'] = s.group('s_value')
+        s = re.search(r'name="s"\svalue="(?P<s_value>[^"]+)', body)
+        if s:
+            params['s'] = s.group('s_value')
 
-            params.update(
-                [
-                    ('jschl_vc', re.search(r'name="jschl_vc" value="(\w+)"', body).group(1)),
-                    ('pass', re.search(r'name="pass" value="(.+?)"', body).group(1))
-                ]
-            )
+        if b'/cdn-cgi/l/chk_captcha' in resp.content:
+            if not self.recaptcha or not isinstance(self.recaptcha, dict) or not self.recaptcha.get('provider'):
+                sys.tracebacklimit = 0
+                raise RuntimeError("Cloudflare reCaptcha detected, unfortunately you haven't loaded an anti reCaptcha provider correctly via the 'recaptcha' parameter.")
 
-            params = cloudflare_kwargs.setdefault('params', params)
+            submit_url = '{}://{}/cdn-cgi/l/chk_captcha'.format(parsed_url.scheme, domain)
+            self.recaptcha['proxies'] = self.proxies
+            params['g-recaptcha-response'] = reCaptcha.dynamicImport(self.recaptcha.get('provider').lower()).solveCaptcha(resp, self.recaptcha)
+        else:
+            # Cloudflare requires a delay before solving the challenge
+            if not self.delay:
+                try:
+                    delay = float(re.search(r'submit\(\);\r?\n\s*},\s*([0-9]+)', body).group(1)) / float(1000)
+                    if isinstance(delay, (int, float)):
+                        self.delay = delay
+                except:  # noqa
+                    pass
 
-        except Exception as e:
-            raise ValueError('Unable to parse Cloudflare anti-bots page: {} {}'.format(e.message, BUG_REPORT))
+            sleep(self.delay)
+            submit_url = '{}://{}/cdn-cgi/l/chk_jschl'.format(parsed_url.scheme, domain)
+            try:
+                params.update(
+                    [
+                        ('jschl_vc', re.search(r'name="jschl_vc" value="(\w+)"', body).group(1)),
+                        ('pass', re.search(r'name="pass" value="(.+?)"', body).group(1)),
+                        ('jschl_answer', JavaScriptInterpreter.dynamicImport(self.interpreter).solveChallenge(body, domain))
+                    ]
+                )
+            except Exception as e:
+                raise ValueError('Unable to parse Cloudflare anti-bots page: {} {}'.format(e.message, BUG_REPORT))
 
-        # Solve the Javascript challenge
-        params['jschl_answer'] = JavaScriptInterpreter.dynamicImport(self.interpreter).solveChallenge(body, domain)
+        cloudflare_kwargs.setdefault('params', params)
 
         # Requests transforms any request into a GET after a redirect,
         # so the redirect has to be handled manually here to allow for
