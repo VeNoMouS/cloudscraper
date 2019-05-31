@@ -11,8 +11,6 @@ This can be useful if you wish to scrape or crawl a website protected with Cloud
 
 Due to Cloudflare continually changing and hardening their protection page, cloudscraper requires a JavaScript interpreter to solve Javascript challenges. This allows the script to easily impersonate a regular web browser without explicitly deobfuscating and parsing Cloudflare's Javascript.
 
-Note: This only works when regular Cloudflare anti-bots is enabled (the "Checking your browser before accessing..." loading page). If there is a reCAPTCHA challenge, you're out of luck (At this stage... however we will be adding in Anti-CAPTCHA 3rd party support). Thankfully, the Javascript check page is much more common.
-
 For reference, this is the default message Cloudflare uses for these sorts of pages:
 
     Checking your browser before accessing website.com.
@@ -159,6 +157,31 @@ scraper = cloudscraper.create_scraper()
 scraper.interpreter = 'nodejs'
 ```
 --------------------------------------------------------------------------------
+
+### 3rd Party reCaptcha Solvers
+
+Cloudscraper currently supports the following 3rd party reCaptcha solvers, should you requiure them (but you shouldn't, unless you your doing something out of the norm).
+
+* **[anticaptcha](https://www.anti-captcha.com/)**
+
+I am working on adding more, so if you wish to have a service added, please raise a support ticket on github
+
+```python
+scraper = cloudscraper.create_scraper(
+  interpreter='nodejs',
+  recaptcha={
+    'provider': 'anticaptcha',
+    'api_key': 'your_anticaptcha_api_key'
+  }
+)
+```
+
+or
+
+```python
+scraper = cloudscraper.create_scraper(interpreter='nodejs')
+scraper.recaptcha={'provider': 'anticaptcha', 'api_key': 'your_anticaptcha_api_key'}
+```
 
 ### Brotli Support
 
