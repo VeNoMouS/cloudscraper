@@ -13201,19 +13201,6 @@
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3650.1 Iron Safari/537.36"
             ]
         }, 
-        "Chrome/71.0.3542.0": {
-            "headers": {
-                "Connection": "keep-alive", 
-                "Upgrade-Insecure-Requests": "1", 
-                "User-Agent": null, 
-                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8", 
-                "Accept-Language": "en-US,en;q=0.9", 
-                "Accept-Encoding": "gzip, deflate, br"
-            }, 
-            "User-Agent": [
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/71.0.3542.0 Safari/537.36"
-            ]
-        }, 
         "Chrome/71.0.3555.2": {
             "headers": {
                 "Connection": "keep-alive", 

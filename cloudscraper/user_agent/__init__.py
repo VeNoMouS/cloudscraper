@@ -19,17 +19,20 @@ class User_Agent():
     ##########################################################################################################################################################
 
     def loadUserAgent(self, *args, **kwargs):
-        browser = kwargs.pop('browser', 'chrome')
+        #browser = kwargs.pop('browser', 'chrome')
 
         user_agents = json.load(
             open(os.path.join(os.path.dirname(__file__), 'browsers.json'), 'r'),
             object_pairs_hook=OrderedDict
         )
 
-        if not user_agents.get(browser):
-            logging.error('Sorry "{}" browser User-Agent was not found.'.format(browser))
-            raise
+        #if not user_agents.get(browser):
+        #    logging.error('Sorry "{}" browser User-Agent was not found.'.format(browser))
+        #    raise
 
+        #if not browser:
+        browser = random.SystemRandom().choice(list(user_agents))
+            
         user_agent_version = random.SystemRandom().choice(list(user_agents.get(browser)))
 
         self.headers = user_agents.get(browser).get(user_agent_version).get('headers')
