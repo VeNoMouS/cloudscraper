@@ -41,7 +41,7 @@ class reCaptcha(ABC):
 
     def solveCaptcha(self, ret, reCaptchaParams):
         try:
-            site_key = re.search('data-sitekey="(.+?)"', ret.content).group(1)
+            site_key = re.search('data-sitekey="(.+?)"', ret.text).group(1)
         except Exception as e:
             raise ValueError("Unable to parse Cloudflare\'s reCaptcha variable 'data-sitekey': {} {}".format(e.message, BUG_REPORT))
 

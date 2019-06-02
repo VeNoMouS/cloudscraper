@@ -87,7 +87,7 @@ That's it...
 
 Any requests made from this session object to websites protected by Cloudflare anti-bot will be handled automatically. Websites not using Cloudflare will be treated normally. You don't need to configure or call anything further, and you can effectively treat all websites as if they're not protected with anything.
 
-You use cloudscraper exactly the same way you use Requests. `CloudScraper` works identically to a Requests `Session` object, just instead of calling `requests.get()` or `requests.post()`, you call `scraper.get()` or `scraper.post()`. 
+You use cloudscraper exactly the same way you use Requests. `CloudScraper` works identically to a Requests `Session` object, just instead of calling `requests.get()` or `requests.post()`, you call `scraper.get()` or `scraper.post()`.
 
 Consult [Requests' documentation](http://docs.python-requests.org/en/latest/user/quickstart/) for more information.
 
@@ -127,7 +127,7 @@ There is no need to override this delay unless cloudscraper generates an error r
 ```python
 scraper = cloudscraper.create_scraper(delay=10)
 ```
-or 
+or
 
 ```python
 scraper = cloudscraper.create_scraper()
@@ -135,7 +135,7 @@ scraper.delay = 10
 ```
 --------------------------------------------------------------------------------
 
-### JavaScript Interpreters 
+### JavaScript Interpreters
 
 Cloudscraper currently supports the following JavaScript Interpreters
 
@@ -163,8 +163,10 @@ scraper.interpreter = 'nodejs'
 Cloudscraper currently supports the following 3rd party reCaptcha solvers, should you requiure them (but you shouldn't, unless you your doing something out of the norm).
 
 * **[anticaptcha](https://www.anti-captcha.com/)**
+* **[deathbycaptcha](https://www.deathbycaptcha.com/)**
 
 I am working on adding more, so if you wish to have a service added, please raise a support ticket on github
+#### anticaptcha
 
 ```python
 scraper = cloudscraper.create_scraper(
@@ -182,6 +184,33 @@ or
 scraper = cloudscraper.create_scraper(interpreter='nodejs')
 scraper.recaptcha={'provider': 'anticaptcha', 'api_key': 'your_anticaptcha_api_key'}
 ```
+
+#### deathbycaptcha
+```python
+scraper = cloudscraper.create_scraper(
+  interpreter='nodejs',
+  recaptcha={
+    'provider': 'deathbycaptcha',
+    'username': 'your_deathbycaptcha_username',
+    'password': 'your_deathbycaptcha_password',
+  }
+)
+```
+
+or
+
+```python
+scraper = cloudscraper.create_scraper(interpreter='nodejs')
+scraper.recaptcha={
+  'provider': 'deathbycaptcha',
+  'username': 'your_deathbycaptcha_username',
+  'password': 'your_deathbycaptcha_password'
+}
+```
+
+##### * Note: if using a proxy and you wish to solve reCaptcha to the 3rd party via the proxy, pass `proxy: True` in your `recaptcha` dict, it will use the scraper session proxy you set, otherwise it will use your default route.
+
+--------------------------------------------------------------------------------
 
 ### Brotli Support
 
@@ -205,9 +234,9 @@ Please read [Requests' documentation on request arguments](http://docs.python-re
 
 ### User-Agent Handling
 
-The two integration functions return a tuple of `(cookie, user_agent_string)`. 
+The two integration functions return a tuple of `(cookie, user_agent_string)`.
 
-**You must use the same user-agent string for obtaining tokens and for making requests with those tokens, otherwise Cloudflare will flag you as a bot.** 
+**You must use the same user-agent string for obtaining tokens and for making requests with those tokens, otherwise Cloudflare will flag you as a bot.**
 
 That means you have to pass the returned `user_agent_string` to whatever script, tool, or service you are passing the tokens to (e.g. curl, or a specialized scraping tool), and it must use that passed user-agent when it makes HTTP requests.
 
@@ -291,7 +320,7 @@ result = subprocess.check_output(
 )
 ```
 
-Trimmed down version. Prints page contents of any site protected with Cloudflare, via curl. 
+Trimmed down version. Prints page contents of any site protected with Cloudflare, via curl.
 
 **Warning: `shell=True` can be dangerous to use with `subprocess` in real code.**
 
@@ -305,7 +334,7 @@ print(
             cookie_arg=cookie_arg,
             user_agent=user_agent,
             url=url
-        ), 
+        ),
         shell=True
     )
 )
