@@ -27,7 +27,7 @@ class captchaSolver(reCaptcha):
             [
                 (400, "DeathByCaptcha: 400 Bad Request"),
                 (403, "DeathByCaptcha: 403 Forbidden - Invalid credentails or insufficient credits."),
-                (500, "DeathByCaptcha: 500 Internal Server Error."),
+                # (500, "DeathByCaptcha: 500 Internal Server Error."),
                 (503, "DeathByCaptcha: 503 Service Temporarily Unavailable.")
             ]
         )
@@ -51,6 +51,8 @@ class captchaSolver(reCaptcha):
 
                 return response
 
+            self.checkErrorStatus(response)
+
             return None
 
         response = polling.poll(
@@ -62,6 +64,7 @@ class captchaSolver(reCaptcha):
                     'password': self.password
                 }
             ),
+            check_success=_checkRequest,
             step=10,
             timeout=120
         )

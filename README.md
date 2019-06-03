@@ -208,7 +208,7 @@ scraper.recaptcha={
 }
 ```
 
-##### * Note: if using a proxy and you wish to solve reCaptcha to the 3rd party via the proxy, pass `proxy: True` in your `recaptcha` dict, it will use the scraper session proxy you set, otherwise it will use your default route.
+##### * Note: if using a proxy and you wish to solve reCaptcha to the 3rd party via the proxy, pass `'proxy': True` in your `recaptcha` dictionary, it will use the scraper session proxy you set, otherwise it will use your default route.
 
 --------------------------------------------------------------------------------
 
