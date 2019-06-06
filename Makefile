@@ -30,12 +30,12 @@ coverage:
 	coveralls
 
 clean:
-	rm -fr build dist .egg cloudscraper.egg-info
+	rm -fr build dist .egg cloudscraper.egg-info report.xml
 
 build:
 	make clean
 	python3 setup.py sdist bdist_wheel --universal
-	
+
 publish:
 	make build
 	pip3 install 'twine>=1.5.0'

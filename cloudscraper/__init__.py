@@ -2,6 +2,7 @@ import logging
 import re
 import sys
 import ssl
+import requests
 
 from copy import deepcopy
 from time import sleep
@@ -34,7 +35,7 @@ except ImportError:
 
 ##########################################################################################################################################################
 
-__version__ = '1.1.16'
+__version__ = '1.1.17'
 
 BUG_REPORT = 'Cloudflare may have changed their technique, or there may be a bug in the script.'
 
@@ -134,7 +135,7 @@ class CloudScraper(Session):
         ourSuper = super(CloudScraper, self)
         resp = ourSuper.request(method, url, *args, **kwargs)
 
-        if resp.headers.get('Content-Encoding') == 'br':
+        if requests.packages.urllib3.__version__ < '1.25.1' and resp.headers.get('Content-Encoding') == 'br':
             if self.allow_brotli and resp._content:
                 resp._content = brotli.decompress(resp.content)
             else:
