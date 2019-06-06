@@ -30,7 +30,7 @@ coverage:
 	coveralls
 
 clean:
-	rm -fr build dist .egg cloudscraper.egg-info report.xml
+	rm -fr build dist .egg cloudscraper.egg-info report.xml coverage.xml
 
 build:
 	make clean
