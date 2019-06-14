@@ -28,14 +28,12 @@ except ImportError:
 
 try:
     from urlparse import urlparse
-    from urlparse import urlunparse
 except ImportError:
     from urllib.parse import urlparse
-    from urllib.parse import urlunparse
 
 ##########################################################################################################################################################
 
-__version__ = '1.1.17'
+__version__ = '1.1.18'
 
 BUG_REPORT = 'Cloudflare may have changed their technique, or there may be a bug in the script.'
 
@@ -110,9 +108,9 @@ class CloudScraper(Session):
         if hasattr(ssl, 'PROTOCOL_TLS'):
             ciphers = [
                 'ECDHE-ECDSA-AES128-GCM-SHA256', 'ECDHE-RSA-AES128-GCM-SHA256', 'ECDHE-ECDSA-AES256-GCM-SHA384',
-                'ECDHE-RSA-AES256-GCM-SHA384', 'ECDHE-ECDSA-CHACHA20-POLY1305-SHA256', 'ECDHE-RSA-CHACHA20-POLY1305-SHA256',
-                'ECDHE-RSA-AES128-CBC-SHA', 'ECDHE-RSA-AES256-CBC-SHA', 'RSA-AES128-GCM-SHA256', 'RSA-AES256-GCM-SHA384',
-                'ECDHE-RSA-AES128-GCM-SHA256', 'RSA-AES256-SHA', '3DES-EDE-CBC'
+                'ECDHE-ECDSA-CHACHA20-POLY1305-SHA256', 'ECDHE-RSA-CHACHA20-POLY1305-SHA256', 'ECDHE-RSA-AES128-CBC-SHA',
+                'ECDHE-RSA-AES256-CBC-SHA', 'RSA-AES128-GCM-SHA256', 'RSA-AES256-GCM-SHA384', 'ECDHE-RSA-AES128-GCM-SHA256',
+                'RSA-AES256-SHA', '3DES-EDE-CBC'
             ]
 
             if hasattr(ssl, 'PROTOCOL_TLSv1_3'):
@@ -184,8 +182,6 @@ class CloudScraper(Session):
         parsed_url = urlparse(resp.url)
         domain = parsed_url.netloc
 
-        cloudflare_kwargs = deepcopy(original_kwargs)
-
         params = OrderedDict()
 
         s = re.search(r'name="s"\svalue="(?P<s_value>[^"]+)', body)
@@ -223,30 +219,16 @@ class CloudScraper(Session):
             except Exception as e:
                 raise ValueError('Unable to parse Cloudflare anti-bots page: {} {}'.format(e.message, BUG_REPORT))
 
-        cloudflare_kwargs.setdefault('params', params)
-
         # Requests transforms any request into a GET after a redirect,
         # so the redirect has to be handled manually here to allow for
         # performing other types of requests even as the first request.
 
+        cloudflare_kwargs = deepcopy(original_kwargs)
+        cloudflare_kwargs.setdefault('params', params)
         cloudflare_kwargs['allow_redirects'] = False
+        self.request(resp.request.method, submit_url, **cloudflare_kwargs)
 
-        redirect = self.request(resp.request.method, submit_url, **cloudflare_kwargs)
-        redirect_location = urlparse(redirect.headers['Location'])
-        if not redirect_location.netloc:
-            redirect_url = urlunparse(
-                (
-                    parsed_url.scheme,
-                    domain,
-                    redirect_location.path,
-                    redirect_location.params,
-                    redirect_location.query,
-                    redirect_location.fragment
-                )
-            )
-            return self.request(resp.request.method, redirect_url, **original_kwargs)
-
-        return self.request(resp.request.method, redirect.headers['Location'], **original_kwargs)
+        return self.request(resp.request.method, resp.url, **original_kwargs)
 
     ##########################################################################################################################################################
 

@@ -19,7 +19,7 @@ class ChallengeInterpreter(JavaScriptInterpreter):
     def eval(self, jsEnv, js):
         try:
             return v8eval.V8().eval('{}{}'.format(jsEnv, js))
-        except: # noqa
+        except:  # noqa
             RuntimeError('We encountered an error running the V8 Engine.')
 
 
