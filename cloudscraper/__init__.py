@@ -33,7 +33,7 @@ except ImportError:
 
 ##########################################################################################################################################################
 
-__version__ = '1.1.19'
+__version__ = '1.1.20'
 
 BUG_REPORT = 'Cloudflare may have changed their technique, or there may be a bug in the script.'
 
@@ -107,10 +107,9 @@ class CloudScraper(Session):
 
         if hasattr(ssl, 'PROTOCOL_TLS'):
             ciphers = [
-                'ECDHE-ECDSA-AES128-GCM-SHA256', 'ECDHE-RSA-AES128-GCM-SHA256', 'ECDHE-ECDSA-CHACHA20-POLY1305-SHA256',
-                'ECDHE-RSA-CHACHA20-POLY1305-SHA256', 'ECDHE-RSA-AES128-CBC-SHA', 'ECDHE-RSA-AES256-CBC-SHA',
-                'RSA-AES128-GCM-SHA256', 'RSA-AES256-GCM-SHA384', 'ECDHE-RSA-AES128-GCM-SHA256',
-                'RSA-AES256-SHA', '3DES-EDE-CBC'
+                'ECDHE-ECDSA-AES128-GCM-SHA256', 'ECDHE-ECDSA-CHACHA20-POLY1305-SHA256', 'ECDHE-RSA-CHACHA20-POLY1305-SHA256',
+                'ECDHE-RSA-AES128-CBC-SHA', 'ECDHE-RSA-AES256-CBC-SHA', 'RSA-AES128-GCM-SHA256',
+                'RSA-AES256-GCM-SHA384', 'RSA-AES256-SHA', '3DES-EDE-CBC'
             ]
 
             if hasattr(ssl, 'PROTOCOL_TLSv1_3'):
