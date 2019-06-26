@@ -33,7 +33,7 @@ except ImportError:
 
 ##########################################################################################################################################################
 
-__version__ = '1.1.20'
+__version__ = '1.1.21'
 
 BUG_REPORT = 'Cloudflare may have changed their technique, or there may be a bug in the script.'
 
@@ -257,6 +257,7 @@ class CloudScraper(Session):
             delay=kwargs.pop('delay', None),
             interpreter=kwargs.pop('interpreter', 'js2py'),
             allow_brotli=kwargs.pop('allow_brotli', True),
+            recaptcha=kwargs.pop('recaptcha', {})
         )
 
         try:
