@@ -33,7 +33,7 @@ except ImportError:
 
 ##########################################################################################################################################################
 
-__version__ = '1.1.24'
+__version__ = '1.1.25'
 
 BUG_REPORT = 'Cloudflare may have changed their technique, or there may be a bug in the script.'
 
@@ -49,6 +49,11 @@ class CipherSuiteAdapter(HTTPAdapter):
             ssl_version=ssl.PROTOCOL_TLS,
             ciphers=self.cipherSuite
         )
+
+        self.ssl_context.options |= ssl.OP_NO_SSLv2
+        self.ssl_context.options |= ssl.OP_NO_SSLv3
+        self.ssl_context.options |= ssl.OP_NO_TLSv1
+        self.ssl_context.options |= ssl.OP_NO_TLSv1_1
 
         super(CipherSuiteAdapter, self).__init__(**kwargs)
 
@@ -115,7 +120,6 @@ class CloudScraper(Session):
                 'ECDHE-ECDSA-AES256-SHA',
                 'ECDHE-ECDSA-AES256-SHA384',
                 # Slip in some additional intermediate compatibility ciphers, This should help out users for non Cloudflare based sites.
-                'ECDHE-RSA-AES128-SHA256',
                 'ECDHE-RSA-AES256-SHA384',
                 'ECDHE-RSA-AES256-GCM-SHA384',
                 'DHE-RSA-AES128-GCM-SHA256',
