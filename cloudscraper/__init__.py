@@ -33,7 +33,7 @@ except ImportError:
 
 ##########################################################################################################################################################
 
-__version__ = '1.1.25'
+__version__ = '1.1.26'
 
 BUG_REPORT = 'Cloudflare may have changed their technique, or there may be a bug in the script.'
 
@@ -178,7 +178,7 @@ class CloudScraper(Session):
                 and (
                     all(s in resp.content for s in [b'jschl_vc', b'jschl_answer'])
                     or
-                    all(s in resp.content for s in [b'why_captcha', b'/cdn-cgi/l/chk_captcha'])
+                    all(s in resp.content for s in [b'data-sitekey', b'/cdn-cgi/l/chk_captcha'])
                 )
             )
 
