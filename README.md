@@ -166,6 +166,7 @@ Cloudscraper currently supports the following 3rd party reCaptcha solvers, shoul
 * **[anticaptcha](https://www.anti-captcha.com/)**
 * **[deathbycaptcha](https://www.deathbycaptcha.com/)**
 * **[2captcha](https://www.2captcha.com/)**
+* **__return_response__**
 
 I am working on adding more, so if you wish to have a service added, please raise a support ticket on github
 #### anticaptcha
@@ -228,6 +229,25 @@ or
 scraper = cloudscraper.create_scraper(interpreter='nodejs')
 scraper.recaptcha={'provider': '2captcha', 'api_key': 'your_2captcha_api_key'}
 ```
+
+#### return_response
+
+Use this if you want the requests response payload without solving the reCaptcha.
+
+```python
+scraper = cloudscraper.create_scraper(
+  interpreter='nodejs',
+  recaptcha={'provider': 'return_response'}
+)
+```
+
+or
+
+```python
+scraper = cloudscraper.create_scraper(interpreter='nodejs')
+scraper.recaptcha={'provider': 'return_response'}
+```
+
 
 ##### * Note: if using a proxy and you wish to solve reCaptcha to the 3rd party via the proxy, pass `'proxy': True` in your `recaptcha` dictionary, it will use the scraper session proxy you set, otherwise it will use your default route.
 

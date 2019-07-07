@@ -33,7 +33,7 @@ except ImportError:
 
 ##########################################################################################################################################################
 
-__version__ = '1.1.28'
+__version__ = '1.1.29'
 
 BUG_REPORT = 'Cloudflare may have changed their technique, or there may be a bug in the script.'
 
@@ -202,6 +202,9 @@ class CloudScraper(Session):
             if not self.recaptcha or not isinstance(self.recaptcha, dict) or not self.recaptcha.get('provider'):
                 sys.tracebacklimit = 0
                 raise RuntimeError("Cloudflare reCaptcha detected, unfortunately you haven't loaded an anti reCaptcha provider correctly via the 'recaptcha' parameter.")
+
+            if self.recaptcha.get('provider') == 'return_response':
+                return resp
 
             submit_url = '{}://{}/cdn-cgi/l/chk_captcha'.format(parsed_url.scheme, domain)
             self.recaptcha['proxies'] = self.proxies
