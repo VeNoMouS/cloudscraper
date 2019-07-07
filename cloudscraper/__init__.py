@@ -33,7 +33,7 @@ except ImportError:
 
 ##########################################################################################################################################################
 
-__version__ = '1.1.27'
+__version__ = '1.1.28'
 
 BUG_REPORT = 'Cloudflare may have changed their technique, or there may be a bug in the script.'
 
@@ -46,7 +46,7 @@ class CipherSuiteAdapter(HTTPAdapter):
         self.cipherSuite = cipherSuite
 
         self.ssl_context = create_urllib3_context(
-            ssl_version=ssl.PROTOCOL_TLS,
+            ssl_version=getattr(ssl, 'PROTOCOL_TLS', ssl.PROTOCOL_TLSv1_2),
             ciphers=self.cipherSuite
         )
 
@@ -126,7 +126,7 @@ class CloudScraper(Session):
                 'DHE-RSA-AES256-GCM-SHA384'
             ]
 
-            ctx = ssl.SSLContext(ssl.PROTOCOL_TLS)
+            ctx = ssl.SSLContext(getattr(ssl, 'PROTOCOL_TLS', ssl.PROTOCOL_TLSv1_2))
 
             for cipher in ciphers:
                 try:
