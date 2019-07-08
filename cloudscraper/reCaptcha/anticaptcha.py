@@ -3,10 +3,10 @@ from __future__ import absolute_import
 import sys
 
 try:
-    from python_anticaptcha import AnticaptchaClient, NoCaptchaTaskProxylessTask, NoCaptchaTask, Proxy
+    from python_anticaptcha import AnticaptchaClient, NoCaptchaTaskProxylessTask
 except ImportError:
     sys.tracebacklimit = 0
-    raise RuntimeError("Please install the python module 'python_anticaptcha' via pip or download it https://github.com/ad-m/python-anticaptcha")
+    raise RuntimeError("Please install the python module 'python_anticaptcha' via pip or download it from https://github.com/ad-m/python-anticaptcha")
 
 from . import reCaptcha
 
@@ -22,20 +22,16 @@ class captchaSolver(reCaptcha):
 
         client = AnticaptchaClient(reCaptchaParams.get('api_key'))
 
-        if reCaptchaParams.get('proxy', False) and reCaptchaParams.get('proxies'):
+        if reCaptchaParams.get('proxy'):
             client.session.proxies = reCaptchaParams.get('proxies')
-            task = NoCaptchaTask(
-                site_url,
-                site_key,
-                proxy=Proxy.parse_url(
-                    reCaptchaParams.get('proxies').get('https')
-                )
-            )
-        else:
-            task = NoCaptchaTaskProxylessTask(site_url, site_key)
 
-        job = client.createTask(task)
-        job.join()
+        task = NoCaptchaTaskProxylessTask(site_url, site_key)
+
+        if not hasattr(client, 'createTaskSmee'):
+            sys.tracebacklimit = 0
+            raise RuntimeError("Please upgrade 'python_anticaptcha' via pip or download it from https://github.com/ad-m/python-anticaptcha")
+
+        job = client.createTaskSmee(task)
         return job.get_solution_response()
 
 
