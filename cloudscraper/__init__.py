@@ -33,7 +33,7 @@ except ImportError:
 
 ##########################################################################################################################################################
 
-__version__ = '1.1.31'
+__version__ = '1.1.32'
 
 BUG_REPORT = 'Cloudflare may have changed their technique, or there may be a bug in the script.'
 
@@ -109,16 +109,16 @@ class CloudScraper(Session):
 
         if hasattr(ssl, 'PROTOCOL_TLS'):
             ciphers = [
-                'TLS13-AES-128-GCM-SHA256',
                 'TLS13-AES-256-GCM-SHA384',
                 'TLS13-CHACHA20-POLY1305-SHA256',
-                'ECDHE-ECDSA-CHACHA20-POLY1305',
-                'ECDHE-ECDSA-AES128-GCM-SHA256',
-                'ECDHE-ECDSA-AES128-SHA',
-                'ECDHE-ECDSA-AES128-SHA256',
                 'ECDHE-ECDSA-AES256-GCM-SHA384',
-                'ECDHE-ECDSA-AES256-SHA',
                 'ECDHE-ECDSA-AES256-SHA384',
+                'ECDHE-ECDSA-AES256-SHA',
+                'ECDHE-ECDSA-CHACHA20-POLY1305',
+                'TLS13-AES-128-GCM-SHA256',
+                'ECDHE-ECDSA-AES128-GCM-SHA256',
+                'ECDHE-ECDSA-AES128-SHA256',
+                'ECDHE-ECDSA-AES128-SHA',
                 # Slip in some additional intermediate compatibility ciphers, This should help out users for non Cloudflare based sites.
                 'ECDHE-RSA-AES256-SHA384',
                 'ECDHE-RSA-AES256-GCM-SHA384',
