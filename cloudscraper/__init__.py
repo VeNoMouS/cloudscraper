@@ -33,7 +33,7 @@ except ImportError:
 
 ##########################################################################################################################################################
 
-__version__ = '1.1.32'
+__version__ = '1.1.33'
 
 BUG_REPORT = 'Cloudflare may have changed their technique, or there may be a bug in the script.'
 
@@ -121,8 +121,7 @@ class CloudScraper(Session):
                 'ECDHE-ECDSA-AES128-SHA',
                 # Slip in some additional intermediate compatibility ciphers, This should help out users for non Cloudflare based sites.
                 'ECDHE-RSA-AES256-SHA384',
-                'ECDHE-RSA-AES256-GCM-SHA384',
-                'DHE-RSA-AES128-GCM-SHA256'
+                'ECDHE-RSA-AES256-GCM-SHA384'
             ]
 
             ctx = ssl.SSLContext(getattr(ssl, 'PROTOCOL_TLS', ssl.PROTOCOL_TLSv1_2))
