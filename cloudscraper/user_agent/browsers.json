@@ -7,7 +7,25 @@
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8", 
             "Accept-Language": "en-US,en;q=0.9", 
             "Accept-Encoding": "gzip, deflate, br"
-        }, 
+        },
+        "cipherSuite": [
+            "TLS13-AES-128-GCM-SHA256",
+            "TLS13-AES-256-GCM-SHA384",
+            "TLS13-CHACHA20-POLY1305-SHA256",
+            "ECDHE-ECDSA-AES128-GCM-SHA256",
+            "ECDHE-RSA-AES128-GCM-SHA256",
+            "ECDHE-ECDSA-AES256-GCM-SHA384",
+            "ECDHE-RSA-AES256-GCM-SHA384",
+            "ECDHE-ECDSA-CHACHA20-POLY1305",
+            "ECDHE-RSA-CHACHA20-POLY1305-OLD",
+            "ECDHE-RSA-AES128-SHA",
+            "ECDHE-RSA-AES256-SHA",
+            "AES128-GCM-SHA256",
+            "AES256-GCM-SHA384",
+            "AES128-SHA",
+            "AES256-SHA",
+            "DES-CBC3-SHA"
+        ],
         "releases": {
             "Chrome/50.0.0.0": {
                 "headers": {}, 
@@ -10927,7 +10945,27 @@
             "Accept-Encoding": "gzip, deflate, br", 
             "Connection": "keep-alive", 
             "Upgrade-Insecure-Requests": "1"
-        }, 
+        },
+        "cipherSuite": [
+            "TLS13-AES-128-GCM-SHA256",
+            "TLS13-CHACHA20-POLY1305-SHA256",
+            "TLS13-AES-256-GCM-SHA384",
+            "ECDHE-ECDSA-AES128-GCM-SHA256",
+            "ECDHE-RSA-AES128-GCM-SHA256",
+            "ECDHE-ECDSA-CHACHA20-POLY1305",
+            "ECDHE-RSA-CHACHA20-POLY1305-OLD",
+            "ECDHE-ECDSA-AES256-GCM-SHA384",
+            "ECDHE-RSA-AES256-GCM-SHA384",
+            "ECDHE-ECDSA-AES256-SHA",
+            "ECDHE-ECDSA-AES128-SHA",
+            "ECDHE-RSA-AES128-SHA",
+            "ECDHE-RSA-AES256-SHA",
+            "DHE-RSA-AES128-SHA",
+            "DHE-RSA-AES256-SHA",
+            "AES128-SHA",
+            "AES256-SHA",
+            "DES-CBC3-SHA"
+        ],
         "releases": {
             "Firefox/50.0": {
                 "headers": {}, 

@@ -33,7 +33,7 @@ except ImportError:
 
 ##########################################################################################################################################################
 
-__version__ = '1.1.35'
+__version__ = '1.1.36'
 
 BUG_REPORT = 'Cloudflare may have changed their technique, or there may be a bug in the script.'
 
@@ -79,14 +79,14 @@ class CloudScraper(Session):
         self.delay = kwargs.pop('delay', None)
         self.interpreter = kwargs.pop('interpreter', 'js2py')
         self.recaptcha = kwargs.pop('recaptcha', {})
-
+        self.user_agent = User_Agent(allow_brotli=self.allow_brotli)
         self.cipherSuite = None
 
         super(CloudScraper, self).__init__(*args, **kwargs)
 
         if 'requests' in self.headers['User-Agent']:
             # Set a random User-Agent if no custom User-Agent has been set
-            self.headers = User_Agent(allow_brotli=self.allow_brotli).headers
+            self.headers = self.user_agent.headers
 
         self.mount('https://', CipherSuiteAdapter(self.loadCipherSuite()))
 
@@ -107,37 +107,8 @@ class CloudScraper(Session):
 
         self.cipherSuite = ''
 
-        if hasattr(ssl, 'PROTOCOL_TLS'):
-            ciphers = [
-                'TLS13-AES-256-GCM-SHA384',
-                'TLS13-CHACHA20-POLY1305-SHA256',
-                'ECDHE-ECDSA-AES256-GCM-SHA384',
-                'ECDHE-ECDSA-AES256-SHA384',
-                'ECDHE-ECDSA-AES256-SHA',
-                'ECDHE-ECDSA-CHACHA20-POLY1305',
-                'TLS13-AES-128-GCM-SHA256',
-                'ECDHE-ECDSA-AES128-GCM-SHA256',
-                'ECDHE-ECDSA-AES128-SHA256',
-                'ECDHE-ECDSA-AES128-SHA',
-                # Slip in some additional intermediate compatibility ciphers, This should help out users for non Cloudflare based sites.
-                'ECDHE-RSA-AES256-GCM-SHA384',
-                'ECDHE-RSA-CHACHA20-POLY1305-OLD',
-                'ECDHE-RSA-AES128-GCM-SHA256',
-                'ECDHE-RSA-AES128-SHA',
-                'ECDHE-RSA-AES256-SHA',
-                'AES128-GCM-SHA256',
-                'AES256-GCM-SHA384',
-                'AES128-SHA',
-                'DES-CBC3-SHA'
-            ]
-
-            # Bad Ciphers that trigger reCaptcha
-            # 'ECDHE-RSA-AES256-SHA38', # if ECDHE-RSA-AES256-SHA384 and ECDHE-RSA-AES256-GCM-SHA384 both populated at once
-            # 'DHE-RSA-AES128-GCM-SHA256',
-            # 'DHE-RSA-AES256-GCM-SHA384',
-            # 'ECDHE-RSA-AES128-SHA256',
-            # 'ECDHE-RSA-AES128-GCM-SHA256',
-            # 'AES256-SHA',
+        if hasattr(ssl, 'PROTOCOL_TLS') or hasattr(ssl, 'PROTOCOL_TLSv1_2'):
+            ciphers = self.user_agent.cipherSuite
 
             ctx = ssl.SSLContext(getattr(ssl, 'PROTOCOL_TLS', ssl.PROTOCOL_TLSv1_2))
 
@@ -147,6 +118,8 @@ class CloudScraper(Session):
                     self.cipherSuite = '{}:{}'.format(self.cipherSuite, cipher).rstrip(':').lstrip(':')
                 except ssl.SSLError:
                     pass
+        else:
+            raise RuntimeError("Your SSL compiled in python does not meet the minimum cipher suite requirements")
 
         return self.cipherSuite
 

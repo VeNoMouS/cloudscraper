@@ -14,6 +14,7 @@ class User_Agent():
 
     def __init__(self, *args, **kwargs):
         self.headers = None
+        self.cipherSuite = []
         self.loadUserAgent(*args, **kwargs)
 
     ##########################################################################################################################################################
@@ -41,6 +42,7 @@ class User_Agent():
             self.headers = user_agents.get(browser).get('default_headers')
 
         self.headers['User-Agent'] = random.SystemRandom().choice(user_agents.get(browser).get('releases').get(user_agent_version).get('User-Agent'))
+        self.cipherSuite = user_agents.get(browser).get('cipherSuite')
 
         if not kwargs.get('allow_brotli', False):
             if 'br' in self.headers['Accept-Encoding']:
