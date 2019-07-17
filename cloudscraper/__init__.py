@@ -33,7 +33,7 @@ except ImportError:
 
 ##########################################################################################################################################################
 
-__version__ = '1.1.34'
+__version__ = '1.1.35'
 
 BUG_REPORT = 'Cloudflare may have changed their technique, or there may be a bug in the script.'
 
@@ -128,9 +128,16 @@ class CloudScraper(Session):
                 'AES128-GCM-SHA256',
                 'AES256-GCM-SHA384',
                 'AES128-SHA',
-                'AES256-SHA',
                 'DES-CBC3-SHA'
             ]
+
+            # Bad Ciphers that trigger reCaptcha
+            # 'ECDHE-RSA-AES256-SHA38', # if ECDHE-RSA-AES256-SHA384 and ECDHE-RSA-AES256-GCM-SHA384 both populated at once
+            # 'DHE-RSA-AES128-GCM-SHA256',
+            # 'DHE-RSA-AES256-GCM-SHA384',
+            # 'ECDHE-RSA-AES128-SHA256',
+            # 'ECDHE-RSA-AES128-GCM-SHA256',
+            # 'AES256-SHA',
 
             ctx = ssl.SSLContext(getattr(ssl, 'PROTOCOL_TLS', ssl.PROTOCOL_TLSv1_2))
 
