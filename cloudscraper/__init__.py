@@ -1,5 +1,6 @@
 import logging
 import re
+import OpenSSL
 import sys
 import ssl
 import requests
@@ -33,7 +34,7 @@ except ImportError:
 
 ##########################################################################################################################################################
 
-__version__ = '1.1.36'
+__version__ = '1.1.37'
 
 BUG_REPORT = 'Cloudflare may have changed their technique, or there may be a bug in the script.'
 
@@ -105,29 +106,30 @@ class CloudScraper(Session):
         if self.cipherSuite:
             return self.cipherSuite
 
-        self.cipherSuite = ''
-
         if hasattr(ssl, 'PROTOCOL_TLS') or hasattr(ssl, 'PROTOCOL_TLSv1_2'):
-            ciphers = self.user_agent.cipherSuite
-
-            ctx = ssl.SSLContext(getattr(ssl, 'PROTOCOL_TLS', ssl.PROTOCOL_TLSv1_2))
-
-            for cipher in ciphers:
+            for cipher in self.user_agent.cipherSuite[:]:
                 try:
-                    ctx.set_ciphers(cipher)
-                    self.cipherSuite = '{}:{}'.format(self.cipherSuite, cipher).rstrip(':').lstrip(':')
-                except ssl.SSLError:
+                    create_urllib3_context(
+                        getattr(ssl, 'PROTOCOL_TLS', ssl.PROTOCOL_TLSv1_2),
+                        ciphers=cipher
+                    )
+                except (OpenSSL.SSL.Error, ssl.SSLError):
+                    self.user_agent.cipherSuite.remove(cipher)
                     pass
-        else:
-            raise RuntimeError("Your SSL compiled in python does not meet the minimum cipher suite requirements")
 
-        return self.cipherSuite
+            if self.user_agent.cipherSuite:
+                self.cipherSuite = ':'.join(self.user_agent.cipherSuite)
+                return self.cipherSuite
+
+        raise RuntimeError("Your SSL compiled in python does not meet the minimum cipher suite requirements.")
 
     ##########################################################################################################################################################
 
     def request(self, method, url, *args, **kwargs):
-        ourSuper = super(CloudScraper, self)
-        resp = ourSuper.request(method, url, *args, **kwargs)
+        if kwargs.get('proxies') and kwargs.get('proxies') != self.proxies:
+            self.proxies = kwargs.get('proxies')
+
+        resp = super(CloudScraper, self).request(method, url, *args, **kwargs)
 
         if requests.packages.urllib3.__version__ < '1.25.1' and resp.headers.get('Content-Encoding') == 'br':
             if self.allow_brotli and resp._content:
@@ -142,12 +144,11 @@ class CloudScraper(Session):
 
         # Check if Cloudflare anti-bot is on
         if self.isChallengeRequest(resp):
-            self.proxies = kwargs.get('proxies')
             if resp.request.method != 'GET':
                 # Work around if the initial request is not a GET,
                 # Supersede with a GET then re-request the original METHOD.
                 self.request('GET', resp.url, proxies=self.proxies)
-                resp = ourSuper.request(method, url, *args, **kwargs)
+                resp = super(CloudScraper, self).request(method, url, *args, **kwargs)
             else:
                 # Solve Challenge
                 resp = self.sendChallengeResponse(resp, **kwargs)

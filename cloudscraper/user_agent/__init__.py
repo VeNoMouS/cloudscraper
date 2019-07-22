@@ -34,6 +34,8 @@ class User_Agent():
         if not browser:
             browser = random.SystemRandom().choice(list(user_agents))
 
+        self.cipherSuite = user_agents.get(browser).get('cipherSuite', [])
+
         user_agent_version = random.SystemRandom().choice(list(user_agents.get(browser).get('releases')))
 
         if user_agents.get(browser).get('releases').get(user_agent_version).get('headers'):
@@ -42,7 +44,6 @@ class User_Agent():
             self.headers = user_agents.get(browser).get('default_headers')
 
         self.headers['User-Agent'] = random.SystemRandom().choice(user_agents.get(browser).get('releases').get(user_agent_version).get('User-Agent'))
-        self.cipherSuite = user_agents.get(browser).get('cipherSuite')
 
         if not kwargs.get('allow_brotli', False):
             if 'br' in self.headers['Accept-Encoding']:
