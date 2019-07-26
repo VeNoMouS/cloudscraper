@@ -34,7 +34,7 @@ except ImportError:
 
 ##########################################################################################################################################################
 
-__version__ = '1.1.37'
+__version__ = '1.1.38'
 
 BUG_REPORT = 'Cloudflare may have changed their technique, or there may be a bug in the script.'
 
@@ -80,7 +80,7 @@ class CloudScraper(Session):
         self.delay = kwargs.pop('delay', None)
         self.interpreter = kwargs.pop('interpreter', 'js2py')
         self.recaptcha = kwargs.pop('recaptcha', {})
-        self.user_agent = User_Agent(allow_brotli=self.allow_brotli)
+        self.user_agent = User_Agent(allow_brotli=self.allow_brotli, browser=kwargs.pop('browser', None))
         self.cipherSuite = None
 
         super(CloudScraper, self).__init__(*args, **kwargs)
@@ -147,7 +147,7 @@ class CloudScraper(Session):
             if resp.request.method != 'GET':
                 # Work around if the initial request is not a GET,
                 # Supersede with a GET then re-request the original METHOD.
-                self.request('GET', resp.url, proxies=self.proxies)
+                self.request('GET', resp.url, *args, **kwargs)
                 resp = super(CloudScraper, self).request(method, url, *args, **kwargs)
             else:
                 # Solve Challenge
