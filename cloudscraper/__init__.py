@@ -34,7 +34,7 @@ except ImportError:
 
 ##########################################################################################################################################################
 
-__version__ = '1.1.38'
+__version__ = '1.1.39'
 
 BUG_REPORT = 'Cloudflare may have changed their technique, or there may be a bug in the script.'
 
@@ -186,13 +186,22 @@ class CloudScraper(Session):
             params['s'] = s.group('s_value')
 
         if b'/cdn-cgi/l/chk_captcha' in resp.content:
+
+            # double down on the request as some websites are only checking if cfuid is populated before issuing reCaptcha.
+            resp = super(CloudScraper, self).request(resp.request.method, resp.url, **original_kwargs)
+            if not self.isChallengeRequest(resp):
+                return resp
+
+            # if no reCaptcha provider raise a runtime error.
             if not self.recaptcha or not isinstance(self.recaptcha, dict) or not self.recaptcha.get('provider'):
                 sys.tracebacklimit = 0
                 raise RuntimeError("Cloudflare reCaptcha detected, unfortunately you haven't loaded an anti reCaptcha provider correctly via the 'recaptcha' parameter.")
 
+            # return the response without doing anything with the reCaptcha.
             if self.recaptcha.get('provider') == 'return_response':
                 return resp
 
+            #  Try to solve the reCaptcha via 3rd party.
             submit_url = '{}://{}/cdn-cgi/l/chk_captcha'.format(parsed_url.scheme, domain)
             self.recaptcha['proxies'] = self.proxies
             params['g-recaptcha-response'] = reCaptcha.dynamicImport(self.recaptcha.get('provider').lower()).solveCaptcha(resp, self.recaptcha)
