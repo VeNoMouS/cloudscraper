@@ -11,7 +11,6 @@ from collections import OrderedDict
 
 from requests.sessions import Session
 from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.util.ssl_ import create_urllib3_context
 
 from .interpreters import JavaScriptInterpreter
 from .reCaptcha import reCaptcha
@@ -34,7 +33,7 @@ except ImportError:
 
 ##########################################################################################################################################################
 
-__version__ = '1.1.39'
+__version__ = '1.1.40'
 
 BUG_REPORT = 'Cloudflare may have changed their technique, or there may be a bug in the script.'
 
@@ -44,17 +43,11 @@ BUG_REPORT = 'Cloudflare may have changed their technique, or there may be a bug
 class CipherSuiteAdapter(HTTPAdapter):
 
     def __init__(self, cipherSuite=None, **kwargs):
-        self.cipherSuite = cipherSuite
 
-        self.ssl_context = create_urllib3_context(
-            ssl_version=getattr(ssl, 'PROTOCOL_TLS', ssl.PROTOCOL_TLSv1_2),
-            ciphers=self.cipherSuite
-        )
+        self.ssl_context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
+        self.ssl_context.set_ciphers(cipherSuite)
 
-        self.ssl_context.options |= ssl.OP_NO_SSLv2
-        self.ssl_context.options |= ssl.OP_NO_SSLv3
-        self.ssl_context.options |= ssl.OP_NO_TLSv1
-        self.ssl_context.options |= ssl.OP_NO_TLSv1_1
+        self.ssl_context.options |= (ssl.OP_NO_SSLv2 | ssl.OP_NO_SSLv3 | ssl.OP_NO_TLSv1 | ssl.OP_NO_TLSv1_1)
 
         super(CipherSuiteAdapter, self).__init__(**kwargs)
 
@@ -80,8 +73,8 @@ class CloudScraper(Session):
         self.delay = kwargs.pop('delay', None)
         self.interpreter = kwargs.pop('interpreter', 'js2py')
         self.recaptcha = kwargs.pop('recaptcha', {})
-        self.user_agent = User_Agent(allow_brotli=self.allow_brotli, browser=kwargs.pop('browser', None))
         self.cipherSuite = None
+        self.user_agent = User_Agent(allow_brotli=self.allow_brotli, browser=kwargs.pop('browser', None))
 
         super(CloudScraper, self).__init__(*args, **kwargs)
 
@@ -106,13 +99,11 @@ class CloudScraper(Session):
         if self.cipherSuite:
             return self.cipherSuite
 
-        if hasattr(ssl, 'PROTOCOL_TLS') or hasattr(ssl, 'PROTOCOL_TLSv1_2'):
+        if hasattr(ssl, 'Purpose') and hasattr(ssl.Purpose, 'SERVER_AUTH'):
             for cipher in self.user_agent.cipherSuite[:]:
                 try:
-                    create_urllib3_context(
-                        getattr(ssl, 'PROTOCOL_TLS', ssl.PROTOCOL_TLSv1_2),
-                        ciphers=cipher
-                    )
+                    context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
+                    context.set_ciphers(cipher)
                 except (OpenSSL.SSL.Error, ssl.SSLError):
                     self.user_agent.cipherSuite.remove(cipher)
                     pass
@@ -121,7 +112,7 @@ class CloudScraper(Session):
                 self.cipherSuite = ':'.join(self.user_agent.cipherSuite)
                 return self.cipherSuite
 
-        raise RuntimeError("Your SSL compiled in python does not meet the minimum cipher suite requirements.")
+        raise RuntimeError("The SSL compiled into python does not meet the minimum cipher suite requirements.")
 
     ##########################################################################################################################################################
 
@@ -262,13 +253,9 @@ class CloudScraper(Session):
     # Functions for integrating cloudscraper with other applications and scripts
     @classmethod
     def get_tokens(cls, url, **kwargs):
-        scraper = cls.create_scraper(
-            debug=kwargs.pop('debug', False),
-            delay=kwargs.pop('delay', None),
-            interpreter=kwargs.pop('interpreter', 'js2py'),
-            allow_brotli=kwargs.pop('allow_brotli', True),
-            recaptcha=kwargs.pop('recaptcha', {})
-        )
+        scraper = cls.create_scraper(**kwargs)
+
+        [kwargs.pop(field, None) for field in ['allow_brotli', 'browser', 'debug', 'delay', 'interpreter', 'recaptcha']]
 
         try:
             resp = scraper.get(url, **kwargs)
