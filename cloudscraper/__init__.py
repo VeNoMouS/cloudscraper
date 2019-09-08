@@ -33,7 +33,7 @@ except ImportError:
 
 ##########################################################################################################################################################
 
-__version__ = '1.1.41'
+__version__ = '1.1.42'
 
 BUG_REPORT = 'Cloudflare may have changed their technique, or there may be a bug in the script.'
 
@@ -253,9 +253,11 @@ class CloudScraper(Session):
     # Functions for integrating cloudscraper with other applications and scripts
     @classmethod
     def get_tokens(cls, url, **kwargs):
-        scraper = cls.create_scraper(**kwargs)
-
-        [kwargs.pop(field, None) for field in ['allow_brotli', 'browser', 'debug', 'delay', 'interpreter', 'recaptcha']]
+        scraper = cls.create_scraper(
+            **{
+                field: kwargs.pop(field, None) for field in ['allow_brotli', 'browser', 'debug', 'delay', 'interpreter', 'recaptcha'] if hasattr(kwargs, field)
+            }
+        )
 
         try:
             resp = scraper.get(url, **kwargs)
