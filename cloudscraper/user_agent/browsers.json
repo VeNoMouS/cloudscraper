@@ -20,8 +20,7 @@
             "ECDHE-RSA-AES128-SHA",
             "ECDHE-RSA-AES256-SHA",
             "AES256-GCM-SHA384",
-            "AES128-SHA",
-            "AES256-SHA"
+            "AES128-SHA"
         ],
         "releases": {
             "Chrome/50.0.0.0": {
@@ -10957,8 +10956,7 @@
             "ECDHE-RSA-AES128-SHA",
             "ECDHE-RSA-AES256-SHA",
             "DHE-RSA-AES128-SHA",
-            "AES128-SHA",
-            "AES256-SHA"
+            "AES128-SHA"
         ],
         "releases": {
             "Firefox/50.0": {
