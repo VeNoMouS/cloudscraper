@@ -255,7 +255,7 @@ class CloudScraper(Session):
     def get_tokens(cls, url, **kwargs):
         scraper = cls.create_scraper(
             **{
-                field: kwargs.pop(field, None) for field in ['allow_brotli', 'browser', 'debug', 'delay', 'interpreter', 'recaptcha'] if hasattr(kwargs, field)
+                field: kwargs.pop(field, None) for field in ['allow_brotli', 'browser', 'debug', 'delay', 'interpreter', 'recaptcha'] if field in kwargs
             }
         )
 
