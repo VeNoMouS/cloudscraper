@@ -10954,7 +10954,6 @@
             "ECDHE-ECDSA-AES128-SHA",
             "ECDHE-RSA-AES128-SHA",
             "ECDHE-RSA-AES256-SHA",
-            "DHE-RSA-AES128-SHA",
             "AES128-SHA"
         ],
         "releases": {
