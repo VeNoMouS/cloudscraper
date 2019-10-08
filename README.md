@@ -1,5 +1,5 @@
-cloudscraper
-=================
+# cloudscraper
+
 [![PyPI version](https://badge.fury.io/py/cloudscraper.svg)](https://badge.fury.io/py/cloudscraper)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![image](https://img.shields.io/pypi/pyversions/cloudscraper.svg)](https://pypi.org/project/cloudscraper/)
@@ -10,69 +10,77 @@ A simple Python module to bypass Cloudflare's anti-bot page (also known as "I'm 
 
 This can be useful if you wish to scrape or crawl a website protected with Cloudflare. Cloudflare's anti-bot page currently just checks if the client supports Javascript, though they may add additional techniques in the future.
 
-Due to Cloudflare continually changing and hardening their protection page, cloudscraper requires a JavaScript interpreter to solve Javascript challenges. This allows the script to easily impersonate a regular web browser without explicitly deobfuscating and parsing Cloudflare's Javascript.
+Due to Cloudflare continually changing and hardening their protection page, cloudscraper requires a JavaScript Engine/interpreter to solve Javascript challenges. This allows the script to easily impersonate a regular web browser without explicitly deobfuscating and parsing Cloudflare's Javascript.
 
 For reference, this is the default message Cloudflare uses for these sorts of pages:
 
-    Checking your browser before accessing website.com.
+```
+Checking your browser before accessing website.com.
 
-    This process is automatic. Your browser will redirect to your requested content shortly.
+This process is automatic. Your browser will redirect to your requested content shortly.
 
-    Please allow up to 5 seconds...
+Please allow up to 5 seconds...
+```
 
 Any script using cloudscraper will sleep for ~5 seconds for the first visit to any site with Cloudflare anti-bots enabled, though no delay will occur after the first request.
 
-Installation
-============
+# Donations
+
+If you feel like showing your love and/or appreciation for this project, then how about shouting me a coffee or beer :)
+
+<a href="https://buymeacoff.ee/venomous" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a>
+
+# Installation
 
 Simply run `pip install cloudscraper`. The PyPI package is at https://pypi.python.org/pypi/cloudscraper/
 
 Alternatively, clone this repository and run `python setup.py install`.
 
-Dependencies
-============
+# Dependencies
 
-* Python 2.7 - 3.x
-* **[Requests](https://github.com/kennethreitz/requests)** >= 2.9.2
-* **[pyOpenSSL](https://pypi.org/project/pyOpenSSL/)** >= 17.0
-* **[Brotli](https://pypi.org/project/Brotli/)** >= 1.0.7
-* **[requests_toolbelt](https://pypi.org/project/requests-toolbelt/)** >= 0.9.1
+- Python 2.7 - 3.x
+- **[Requests](https://github.com/kennethreitz/requests)** >= 2.9.2
+- **[pyOpenSSL](https://pypi.org/project/pyOpenSSL/)** >= 17.0
+- **[Brotli](https://pypi.org/project/Brotli/)** >= 1.0.7
+- **[requests_toolbelt](https://pypi.org/project/requests-toolbelt/)** >= 0.9.1
 
-Have the ability to choose between Javascript Interpreters.
-* **[js2py](https://github.com/PiotrDabkowski/Js2Py)** >=0.60
-* **[ChakraCore](https://github.com/microsoft/ChakraCore)**
-  - Library binaries can also be located [here](https://www.github.com/VeNoMouS/cloudscraper/tree/ChakraCore/).
-* **[V8](https://v8.dev)**
-  - We use the python [v8eval](https://github.com/sony/v8eval/) module by Sony, which takes a billion years (~90 minutes) to compile and install V8.
-* **[Node.js](https://nodejs.org/)**
+`python setup.py install` will install the Python dependencies automatically. The javascript interpreters and/or engines you decide to use are the only things you need to install yourself, excluding js2py which is part of the requirements as the default.
 
+# Javascript Interpreters and Engines
 
-`python setup.py install` will install the Python dependencies automatically. The javascript interpreters you decide to use are the only things you need to install yourself excluding js2py.
+We support the following Javascript interpreters/engines.
 
-Updates
-=======
+- **[ChakraCore](https://github.com/microsoft/ChakraCore):** Library binaries can also be located [here](https://www.github.com/VeNoMouS/cloudscraper/tree/ChakraCore/).
+- **[js2py](https://github.com/PiotrDabkowski/Js2Py):** >=0.60 (Default)
+- **[Node.js](https://nodejs.org/)**
+- **[V8](https://github.com/sony/v8eval/):** We use Sony's [v8eval](https://v8.dev)() python module.
+
+# Updates
 
 Cloudflare modifies their anti-bot protection page occasionally, So far it has changed maybe once per year on average.
 
 If you notice that the anti-bot page has changed, or if this module suddenly stops working, please create a GitHub issue so that I can update the code accordingly.
 
-* Many issues are a result of users not updating to the latest release of this project. Before filing an issue, please run the following command:
+- Many issues are a result of users not updating to the latest release of this project. Before filing an issue, please run the following command:
+
 ```
 pip show cloudscraper
 ```
+
 If the value of the version field is not the latest release, please run the following to update your package:
+
 ```
 pip install cloudscraper -U
 ```
+
 If you are still encountering a problem, open an issue and please include:
 
-* The full exception and stack trace.
-* The URL of the Cloudflare-protected page which the script does not work on.
-* A Pastebin or Gist containing the HTML source of the protected page.
-* The version number from `pip show cloudscraper`.
+- The full exception and stack trace.
+- The URL of the Cloudflare-protected page which the script does not work on.
+- A Pastebin or Gist containing the HTML source of the protected page.
+- The version number from `pip show cloudscraper`.
 
-Usage
-=====
+# Usage
 
 The simplest way to use cloudscraper is by calling `create_scraper()`.
 
@@ -88,88 +96,222 @@ That's it...
 
 Any requests made from this session object to websites protected by Cloudflare anti-bot will be handled automatically. Websites not using Cloudflare will be treated normally. You don't need to configure or call anything further, and you can effectively treat all websites as if they're not protected with anything.
 
-You use cloudscraper exactly the same way you use Requests. `CloudScraper` works identically to a Requests `Session` object, just instead of calling `requests.get()` or `requests.post()`, you call `scraper.get()` or `scraper.post()`.
+You use cloudscraper exactly the same way you use Requests. `cloudScraper` works identically to a Requests `Session` object, just instead of calling `requests.get()` or `requests.post()`, you call `scraper.get()` or `scraper.post()`.
 
 Consult [Requests' documentation](http://docs.python-requests.org/en/latest/user/quickstart/) for more information.
 
 ## Options
 
-### Existing session
+### Brotli
 
-If you already have an existing Requests session, you can pass it to `create_scraper()` to continue using that session.
+#### Description
+
+[Brotli](https://en.wikipedia.org/wiki/Brotli) decompression support has been added, and it is enabled by default.
+
+#### Parameters
+
+
+|Parameter|Value|Default|
+|-------------|:-------------:|:-----:|
+|allow_brotli|(boolean)|True|
+
+#### Example
 
 ```python
-session = requests.session()
-scraper = cloudscraper.create_scraper(sess=session)
+scraper = cloudscraper.create_scraper(allow_brotli=False)
 ```
-Unfortunately, not all of Requests' session attributes are easily transferable, so if you run into problems with this, you should replace your initial `sess = requests.session()` call with `sess = cloudscraper.create_scraper()`.
 
---------------------------------------------------------------------------------
+------
+
+### Browser / User-Agent Filtering
+
+#### Description
+
+Control how and which User-Agent is "randomly" selected.
+
+#### Parameters
+
+Can be passed as an argument to `create_scraper()`, `get_tokens()`, `get_cookie_string()`.
+
+|Parameter|Value|Default|
+|-------------|:-------------:|:-----:|
+|browser|(string) `chrome` or `firefox`|None|
+
+Or
+
+|Parameter|Value|Default|
+|-------------|:-------------:|:-----:|
+|browser|(dict)||
+
+##### `browser` *_dict_* Parameters
+|Parameter|Value|Default|
+|-------------|:-------------:|:-----:|
+|browser|(string) `chrome` or `firefox`|None|
+|mobile|(boolean)|True|
+|desktop|(boolean)|True|
+
+#### Example
+
+```python
+scraper = cloudscraper.create_scraper(browser='chrome')
+```
+
+or
+
+```python
+# will give you only mobile chrome User-Agents
+scraper = cloudscraper.create_scraper(browser={'browser': 'chrome', 'desktop': False)
+
+# will give you only desktop firefox User-Agents
+scraper = cloudscraper.create_scraper(browser={'browser': 'firefox', 'mobile': False)
+```
+------
 
 ### Debug
+
+#### Description
+
+Prints out header and content information of the request for debugging.
+
+#### Parameters
+
+Can be set as an attribute via your `cloudscraper` object or passed as an argument to `create_scraper()`, `get_tokens()`, `get_cookie_string()`.
+
+|Parameter|Value|Default|
+|-------------|:-------------:|:-----:|
+|debug|(boolean)|True|
+
+#### Example
 
 ```python
 scraper = cloudscraper.create_scraper(debug=True)
 ```
 
-Or
+------
 
-```python
-scraper = cloudscraper.create_scraper()
-scraper.debug = True
-```
---------------------------------------------------------------------------------
 ### Delays
 
-Normally, when a browser is faced with a Cloudflare IUAM challenge page, Cloudflare requires the browser to wait ~5 seconds before submitting the challenge answer. If a website is under heavy load, sometimes this may fail. One solution is to increase the delay (perhaps to 10 or 15 seconds, depending on the website). If you would like to override this delay, pass the `delay` keyword argument to `create_scraper()` or `CloudScraper()`.
+#### Description
 
-There is no need to override this delay unless cloudscraper generates an error recommending you increase the delay.
+Cloudflare IUAM challenge requires the browser to wait ~5 seconds before submitting the challenge answer, If you would like to override this delay.
+
+#### Parameters
+
+Can be set as an attribute via your `cloudscraper` object or passed as an argument to `create_scraper()`, `get_tokens()`, `get_cookie_string()`.
+
+|Parameter|Value|Default|
+|-------------|:-------------:|:-----:|
+|delay|(float)|extracted from IUAM page|
+
+#### Example
 
 ```python
 scraper = cloudscraper.create_scraper(delay=10)
 ```
-or
+
+------
+
+### Existing session
+
+#### Description:
+
+If you already have an existing Requests session, you can pass it to the function `create_scraper()` to continue using that session.
+
+#### Parameters
+
+|Parameter|Value|Default|
+|-------------|:-------------:|:-----:|
+|sess|(requests.session)|None|
+
+#### Example
 
 ```python
-scraper = cloudscraper.create_scraper()
-scraper.delay = 10
+session = requests.session()
+scraper = cloudscraper.create_scraper(sess=session)
 ```
---------------------------------------------------------------------------------
 
-### JavaScript Interpreters
+#### Note
 
-Cloudscraper currently supports the following JavaScript Interpreters
+Unfortunately, not all of Requests session attributes are easily transferable, so if you run into problems with this,
 
-* **[js2py](https://github.com/PiotrDabkowski/Js2Py)**
-* **[Node.js](https://nodejs.org/)**
-* **[ChakraCore](https://github.com/microsoft/ChakraCore)**
-* **[V8](https://github.com/sony/v8eval/)**
+You should replace your initial session initialization call
 
-The default interpreter is set to `js2py`,  you can set which to use by defining the `interpreter` parameter with one of the following values `js2py`, `nodejs`, `chakracore` or `v8`.
+From: 
+```python
+sess = requests.session()
+```
+
+To:
+
+```python
+sess = cloudscraper.create_scraper()
+```
+
+------
+
+### JavaScript Engines and Interpreters
+
+#### Description
+cloudscraper currently supports the following JavaScript Engines/Interpreters
+
+- **[ChakraCore](https://github.com/microsoft/ChakraCore)**
+- **[js2py](https://github.com/PiotrDabkowski/Js2Py)**
+- **[Node.js](https://nodejs.org/)**
+- **[V8](https://github.com/sony/v8eval/)**
+
+
+#### Parameters
+Can be set as an attribute via your `cloudscraper` object or passed as an argument to `create_scraper()`, `get_tokens()`, `get_cookie_string()`.
+
+|Parameter|Value|Default|
+|-------------|:-------------:|:-----:|
+|interpreter|(string)|`js2py`|
+
+#### Example
 
 ```python
 scraper = cloudscraper.create_scraper(interpreter='nodejs')
 ```
 
-or
-
-```python
-scraper = cloudscraper.create_scraper()
-scraper.interpreter = 'nodejs'
-```
---------------------------------------------------------------------------------
+------
 
 ### 3rd Party reCaptcha Solvers
 
-Cloudscraper currently supports the following 3rd party reCaptcha solvers, should you requiure them (but you shouldn't, unless you your doing something out of the norm).
+#### Description
+`cloudscraper` currently supports the following 3rd party reCaptcha solvers, should you require them.
 
-* **[anticaptcha](https://www.anti-captcha.com/)**
-* **[deathbycaptcha](https://www.deathbycaptcha.com/)**
-* **[2captcha](https://www.2captcha.com/)**
-* **__return_response__**
+- **[anticaptcha](https://www.anti-captcha.com/)**
+- **[deathbycaptcha](https://www.deathbycaptcha.com/)**
+- **[2captcha](https://www.2captcha.com/)**
+- **__return_response__**
 
-I am working on adding more, so if you wish to have a service added, please raise a support ticket on github
+#### Note
+
+I am working on adding more 3rd party solvers, if you wish to have a service added that is not currently supported, please raise a support ticket on github.
+
+To use a proxy to solve reCaptcha via the 3rd party, pass `'proxy': True` in your `recaptcha` dictionary, it will use the scrapers proxy you defined.
+
+##### Required Parameters
+
+Can be set as an attribute via your `cloudscraper` object or passed as an argument to `create_scraper()`, `get_tokens()`, `get_cookie_string()`.
+
+|Parameter|Value|Default|
+|-------------|:-------------:|:-----:|
+|recaptcha|(dict)|None|
+
+------
+
 #### anticaptcha
+
+##### Required `recaptcha` Parameters
+
+|Parameter|Value|Required|Default|
+|-------------|:-------------:|:-----:|:-----:|
+|provider|(string) `anticaptcha`|yes||
+|api_key|(string)|yes||
+|proxy|(boolean)|no|False|
+
+##### Example
 
 ```python
 scraper = cloudscraper.create_scraper(
@@ -181,14 +323,21 @@ scraper = cloudscraper.create_scraper(
 )
 ```
 
-or
-
-```python
-scraper = cloudscraper.create_scraper(interpreter='nodejs')
-scraper.recaptcha={'provider': 'anticaptcha', 'api_key': 'your_anticaptcha_api_key'}
-```
+------
 
 #### deathbycaptcha
+
+##### Required `recaptcha` Parameters
+
+|Parameter|Value|Required|Default|
+|-------------|:-------------:|:-----:|:-----:|
+|provider|(string) `deathbycaptcha`|yes||
+|username|(string)|yes||
+|password|(string)|yes||
+|proxy|(boolean)|no|False|
+
+##### Example
+
 ```python
 scraper = cloudscraper.create_scraper(
   interpreter='nodejs',
@@ -200,18 +349,19 @@ scraper = cloudscraper.create_scraper(
 )
 ```
 
-or
-
-```python
-scraper = cloudscraper.create_scraper(interpreter='nodejs')
-scraper.recaptcha={
-  'provider': 'deathbycaptcha',
-  'username': 'your_deathbycaptcha_username',
-  'password': 'your_deathbycaptcha_password'
-}
-```
+------
 
 #### 2captcha
+
+##### Required `recaptcha` Parameters
+
+|Parameter|Value|Required|Default|
+|-------------|:-------------:|:-----:|:-----:|
+|provider|(string) `2captcha`| yes||
+|api_key|(string)| yes||
+|proxy| (boolean)| no| False|
+
+##### Example
 
 ```python
 scraper = cloudscraper.create_scraper(
@@ -223,17 +373,19 @@ scraper = cloudscraper.create_scraper(
 )
 ```
 
-or
-
-```python
-scraper = cloudscraper.create_scraper(interpreter='nodejs')
-scraper.recaptcha={'provider': '2captcha', 'api_key': 'your_2captcha_api_key'}
-```
+------
 
 #### return_response
 
 Use this if you want the requests response payload without solving the reCaptcha.
 
+##### Required `recaptcha` Parameters
+
+|Parameter|Value|Required|Default|
+|-------------|:-------------:|:-----:|:-----:|
+|provider|(string) `return_response`| yes||
+
+##### Example
 ```python
 scraper = cloudscraper.create_scraper(
   interpreter='nodejs',
@@ -241,29 +393,9 @@ scraper = cloudscraper.create_scraper(
 )
 ```
 
-or
-
-```python
-scraper = cloudscraper.create_scraper(interpreter='nodejs')
-scraper.recaptcha={'provider': 'return_response'}
-```
-
-
-##### * Note: if using a proxy and you wish to solve reCaptcha to the 3rd party via the proxy, pass `'proxy': True` in your `recaptcha` dictionary, it will use the scraper session proxy you set, otherwise it will use your default route.
-
---------------------------------------------------------------------------------
-
-### Brotli Support
-
-We have added in [Brotli](https://en.wikipedia.org/wiki/Brotli) decompression support in, and it is enabled by default, the __only__ way to disable it, is by passing the `allow_brotli` parameter set to`False` to `create_scraper()`
-
-```python
-scraper = cloudscraper.create_scraper(allow_brotli=False)
-```
-
 ## Integration
 
-It's easy to integrate cloudscraper with other applications and tools. Cloudflare uses two cookies as tokens: one to verify you made it past their challenge page and one to track your session. To bypass the challenge page, simply include both of these cookies (with the appropriate user-agent) in all HTTP requests you make.
+It's easy to integrate `cloudscraper` with other applications and tools. Cloudflare uses two cookies as tokens: one to verify you made it past their challenge page and one to track your session. To bypass the challenge page, simply include both of these cookies (with the appropriate user-agent) in all HTTP requests you make.
 
 To retrieve just the cookies (as a dictionary), use `cloudscraper.get_tokens()`. To retrieve them as a full `Cookie` HTTP header, use `cloudscraper.get_cookie_string()`.
 
@@ -271,7 +403,7 @@ To retrieve just the cookies (as a dictionary), use `cloudscraper.get_tokens()`.
 
 Please read [Requests' documentation on request arguments](http://docs.python-requests.org/en/master/api/#requests.Session.request) for more information.
 
---------------------------------------------------------------------------------
+------
 
 ### User-Agent Handling
 
@@ -281,13 +413,13 @@ The two integration functions return a tuple of `(cookie, user_agent_string)`.
 
 That means you have to pass the returned `user_agent_string` to whatever script, tool, or service you are passing the tokens to (e.g. curl, or a specialized scraping tool), and it must use that passed user-agent when it makes HTTP requests.
 
---------------------------------------------------------------------------------
+------
 
 ### Integration examples
 
 Remember, you must always use the same user-agent when retrieving or using these cookies. These functions all return a tuple of `(cookie_dict, user_agent_string)`.
 
---------------------------------------------------------------------------------
+------
 
 #### Retrieving a cookie dict through a proxy
 
@@ -300,13 +432,14 @@ import cloudscraper
 
 proxies = {"http": "http://localhost:8080", "https": "http://localhost:8080"}
 tokens, user_agent = cloudscraper.get_tokens("http://somesite.com", proxies=proxies)
-print tokens
+print(tokens)
 # => {
          'cf_clearance': 'c8f913c707b818b47aa328d81cab57c349b1eee5-1426733163-3600',
          '__cfduid': 'dd8ec03dfdbcb8c2ea63e920f1335c1001426733158'
      }
 ```
---------------------------------------------------------------------------------
+
+------
 
 #### Retrieving a cookie string
 
@@ -319,13 +452,14 @@ import cloudscraper
 
 cookie_value, user_agent = cloudscraper.get_cookie_string('http://somesite.com')
 
-print 'GET / HTTP/1.1\r\nCookie: {}\r\nUser-Agent: {}\r\n'.format(cookie_value, user_agent)
+print('GET / HTTP/1.1\nCookie: {}\nUser-Agent: {}\n'.format(cookie_value, user_agent))
 
-# GET / HTTP/1.1\r\n
+# GET / HTTP/1.1
 # Cookie: cf_clearance=c8f913c707b818b47aa328d81cab57c349b1eee5-1426733163-3600; __cfduid=dd8ec03dfdbcb8c2ea63e920f1335c1001426733158
 # User-Agent: Some/User-Agent String
 ```
---------------------------------------------------------------------------------
+
+------
 
 #### curl example
 
@@ -380,10 +514,3 @@ print(
     )
 )
 ```
-
-Donations
-=======
-
-If you feel like showing your love and/or appreciation for this project, then how about shouting me a coffee or beer :)
-
-<a href="https://buymeacoff.ee/venomous" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a>

@@ -10,7 +10,7 @@ from os import path
 from io import open
 
 # Fake URL, network requests are not allowed by default when using the decorator
-url = 'http://example-site.dev'
+url = 'https://example-site.dev'
 # These kwargs will be passed to tests by the decorator
 cloudscraper_kwargs = dict(
     delay=0.01,
@@ -31,10 +31,12 @@ class ChallengeResponse(responses.Response):
     """
 
     def __init__(self, **kwargs):
-        defaults = (('method', 'GET'),
-                    ('status', 503),
-                    ('headers', {'Server': 'cloudflare'}),
-                    ('content_type', 'text/html'))
+        defaults = (
+            ('method', 'GET'),
+            ('status', 503),
+            ('headers', {'Server': 'cloudflare'}),
+            ('content_type', 'text/html')
+        )
 
         for k, v in defaults:
             kwargs.setdefault(k, v)
@@ -55,11 +57,13 @@ class RedirectResponse(responses.CallbackResponse):
     """
 
     def __init__(self, callback=lambda request: None, **kwargs):
-        defaults = (('method', 'GET'),
-                    ('status', 302),
-                    ('headers', {'Location': '/'}),
-                    ('content_type', 'text/html'),
-                    ('body', ''))
+        defaults = (
+            ('method', 'GET'),
+            ('status', 302),
+            ('headers', {'Location': '/'}),
+            ('content_type', 'text/html'),
+            ('body', '')
+        )
 
         for k, v in defaults:
             kwargs.setdefault(k, v)
@@ -81,9 +85,11 @@ class DefaultResponse(responses.Response):
     """
 
     def __init__(self, **kwargs):
-        defaults = (('method', 'GET'),
-                    ('status', 200),
-                    ('content_type', 'text/html'))
+        defaults = (
+            ('method', 'GET'),
+            ('status', 200),
+            ('content_type', 'text/html')
+        )
 
         for k, v in defaults:
             kwargs.setdefault(k, v)
@@ -115,13 +121,7 @@ def challenge_responses(filename, jschl_answer):
         def wrapper(self, interpreter):
             html = fixtures(filename).decode('utf-8')
 
-            params = OrderedDict()
-
-            s = re.search(r'name="s"\svalue="(?P<s_value>[^"]+)', html)
-            if s:
-                params['s'] = s.group('s_value')
-            params['jschl_vc'] = re.search(r'name="jschl_vc" value="(\w+)"', html).group(1)
-            params['pass'] = re.search(r'name="pass" value="(.+?)"', html).group(1)
+            params = OrderedDict(re.findall(r'name="(s|jschl_vc|pass)"\svalue="(\S+)"', html))
             params['jschl_answer'] = jschl_answer
 
             submit_uri = '{}/cdn-cgi/l/chk_jschl?{}'.format(url, urlencode(params))

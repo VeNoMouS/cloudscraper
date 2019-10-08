@@ -5,6 +5,11 @@ import sys
 import ssl
 import requests
 
+try:
+    import copyreg
+except ImportError:
+    import copy_reg as copyreg
+
 from copy import deepcopy
 from time import sleep
 from collections import OrderedDict
@@ -28,63 +33,99 @@ except ImportError:
 
 try:
     from urlparse import urlparse
+    from urllib import urlencode
 except ImportError:
-    from urllib.parse import urlparse
+    from urllib.parse import urlparse, urlencode
 
-##########################################################################################################################################################
+# ------------------------------------------------------------------------------- #
 
-__version__ = '1.1.47'
+__version__ = '1.2.0'
 
-BUG_REPORT = 'Cloudflare may have changed their technique, or there may be a bug in the script.'
-
-##########################################################################################################################################################
+# ------------------------------------------------------------------------------- #
 
 
 class CipherSuiteAdapter(HTTPAdapter):
 
-    def __init__(self, cipherSuite=None, **kwargs):
+    __attrs__ = [
+        'ssl_context',
+        'max_retries',
+        'config',
+        '_pool_connections',
+        '_pool_maxsize',
+        '_pool_block'
+    ]
 
-        self.ssl_context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
-        self.ssl_context.set_ciphers(cipherSuite)
+    def __init__(self, *args, **kwargs):
+        self.ssl_context = kwargs.pop('ssl_context', None)
+        self.cipherSuite = kwargs.pop('cipherSuite', None)
 
-        self.ssl_context.options |= (ssl.OP_NO_SSLv2 | ssl.OP_NO_SSLv3 | ssl.OP_NO_TLSv1 | ssl.OP_NO_TLSv1_1)
+        if not self.ssl_context:
+            self.ssl_context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
+            self.ssl_context.set_ciphers(self.cipherSuite)
+            self.ssl_context.options |= (ssl.OP_NO_SSLv2 | ssl.OP_NO_SSLv3 | ssl.OP_NO_TLSv1 | ssl.OP_NO_TLSv1_1)
 
         super(CipherSuiteAdapter, self).__init__(**kwargs)
 
-    ##########################################################################################################################################################
+    # ------------------------------------------------------------------------------- #
 
     def init_poolmanager(self, *args, **kwargs):
         kwargs['ssl_context'] = self.ssl_context
         return super(CipherSuiteAdapter, self).init_poolmanager(*args, **kwargs)
 
-    ##########################################################################################################################################################
+    # ------------------------------------------------------------------------------- #
 
     def proxy_manager_for(self, *args, **kwargs):
         kwargs['ssl_context'] = self.ssl_context
         return super(CipherSuiteAdapter, self).proxy_manager_for(*args, **kwargs)
 
-##########################################################################################################################################################
+# ------------------------------------------------------------------------------- #
 
 
 class CloudScraper(Session):
+
     def __init__(self, *args, **kwargs):
-        self.allow_brotli = kwargs.pop('allow_brotli', True if 'brotli' in sys.modules.keys() else False)
         self.debug = kwargs.pop('debug', False)
         self.delay = kwargs.pop('delay', None)
+        self.cipherSuite = kwargs.pop('cipherSuite', None)
         self.interpreter = kwargs.pop('interpreter', 'js2py')
         self.recaptcha = kwargs.pop('recaptcha', {})
-        self.cipherSuite = None
-        self.user_agent = User_Agent(allow_brotli=self.allow_brotli, browser=kwargs.pop('browser', None))
+        self.allow_brotli = kwargs.pop(
+            'allow_brotli',
+            True if 'brotli' in sys.modules.keys() else False
+        )
+        self.user_agent = User_Agent(
+            allow_brotli=self.allow_brotli,
+            browser=kwargs.pop('browser', None)
+        )
 
         super(CloudScraper, self).__init__(*args, **kwargs)
 
         if 'requests' in self.headers['User-Agent']:
+            # ------------------------------------------------------------------------------- #
             # Set a random User-Agent if no custom User-Agent has been set
+            # ------------------------------------------------------------------------------- #
             self.headers = self.user_agent.headers
 
-        self.mount('https://', CipherSuiteAdapter(self.loadCipherSuite()))
+        self.mount(
+            'https://',
+            CipherSuiteAdapter(
+                cipherSuite=self.loadCipherSuite() if not self.cipherSuite else self.cipherSuite
+            )
+        )
 
-    ##########################################################################################################################################################
+        # purely to allow us to pickle dump
+        copyreg.pickle(ssl.SSLContext, lambda obj: (obj.__class__, (obj.protocol,)))
+
+    # ------------------------------------------------------------------------------- #
+    # Allow us to pickle our session back with all variables
+    # ------------------------------------------------------------------------------- #
+
+    def __getstate__(self):
+        return self.__dict__
+
+    # ------------------------------------------------------------------------------- #
+    # debug the request via the response
+    # ------------------------------------------------------------------------------- #
 
     @staticmethod
     def debugRequest(req):
@@ -93,7 +134,9 @@ class CloudScraper(Session):
         except:  # noqa
             pass
 
-    ##########################################################################################################################################################
+    # ------------------------------------------------------------------------------- #
+    # construct a cipher suite of ciphers the system actually supports
+    # ------------------------------------------------------------------------------- #
 
     def loadCipherSuite(self):
         if self.cipherSuite:
@@ -112,9 +155,12 @@ class CloudScraper(Session):
                 self.cipherSuite = ':'.join(self.user_agent.cipherSuite)
                 return self.cipherSuite
 
-        raise RuntimeError("The SSL compiled into python does not meet the minimum cipher suite requirements.")
+        sys.tracebacklimit = 0
+        raise RuntimeError("The OpenSSL on this system does not meet the minimum cipher requirements.")
 
-    ##########################################################################################################################################################
+    # ------------------------------------------------------------------------------- #
+    # Our hijacker request function
+    # ------------------------------------------------------------------------------- #
 
     def request(self, method, url, *args, **kwargs):
         if kwargs.get('proxies') and kwargs.get('proxies') != self.proxies:
@@ -129,108 +175,221 @@ class CloudScraper(Session):
                 logging.warning('Brotli content detected, But option is disabled, we will not continue.')
                 return resp
 
+        # ------------------------------------------------------------------------------- #
         # Debug request
+        # ------------------------------------------------------------------------------- #
+
         if self.debug:
             self.debugRequest(resp)
 
         # Check if Cloudflare anti-bot is on
-        if self.isChallengeRequest(resp):
+        if self.is_Challenge_Request(resp):
             if resp.request.method != 'GET':
+                # ------------------------------------------------------------------------------- #
                 # Work around if the initial request is not a GET,
-                # Supersede with a GET then re-request the original METHOD.
+                # Supersede with a GET then re-request with the original METHOD.
+                # ------------------------------------------------------------------------------- #
+
                 self.request('GET', resp.url, *args, **kwargs)
                 resp = super(CloudScraper, self).request(method, url, *args, **kwargs)
             else:
-                # Solve Challenge
-                resp = self.sendChallengeResponse(resp, **kwargs)
+                # ------------------------------------------------------------------------------- #
+                # Try to solve the challenge and send it back
+                # ------------------------------------------------------------------------------- #
+
+                resp = self.Challenge_Response(resp, **kwargs)
 
         return resp
 
-    ##########################################################################################################################################################
+    # ------------------------------------------------------------------------------- #
+    # check if the response contains a valid Cloudflare challenge
+    # ------------------------------------------------------------------------------- #
 
     @staticmethod
-    def isChallengeRequest(resp):
-        if resp.headers.get('Server', '').startswith('cloudflare'):
+    def is_IUAM_Challenge(resp):
+        try:
             return (
-                resp.status_code in [403, 429, 503]
-                and (
-                    all(s in resp.content for s in [b'jschl_vc', b'jschl_answer'])
-                    or
-                    all(s in resp.content for s in [b'data-sitekey', b'/cdn-cgi/l/chk_captcha'])
+                resp.headers.get('Server', '').startswith('cloudflare')
+                and resp.status_code in [429, 503]
+                and re.search(
+                    r'action="/cdn\-cgi/l/chk_jschl.*?name="jschl_vc"\svalue=.*?',
+                    resp.text,
+                    re.M | re.DOTALL
                 )
             )
+        except (AttributeError):
+            pass
 
         return False
 
-    ##########################################################################################################################################################
+    # ------------------------------------------------------------------------------- #
+    # check if the response contains a valid Cloudflare reCaptcha challenge
+    # ------------------------------------------------------------------------------- #
 
-    def sendChallengeResponse(self, resp, **original_kwargs):
-        body = resp.text
+    @staticmethod
+    def is_reCaptcha_Challenge(resp):
+        try:
+            return (
+                resp.headers.get('Server', '').startswith('cloudflare')
+                and resp.status_code == 403
+                and re.search(
+                    r'action="/cdn\-cgi/l/chk_captcha"\smethod="get">.*?data\-sitekey=.*?',
+                    resp.text,
+                    re.M | re.DOTALL
+                )
+            )
+        except (AttributeError):
+            pass
 
-        parsed_url = urlparse(resp.url)
-        domain = parsed_url.netloc
+        return False
 
-        params = OrderedDict()
+    # ------------------------------------------------------------------------------- #
+    # Wrapper for is_reCaptcha_Challenge and is_IUAM_Challenge
+    # ------------------------------------------------------------------------------- #
 
-        s = re.search(r'name="s"\svalue="(?P<s_value>[^"]+)', body)
-        if s:
-            params['s'] = s.group('s_value')
+    def is_Challenge_Request(self, resp):
+        if self.is_reCaptcha_Challenge(resp) or self.is_IUAM_Challenge(resp):
+            return True
 
-        if b'/cdn-cgi/l/chk_captcha' in resp.content:
+        return False
 
-            # double down on the request as some websites are only checking if cfuid is populated before issuing reCaptcha.
-            resp = super(CloudScraper, self).request(resp.request.method, resp.url, **original_kwargs)
-            if not self.isChallengeRequest(resp):
+    # ------------------------------------------------------------------------------- #
+    # Try to solve cloudflare javascript challenge.
+    # ------------------------------------------------------------------------------- #
+
+    @staticmethod
+    def IUAM_Challenge_Response(body, domain, interpreter):
+        try:
+            params = OrderedDict(re.findall(r'name="(s|jschl_vc|pass)"\svalue="(\S+)"', body))
+        except (AttributeError):
+            sys.tracebacklimit = 0
+            raise RuntimeError(
+                "Cloudflare IUAM detected, unfortunately we can't extract the parameters correctly."
+            )
+
+        try:
+            params['jschl_answer'] = JavaScriptInterpreter.dynamicImport(
+                interpreter
+            ).solveChallenge(body, domain)
+        except Exception as e:
+            raise RuntimeError(
+                'Unable to parse Cloudflare anti-bots page: {}'.format(
+                    getattr(e, 'message', e)
+                )
+            )
+
+        return 'https://{}/cdn-cgi/l/chk_jschl?{}'.format(domain, urlencode(params))
+
+    # ------------------------------------------------------------------------------- #
+    #  Try to solve the reCaptcha challenge via 3rd party.
+    # ------------------------------------------------------------------------------- #
+
+    @staticmethod
+    def reCaptcha_Challenge_Response(provider, provider_params, body, url):
+        try:
+            params = re.search(
+                r'action="/cdn\-cgi/l/chk_captcha.*?name="s"\svalue="(?P<s>\S+)".*?data\-sitekey="(?P<site_key>\S+)"',
+                body,
+                re.M | re.DOTALL
+            ).groupdict()
+        except (AttributeError):
+            sys.tracebacklimit = 0
+            raise RuntimeError(
+                "Cloudflare reCaptcha detected, unfortunately we can't extract the parameters correctly."
+            )
+
+        return 'https://{}/cdn-cgi/l/chk_captcha?{}'.format(
+            urlparse(url).netloc,
+            urlencode(
+                {
+                    's': params.get('s'),
+                    'g-recaptcha-response': reCaptcha.dynamicImport(
+                        provider.lower()
+                    ).solveCaptcha(url, params.get('site_key'), provider_params)
+                }
+            )
+        )
+
+    # ------------------------------------------------------------------------------- #
+    # Attempt to handle and send the challenge response back to cloudflare
+    # ------------------------------------------------------------------------------- #
+
+    def Challenge_Response(self, resp, **kwargs):
+        if self.is_reCaptcha_Challenge(resp.text):
+            # ------------------------------------------------------------------------------- #
+            # double down on the request as some websites are only checking
+            # if cfuid is populated before issuing reCaptcha.
+            # ------------------------------------------------------------------------------- #
+
+            resp = super(CloudScraper, self).request(resp.request.method, resp.url, **kwargs)
+            if not self.is_reCaptcha_Challenge(resp.text):
                 return resp
 
+            # ------------------------------------------------------------------------------- #
             # if no reCaptcha provider raise a runtime error.
+            # ------------------------------------------------------------------------------- #
+
             if not self.recaptcha or not isinstance(self.recaptcha, dict) or not self.recaptcha.get('provider'):
                 sys.tracebacklimit = 0
-                raise RuntimeError("Cloudflare reCaptcha detected, unfortunately you haven't loaded an anti reCaptcha provider correctly via the 'recaptcha' parameter.")
+                raise RuntimeError(
+                    "Cloudflare reCaptcha detected, unfortunately you haven't loaded an anti reCaptcha provider "
+                    "correctly via the 'recaptcha' parameter."
+                )
 
-            # return the response without doing anything with the reCaptcha.
+            # ------------------------------------------------------------------------------- #
+            # if provider is return_response, return the response without doing anything.
+            # ------------------------------------------------------------------------------- #
+
             if self.recaptcha.get('provider') == 'return_response':
                 return resp
 
-            #  Try to solve the reCaptcha via 3rd party.
-            submit_url = '{}://{}/cdn-cgi/l/chk_captcha'.format(parsed_url.scheme, domain)
             self.recaptcha['proxies'] = self.proxies
-            params['g-recaptcha-response'] = reCaptcha.dynamicImport(self.recaptcha.get('provider').lower()).solveCaptcha(resp, self.recaptcha)
+            submit_url = self.reCaptcha_Challenge_Response(
+                self.recaptcha.get('provider'),
+                self.recaptcha,
+                resp.text,
+                resp.url
+            )
         else:
+            # ------------------------------------------------------------------------------- #
             # Cloudflare requires a delay before solving the challenge
+            # ------------------------------------------------------------------------------- #
+
             if not self.delay:
                 try:
-                    delay = float(re.search(r'submit\(\);\r?\n\s*},\s*([0-9]+)', body).group(1)) / float(1000)
+                    delay = float(
+                        re.search(
+                            r'submit\(\);\r?\n\s*},\s*([0-9]+)',
+                            resp.text
+                        ).group(1)
+                    ) / float(1000)
                     if isinstance(delay, (int, float)):
                         self.delay = delay
                 except:  # noqa
                     pass
 
             sleep(self.delay)
-            submit_url = '{}://{}/cdn-cgi/l/chk_jschl'.format(parsed_url.scheme, domain)
-            try:
-                params.update(
-                    [
-                        ('jschl_vc', re.search(r'name="jschl_vc" value="(\w+)"', body).group(1)),
-                        ('pass', re.search(r'name="pass" value="(.+?)"', body).group(1)),
-                        ('jschl_answer', JavaScriptInterpreter.dynamicImport(self.interpreter).solveChallenge(body, domain))
-                    ]
-                )
-            except Exception as e:
-                raise ValueError('Unable to parse Cloudflare anti-bots page: {} {}'.format(e.message, BUG_REPORT))
 
-        # Requests transforms any request into a GET after a redirect,
-        # so the redirect has to be handled manually here to allow for
-        # performing other types of requests even as the first request.
+            # ------------------------------------------------------------------------------- #
 
-        cloudflare_kwargs = deepcopy(original_kwargs)
-        cloudflare_kwargs.setdefault('params', params)
-        cloudflare_kwargs['allow_redirects'] = False
-        self.request(resp.request.method, submit_url, **cloudflare_kwargs)
+            submit_url = self.IUAM_Challenge_Response(resp.text, urlparse(resp.url).netloc, self.interpreter)
 
-        return self.request(resp.request.method, resp.url, **original_kwargs)
+        # ------------------------------------------------------------------------------- #
+        # Send the Challenge Response back to Cloudflare
+        # ------------------------------------------------------------------------------- #
 
-    ##########################################################################################################################################################
+        if submit_url:
+            cloudflare_kwargs = deepcopy(kwargs)
+            cloudflare_kwargs['allow_redirects'] = False
+            self.request('GET', submit_url, **cloudflare_kwargs)
+
+        # ------------------------------------------------------------------------------- #
+        # Request the original query request and return it
+        # ------------------------------------------------------------------------------- #
+
+        return self.request(resp.request.method, resp.url, **kwargs)
+
+    # ------------------------------------------------------------------------------- #
 
     @classmethod
     def create_scraper(cls, sess=None, **kwargs):
@@ -240,22 +399,29 @@ class CloudScraper(Session):
         scraper = cls(**kwargs)
 
         if sess:
-            attrs = ['auth', 'cert', 'cookies', 'headers', 'hooks', 'params', 'proxies', 'data']
-            for attr in attrs:
+            for attr in ['auth', 'cert', 'cookies', 'headers', 'hooks', 'params', 'proxies', 'data']:
                 val = getattr(sess, attr, None)
                 if val:
                     setattr(scraper, attr, val)
 
         return scraper
 
-    ##########################################################################################################################################################
-
+    # ------------------------------------------------------------------------------- #
     # Functions for integrating cloudscraper with other applications and scripts
+    # ------------------------------------------------------------------------------- #
+
     @classmethod
     def get_tokens(cls, url, **kwargs):
         scraper = cls.create_scraper(
             **{
-                field: kwargs.pop(field, None) for field in ['allow_brotli', 'browser', 'debug', 'delay', 'interpreter', 'recaptcha'] if field in kwargs
+                field: kwargs.pop(field, None) for field in [
+                    'allow_brotli',
+                    'browser',
+                    'debug',
+                    'delay',
+                    'interpreter',
+                    'recaptcha'
+                ] if field in kwargs
             }
         )
 
@@ -275,7 +441,11 @@ class CloudScraper(Session):
                 cookie_domain = d
                 break
         else:
-            raise ValueError('Unable to find Cloudflare cookies. Does the site actually have Cloudflare IUAM ("I\'m Under Attack Mode") enabled?')
+            sys.tracebacklimit = 0
+            raise RuntimeError(
+                "Unable to find Cloudflare cookies. Does the site actually "
+                "have Cloudflare IUAM (I'm Under Attack Mode) enabled?"
+            )
 
         return (
             {
@@ -285,7 +455,7 @@ class CloudScraper(Session):
             scraper.headers['User-Agent']
         )
 
-    ##########################################################################################################################################################
+    # ------------------------------------------------------------------------------- #
 
     @classmethod
     def get_cookie_string(cls, url, **kwargs):
@@ -296,7 +466,7 @@ class CloudScraper(Session):
         return '; '.join('='.join(pair) for pair in tokens.items()), user_agent
 
 
-##########################################################################################################################################################
+# ------------------------------------------------------------------------------- #
 
 create_scraper = CloudScraper.create_scraper
 get_tokens = CloudScraper.get_tokens
