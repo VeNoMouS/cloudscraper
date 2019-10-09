@@ -39,7 +39,7 @@ except ImportError:
 
 # ------------------------------------------------------------------------------- #
 
-__version__ = '1.2.0'
+__version__ = '1.2.1'
 
 # ------------------------------------------------------------------------------- #
 
@@ -315,14 +315,14 @@ class CloudScraper(Session):
     # ------------------------------------------------------------------------------- #
 
     def Challenge_Response(self, resp, **kwargs):
-        if self.is_reCaptcha_Challenge(resp.text):
+        if self.is_reCaptcha_Challenge(resp):
             # ------------------------------------------------------------------------------- #
             # double down on the request as some websites are only checking
             # if cfuid is populated before issuing reCaptcha.
             # ------------------------------------------------------------------------------- #
 
             resp = super(CloudScraper, self).request(resp.request.method, resp.url, **kwargs)
-            if not self.is_reCaptcha_Challenge(resp.text):
+            if not self.is_reCaptcha_Challenge(resp):
                 return resp
 
             # ------------------------------------------------------------------------------- #
