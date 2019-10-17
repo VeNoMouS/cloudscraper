@@ -39,7 +39,7 @@ except ImportError:
 
 # ------------------------------------------------------------------------------- #
 
-__version__ = '1.2.3'
+__version__ = '1.2.4'
 
 # ------------------------------------------------------------------------------- #
 
@@ -100,6 +100,7 @@ class CloudScraper(Session):
 
         super(CloudScraper, self).__init__(*args, **kwargs)
 
+        # pylint: disable=E0203
         if 'requests' in self.headers['User-Agent']:
             # ------------------------------------------------------------------------------- #
             # Set a random User-Agent if no custom User-Agent has been set
@@ -131,8 +132,8 @@ class CloudScraper(Session):
     def debugRequest(req):
         try:
             print(dump.dump_all(req).decode('utf-8'))
-        except:  # noqa
-            pass
+        except ValueError as e:
+            print("Debug Error: {}".format(getattr(e, 'message', e)))
 
     # ------------------------------------------------------------------------------- #
     # construct a cipher suite of ciphers the system actually supports
@@ -149,7 +150,6 @@ class CloudScraper(Session):
                     context.set_ciphers(cipher)
                 except (OpenSSL.SSL.Error, ssl.SSLError):
                     self.user_agent.cipherSuite.remove(cipher)
-                    pass
 
             if self.user_agent.cipherSuite:
                 self.cipherSuite = ':'.join(self.user_agent.cipherSuite)
@@ -163,6 +163,7 @@ class CloudScraper(Session):
     # ------------------------------------------------------------------------------- #
 
     def request(self, method, url, *args, **kwargs):
+        # pylint: disable=E0203
         if kwargs.get('proxies') and kwargs.get('proxies') != self.proxies:
             self.proxies = kwargs.get('proxies')
 
@@ -217,7 +218,7 @@ class CloudScraper(Session):
                     re.M | re.DOTALL
                 )
             )
-        except (AttributeError):
+        except AttributeError:
             pass
 
         return False
@@ -238,7 +239,7 @@ class CloudScraper(Session):
                     re.M | re.DOTALL
                 )
             )
-        except (AttributeError):
+        except AttributeError:
             pass
 
         return False
@@ -261,7 +262,7 @@ class CloudScraper(Session):
     def IUAM_Challenge_Response(body, domain, interpreter):
         try:
             params = OrderedDict(re.findall(r'name="(s|jschl_vc|pass)"\svalue="(\S+)"', body))
-        except (AttributeError):
+        except AttributeError:
             sys.tracebacklimit = 0
             raise RuntimeError(
                 "Cloudflare IUAM detected, unfortunately we can't extract the parameters correctly."
@@ -365,8 +366,9 @@ class CloudScraper(Session):
                     ) / float(1000)
                     if isinstance(delay, (int, float)):
                         self.delay = delay
-                except:  # noqa
-                    pass
+                except (AttributeError, ValueError):
+                    sys.tracebacklimit = 0
+                    raise RuntimeError("Cloudflare IUAM possibility malformed, issue extracing delay value.")
 
             sleep(self.delay)
 

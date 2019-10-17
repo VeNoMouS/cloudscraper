@@ -44,7 +44,7 @@ class User_Agent():
     def loadUserAgent(self, *args, **kwargs):
         self.browser = kwargs.pop('browser', None)
 
-        if type(self.browser) is dict:
+        if isinstance(self.browser, dict):
             self.desktop = self.browser.get('desktop', True)
             self.mobile = self.browser.get('mobile', True)
             self.browser = self.browser.get('browser', None)

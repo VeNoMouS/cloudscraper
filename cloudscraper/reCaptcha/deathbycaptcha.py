@@ -20,9 +20,10 @@ class captchaSolver(reCaptcha):
         self.host = 'http://api.dbcapi.me/api'
         self.session = requests.Session()
 
-    ##########################################################################################################################################################
+        # ------------------------------------------------------------------------------- #
 
-    def checkErrorStatus(self, response):
+    @staticmethod
+    def checkErrorStatus(response):
         errors = dict(
             [
                 (400, "DeathByCaptcha: 400 Bad Request"),
@@ -35,7 +36,7 @@ class captchaSolver(reCaptcha):
         if response.status_code in errors:
             raise RuntimeError(errors.get(response.status_code))
 
-    ##########################################################################################################################################################
+        # ------------------------------------------------------------------------------- #
 
     def login(self, username, password):
         self.username = username
@@ -71,7 +72,7 @@ class captchaSolver(reCaptcha):
 
         self.debugRequest(response)
 
-    ##########################################################################################################################################################
+        # ------------------------------------------------------------------------------- #
 
     def reportJob(self, jobID):
         if not jobID:
@@ -104,7 +105,7 @@ class captchaSolver(reCaptcha):
         else:
             raise RuntimeError("DeathByCaptcha: Error report failed reCaptcha.")
 
-    ##########################################################################################################################################################
+        # ------------------------------------------------------------------------------- #
 
     def requestJob(self, jobID):
         if not jobID:
@@ -133,7 +134,7 @@ class captchaSolver(reCaptcha):
         else:
             raise RuntimeError("DeathByCaptcha: Error failed to solve reCaptcha.")
 
-    ##########################################################################################################################################################
+        # ------------------------------------------------------------------------------- #
 
     def requestSolve(self, site_url, site_key):
         def _checkRequest(response):
@@ -169,7 +170,7 @@ class captchaSolver(reCaptcha):
         else:
             raise RuntimeError('DeathByCaptcha: Error no job id was returned.')
 
-    ##########################################################################################################################################################
+        # ------------------------------------------------------------------------------- #
 
     def getCaptchaAnswer(self, site_url, site_key, reCaptchaParams):
         jobID = None
@@ -194,5 +195,7 @@ class captchaSolver(reCaptcha):
 
             raise RuntimeError("DeathByCaptcha: reCaptcha solve took to long to execute, aborting.")
 
+
+# ------------------------------------------------------------------------------- #
 
 captchaSolver()

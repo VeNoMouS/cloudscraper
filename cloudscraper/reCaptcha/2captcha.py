@@ -19,9 +19,10 @@ class captchaSolver(reCaptcha):
         self.host = 'https://2captcha.com'
         self.session = requests.Session()
 
-    ##########################################################################################################################################################
+    # ------------------------------------------------------------------------------- #
 
-    def checkErrorStatus(self, response, request_type):
+    @staticmethod
+    def checkErrorStatus(response, request_type):
         if response.status_code in [500, 502]:
             raise RuntimeError('2Captcha: Server Side Error {}'.format(response.status_code))
 
@@ -72,7 +73,7 @@ class captchaSolver(reCaptcha):
         if response.json().get('status') is False and response.json().get('request') in errors.get(request_type):
             raise RuntimeError('{} {}'.format(response.json().get('request'), errors.get(request_type).get(response.json().get('request'))))
 
-    ##########################################################################################################################################################
+    # ------------------------------------------------------------------------------- #
 
     def reportJob(self, jobID):
         if not jobID:
@@ -106,7 +107,7 @@ class captchaSolver(reCaptcha):
         else:
             raise RuntimeError("2Captcha: Error - Failed to report bad reCaptcha solve.")
 
-    ##########################################################################################################################################################
+    # ------------------------------------------------------------------------------- #
 
     def requestJob(self, jobID):
         if not jobID:
@@ -140,7 +141,7 @@ class captchaSolver(reCaptcha):
         else:
             raise RuntimeError("2Captcha: Error failed to solve reCaptcha.")
 
-    ##########################################################################################################################################################
+    # ------------------------------------------------------------------------------- #
 
     def requestSolve(self, site_url, site_key):
         def _checkRequest(response):
@@ -174,7 +175,7 @@ class captchaSolver(reCaptcha):
         else:
             raise RuntimeError('2Captcha: Error no job id was returned.')
 
-    ##########################################################################################################################################################
+    # ------------------------------------------------------------------------------- #
 
     def getCaptchaAnswer(self, site_url, site_key, reCaptchaParams):
         jobID = None
@@ -200,6 +201,6 @@ class captchaSolver(reCaptcha):
             raise RuntimeError("2Captcha: reCaptcha solve took to long to execute, aborting.")
 
 
-##########################################################################################################################################################
+# ------------------------------------------------------------------------------- #
 
 captchaSolver()
