@@ -39,7 +39,7 @@ except ImportError:
 
 # ------------------------------------------------------------------------------- #
 
-__version__ = '1.2.7'
+__version__ = '1.2.8'
 
 # ------------------------------------------------------------------------------- #
 
@@ -136,6 +136,24 @@ class CloudScraper(Session):
             print("Debug Error: {}".format(getattr(e, 'message', e)))
 
     # ------------------------------------------------------------------------------- #
+    # Decode Brotli on older versions of urllib3 manually
+    # ------------------------------------------------------------------------------- #
+
+    def decodeBrotli(self, resp):
+        if requests.packages.urllib3.__version__ < '1.25.1' and resp.headers.get('Content-Encoding') == 'br':
+            if self.allow_brotli and resp._content:
+                resp._content = brotli.decompress(resp.content)
+            else:
+                logging.warning(
+                    'You\'re running urllib3 {}, Brotli content detected, '
+                    'Which requires manual decompression, '
+                    'But option allow_brotli is set to False, '
+                    'We will not continue to decompress.'.format(requests.packages.urllib3.__version__)
+                )
+
+        return resp
+
+    # ------------------------------------------------------------------------------- #
     # construct a cipher suite of ciphers the system actually supports
     # ------------------------------------------------------------------------------- #
 
@@ -167,14 +185,9 @@ class CloudScraper(Session):
         if kwargs.get('proxies') and kwargs.get('proxies') != self.proxies:
             self.proxies = kwargs.get('proxies')
 
-        resp = super(CloudScraper, self).request(method, url, *args, **kwargs)
-
-        if requests.packages.urllib3.__version__ < '1.25.1' and resp.headers.get('Content-Encoding') == 'br':
-            if self.allow_brotli and resp._content:
-                resp._content = brotli.decompress(resp.content)
-            else:
-                logging.warning('Brotli content detected, But option is disabled, we will not continue.')
-                return resp
+        resp = self.decodeBrotli(
+            super(CloudScraper, self).request(method, url, *args, **kwargs)
+        )
 
         # ------------------------------------------------------------------------------- #
         # Debug request
@@ -192,7 +205,9 @@ class CloudScraper(Session):
                 # ------------------------------------------------------------------------------- #
 
                 self.request('GET', resp.url, *args, **kwargs)
-                resp = super(CloudScraper, self).request(method, url, *args, **kwargs)
+                resp = self.decodeBrotli(
+                    super(CloudScraper, self).request(method, url, *args, **kwargs)
+                )
             else:
                 # ------------------------------------------------------------------------------- #
                 # Try to solve the challenge and send it back
@@ -322,7 +337,10 @@ class CloudScraper(Session):
             # if cfuid is populated before issuing reCaptcha.
             # ------------------------------------------------------------------------------- #
 
-            resp = super(CloudScraper, self).request(resp.request.method, resp.url, **kwargs)
+            resp = self.decodeBrotli(
+                super(CloudScraper, self).request(resp.request.method, resp.url, **kwargs)
+            )
+
             if not self.is_reCaptcha_Challenge(resp):
                 return resp
 
