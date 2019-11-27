@@ -33,13 +33,12 @@ except ImportError:
 
 try:
     from urlparse import urlparse
-    from urllib import urlencode
 except ImportError:
-    from urllib.parse import urlparse, urlencode
+    from urllib.parse import urlparse
 
 # ------------------------------------------------------------------------------- #
 
-__version__ = '1.2.8'
+__version__ = '1.2.9'
 
 # ------------------------------------------------------------------------------- #
 
@@ -228,7 +227,7 @@ class CloudScraper(Session):
                 resp.headers.get('Server', '').startswith('cloudflare')
                 and resp.status_code in [429, 503]
                 and re.search(
-                    r'action="/cdn\-cgi/l/chk_jschl.*?name="jschl_vc"\svalue=.*?',
+                    r'action="/.*?__cf_chl_jschl_tk__=\S+".*?name="jschl_vc"\svalue=.*?',
                     resp.text,
                     re.M | re.DOTALL
                 )
@@ -249,14 +248,13 @@ class CloudScraper(Session):
                 resp.headers.get('Server', '').startswith('cloudflare')
                 and resp.status_code == 403
                 and re.search(
-                    r'action="/cdn\-cgi/l/chk_captcha"\smethod="get">.*?data\-sitekey=.*?',
+                    r'action="/.*?__cf_chl_captcha_tk__=\S+".*?data\-sitekey=.*?',
                     resp.text,
                     re.M | re.DOTALL
                 )
             )
         except AttributeError:
             pass
-
         return False
 
     # ------------------------------------------------------------------------------- #
@@ -276,7 +274,11 @@ class CloudScraper(Session):
     @staticmethod
     def IUAM_Challenge_Response(body, domain, interpreter):
         try:
-            params = OrderedDict(re.findall(r'name="(s|jschl_vc|pass)"\svalue="(\S+)"', body))
+            challengeUUID = re.search(
+                r'__cf_chl_jschl_tk__=(?P<challengeUUID>\S+)"',
+                body, re.M | re.DOTALL
+            ).groupdict().get('challengeUUID')
+            params = OrderedDict(re.findall(r'name="(r|jschl_vc|pass)"\svalue="(.*?)"', body))
         except AttributeError:
             sys.tracebacklimit = 0
             raise RuntimeError(
@@ -294,7 +296,11 @@ class CloudScraper(Session):
                 )
             )
 
-        return 'https://{}/cdn-cgi/l/chk_jschl?{}'.format(domain, urlencode(params))
+        return {
+            'url': 'https://{}/'.format(domain),
+            'params': {'__cf_chl_jschl_tk__': challengeUUID},
+            'data': params
+        }
 
     # ------------------------------------------------------------------------------- #
     #  Try to solve the reCaptcha challenge via 3rd party.
@@ -304,9 +310,9 @@ class CloudScraper(Session):
     def reCaptcha_Challenge_Response(provider, provider_params, body, url):
         try:
             params = re.search(
-                r'action="/cdn\-cgi/l/chk_captcha.*?name="s"\svalue="(?P<s>\S+)".*?data\-sitekey="(?P<site_key>\S+)"',
-                body,
-                re.M | re.DOTALL
+                r'(name="r"\svalue="(?P<r>\S+)"|).*?__cf_chl_captcha_tk__=(?P<challengeUUID>\S+)".*?'
+                r'data-ray="(?P<data_ray>\S+)".*?data-sitekey="(?P<site_key>\S+)"',
+                body, re.M | re.DOTALL
             ).groupdict()
         except (AttributeError):
             sys.tracebacklimit = 0
@@ -314,17 +320,20 @@ class CloudScraper(Session):
                 "Cloudflare reCaptcha detected, unfortunately we can't extract the parameters correctly."
             )
 
-        return 'https://{}/cdn-cgi/l/chk_captcha?{}'.format(
-            urlparse(url).netloc,
-            urlencode(
-                {
-                    's': params.get('s'),
-                    'g-recaptcha-response': reCaptcha.dynamicImport(
+        return {
+            'url': url,
+            'params': {'__cf_chl_captcha_tk__': params.get('challengeUUID')},
+            'data': OrderedDict([
+                ('r', ''),
+                ('id', params.get('data_ray')),
+                (
+                    'g-recaptcha-response',
+                    reCaptcha.dynamicImport(
                         provider.lower()
                     ).solveCaptcha(url, params.get('site_key'), provider_params)
-                }
-            )
-        )
+                )
+            ])
+        }
 
     # ------------------------------------------------------------------------------- #
     # Attempt to handle and send the challenge response back to cloudflare
@@ -401,14 +410,19 @@ class CloudScraper(Session):
         if submit_url:
             cloudflare_kwargs = deepcopy(kwargs)
             cloudflare_kwargs['allow_redirects'] = False
-            self.request('GET', submit_url, **cloudflare_kwargs)
 
-        # ------------------------------------------------------------------------------- #
-        # Request the original query request and return it
-        # ------------------------------------------------------------------------------- #
+            ret = super(CloudScraper, self).request(
+                'POST',
+                submit_url['url'],
+                params=submit_url['params'],
+                data=submit_url['data'],
+                **cloudflare_kwargs
+            )
 
-        return self.request(resp.request.method, resp.url, **kwargs)
+            if self.is_Challenge_Request(ret):
+                raise RuntimeError("Cloudflare challenge solve was unsuccessful, Raising Runtime exception for infinite loop protection.")
 
+            return ret
     # ------------------------------------------------------------------------------- #
 
     @classmethod
