@@ -37,7 +37,7 @@ except ImportError:
 
 # ------------------------------------------------------------------------------- #
 
-__version__ = '1.2.10'
+__version__ = '1.2.11'
 
 # ------------------------------------------------------------------------------- #
 
@@ -414,7 +414,8 @@ class CloudScraper(Session):
                 data=submit_url['data'],
             )
 
-            self.debugRequest(resp)
+            if self.debug:
+                self.debugRequest(resp)
 
             if self.is_Challenge_Request(resp):
                 raise RuntimeError("Cloudflare challenge solve was unsuccessful, Raising Runtime exception for infinite loop protection.")
