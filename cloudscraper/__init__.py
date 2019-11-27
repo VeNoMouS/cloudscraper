@@ -37,7 +37,7 @@ except ImportError:
 
 # ------------------------------------------------------------------------------- #
 
-__version__ = '1.2.11'
+__version__ = '1.2.12'
 
 # ------------------------------------------------------------------------------- #
 
@@ -417,8 +417,11 @@ class CloudScraper(Session):
             if self.debug:
                 self.debugRequest(resp)
 
-            if self.is_Challenge_Request(resp):
+            if self.is_IUAM_Challenge(resp):
                 raise RuntimeError("Cloudflare challenge solve was unsuccessful, Raising Runtime exception for infinite loop protection.")
+
+            if self.is_reCaptcha_Challenge(resp):
+                raise RuntimeError("Cloudflare reCaptcha detected, Raising Runtime exception for infinite loop protection.")
 
             return resp
     # ------------------------------------------------------------------------------- #
