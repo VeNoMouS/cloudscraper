@@ -10,7 +10,6 @@ try:
 except ImportError:
     import copy_reg as copyreg
 
-from copy import deepcopy
 from time import sleep
 from collections import OrderedDict
 
@@ -38,7 +37,7 @@ except ImportError:
 
 # ------------------------------------------------------------------------------- #
 
-__version__ = '1.2.9'
+__version__ = '1.2.10'
 
 # ------------------------------------------------------------------------------- #
 
@@ -408,21 +407,19 @@ class CloudScraper(Session):
         # ------------------------------------------------------------------------------- #
 
         if submit_url:
-            cloudflare_kwargs = deepcopy(kwargs)
-            cloudflare_kwargs['allow_redirects'] = False
-
-            ret = super(CloudScraper, self).request(
+            resp = super(CloudScraper, self).request(
                 'POST',
                 submit_url['url'],
                 params=submit_url['params'],
                 data=submit_url['data'],
-                **cloudflare_kwargs
             )
 
-            if self.is_Challenge_Request(ret):
+            self.debugRequest(resp)
+
+            if self.is_Challenge_Request(resp):
                 raise RuntimeError("Cloudflare challenge solve was unsuccessful, Raising Runtime exception for infinite loop protection.")
 
-            return ret
+            return resp
     # ------------------------------------------------------------------------------- #
 
     @classmethod
