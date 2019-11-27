@@ -10,6 +10,7 @@ try:
 except ImportError:
     import copy_reg as copyreg
 
+from copy import deepcopy
 from time import sleep
 from collections import OrderedDict
 
@@ -37,7 +38,7 @@ except ImportError:
 
 # ------------------------------------------------------------------------------- #
 
-__version__ = '1.2.12'
+__version__ = '1.2.13'
 
 # ------------------------------------------------------------------------------- #
 
@@ -82,6 +83,7 @@ class CipherSuiteAdapter(HTTPAdapter):
 class CloudScraper(Session):
 
     def __init__(self, *args, **kwargs):
+
         self.debug = kwargs.pop('debug', False)
         self.delay = kwargs.pop('delay', None)
         self.cipherSuite = kwargs.pop('cipherSuite', None)
@@ -95,6 +97,9 @@ class CloudScraper(Session):
             allow_brotli=self.allow_brotli,
             browser=kwargs.pop('browser', None)
         )
+
+        self._solveDepthCnt = 0
+        self.solveDepth = kwargs.pop('solveDepth', 3)
 
         super(CloudScraper, self).__init__(*args, **kwargs)
 
@@ -179,6 +184,7 @@ class CloudScraper(Session):
     # ------------------------------------------------------------------------------- #
 
     def request(self, method, url, *args, **kwargs):
+
         # pylint: disable=E0203
         if kwargs.get('proxies') and kwargs.get('proxies') != self.proxies:
             self.proxies = kwargs.get('proxies')
@@ -196,22 +202,20 @@ class CloudScraper(Session):
 
         # Check if Cloudflare anti-bot is on
         if self.is_Challenge_Request(resp):
-            if resp.request.method != 'GET':
-                # ------------------------------------------------------------------------------- #
-                # Work around if the initial request is not a GET,
-                # Supersede with a GET then re-request with the original METHOD.
-                # ------------------------------------------------------------------------------- #
+            # ------------------------------------------------------------------------------- #
+            # Try to solve the challenge and send it back
+            # ------------------------------------------------------------------------------- #
 
-                self.request('GET', resp.url, *args, **kwargs)
-                resp = self.decodeBrotli(
-                    super(CloudScraper, self).request(method, url, *args, **kwargs)
-                )
-            else:
-                # ------------------------------------------------------------------------------- #
-                # Try to solve the challenge and send it back
-                # ------------------------------------------------------------------------------- #
+            if self._solveDepthCnt == self.solveDepth:
+                sys.tracebacklimit = 0
+                raise RuntimeError("!!Loop Protection!! We have tried to solve {} time(s) in a row.".format(self._solveDepthCnt))
 
-                resp = self.Challenge_Response(resp, **kwargs)
+            self._solveDepthCnt += 1
+
+            resp = self.Challenge_Response(resp, **kwargs)
+        else:
+            if resp.status_code not in [302, 429, 503]:
+                self._solveDepthCnt = 0
 
         return resp
 
@@ -254,6 +258,7 @@ class CloudScraper(Session):
             )
         except AttributeError:
             pass
+
         return False
 
     # ------------------------------------------------------------------------------- #
@@ -400,30 +405,43 @@ class CloudScraper(Session):
 
             # ------------------------------------------------------------------------------- #
 
-            submit_url = self.IUAM_Challenge_Response(resp.text, urlparse(resp.url).netloc, self.interpreter)
+            submit_url = self.IUAM_Challenge_Response(
+                resp.text,
+                urlparse(resp.url).netloc,
+                self.interpreter
+            )
 
         # ------------------------------------------------------------------------------- #
         # Send the Challenge Response back to Cloudflare
         # ------------------------------------------------------------------------------- #
 
         if submit_url:
-            resp = super(CloudScraper, self).request(
+            def updateAttr(obj, name, newValue):
+                try:
+                    obj[name].update(newValue)
+                    return obj[name]
+                except (AttributeError, KeyError):
+                    obj[name] = {}
+                    obj[name].update(newValue)
+                    return obj[name]
+
+            cloudflare_kwargs = deepcopy(kwargs)
+            cloudflare_kwargs['allow_redirects'] = False
+            cloudflare_kwargs['params'] = updateAttr(cloudflare_kwargs, 'params', submit_url['params'])
+            cloudflare_kwargs['data'] = updateAttr(cloudflare_kwargs, 'data', submit_url['data'])
+            cloudflare_kwargs['headers'] = updateAttr(cloudflare_kwargs, 'headers', {'Referer': resp.url})
+
+            self.request(
                 'POST',
                 submit_url['url'],
-                params=submit_url['params'],
-                data=submit_url['data'],
+                **cloudflare_kwargs
             )
 
-            if self.debug:
-                self.debugRequest(resp)
+        # ------------------------------------------------------------------------------- #
+        # Request the original query request and return it
+        # ------------------------------------------------------------------------------- #
 
-            if self.is_IUAM_Challenge(resp):
-                raise RuntimeError("Cloudflare challenge solve was unsuccessful, Raising Runtime exception for infinite loop protection.")
-
-            if self.is_reCaptcha_Challenge(resp):
-                raise RuntimeError("Cloudflare reCaptcha detected, Raising Runtime exception for infinite loop protection.")
-
-            return resp
+        return self.request(resp.request.method, resp.url, **kwargs)
     # ------------------------------------------------------------------------------- #
 
     @classmethod
