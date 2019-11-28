@@ -38,7 +38,7 @@ except ImportError:
 
 # ------------------------------------------------------------------------------- #
 
-__version__ = '1.2.13'
+__version__ = '1.2.14'
 
 # ------------------------------------------------------------------------------- #
 
@@ -83,7 +83,6 @@ class CipherSuiteAdapter(HTTPAdapter):
 class CloudScraper(Session):
 
     def __init__(self, *args, **kwargs):
-
         self.debug = kwargs.pop('debug', False)
         self.delay = kwargs.pop('delay', None)
         self.cipherSuite = kwargs.pop('cipherSuite', None)
@@ -184,7 +183,6 @@ class CloudScraper(Session):
     # ------------------------------------------------------------------------------- #
 
     def request(self, method, url, *args, **kwargs):
-
         # pylint: disable=E0203
         if kwargs.get('proxies') and kwargs.get('proxies') != self.proxies:
             self.proxies = kwargs.get('proxies')
@@ -206,9 +204,11 @@ class CloudScraper(Session):
             # Try to solve the challenge and send it back
             # ------------------------------------------------------------------------------- #
 
-            if self._solveDepthCnt == self.solveDepth:
+            if self._solveDepthCnt >= self.solveDepth:
                 sys.tracebacklimit = 0
-                raise RuntimeError("!!Loop Protection!! We have tried to solve {} time(s) in a row.".format(self._solveDepthCnt))
+                _ = self._solveDepthCnt
+                self._solveDepthCnt = 0
+                raise RuntimeError("!!Loop Protection!! We have tried to solve {} time(s) in a row.".format(_))
 
             self._solveDepthCnt += 1
 
@@ -276,23 +276,25 @@ class CloudScraper(Session):
     # ------------------------------------------------------------------------------- #
 
     @staticmethod
-    def IUAM_Challenge_Response(body, domain, interpreter):
+    def IUAM_Challenge_Response(body, url, interpreter):
         try:
             challengeUUID = re.search(
-                r'__cf_chl_jschl_tk__=(?P<challengeUUID>\S+)"',
+                r'id="challenge-form" action="(?P<challengeUUID>\S+)"',
                 body, re.M | re.DOTALL
-            ).groupdict().get('challengeUUID')
-            params = OrderedDict(re.findall(r'name="(r|jschl_vc|pass)"\svalue="(.*?)"', body))
+            ).groupdict().get('challengeUUID', '')
+            payload = OrderedDict(re.findall(r'name="(r|jschl_vc|pass)"\svalue="(.*?)"', body))
         except AttributeError:
             sys.tracebacklimit = 0
             raise RuntimeError(
                 "Cloudflare IUAM detected, unfortunately we can't extract the parameters correctly."
             )
 
+        hostParsed = urlparse(url)
+
         try:
-            params['jschl_answer'] = JavaScriptInterpreter.dynamicImport(
+            payload['jschl_answer'] = JavaScriptInterpreter.dynamicImport(
                 interpreter
-            ).solveChallenge(body, domain)
+            ).solveChallenge(body, hostParsed.netloc)
         except Exception as e:
             raise RuntimeError(
                 'Unable to parse Cloudflare anti-bots page: {}'.format(
@@ -301,9 +303,12 @@ class CloudScraper(Session):
             )
 
         return {
-            'url': 'https://{}/'.format(domain),
-            'params': {'__cf_chl_jschl_tk__': challengeUUID},
-            'data': params
+            'url': '{}://{}{}'.format(
+                hostParsed.scheme,
+                hostParsed.netloc,
+                challengeUUID
+            ),
+            'data': payload
         }
 
     # ------------------------------------------------------------------------------- #
@@ -313,8 +318,8 @@ class CloudScraper(Session):
     @staticmethod
     def reCaptcha_Challenge_Response(provider, provider_params, body, url):
         try:
-            params = re.search(
-                r'(name="r"\svalue="(?P<r>\S+)"|).*?__cf_chl_captcha_tk__=(?P<challengeUUID>\S+)".*?'
+            payload = re.search(
+                r'(name="r"\svalue="(?P<r>\S+)"|).*?challenge-form" action="(?P<challengeUUID>\S+)".*?'
                 r'data-ray="(?P<data_ray>\S+)".*?data-sitekey="(?P<site_key>\S+)"',
                 body, re.M | re.DOTALL
             ).groupdict()
@@ -324,17 +329,21 @@ class CloudScraper(Session):
                 "Cloudflare reCaptcha detected, unfortunately we can't extract the parameters correctly."
             )
 
+        hostParsed = urlparse(url)
         return {
-            'url': url,
-            'params': {'__cf_chl_captcha_tk__': params.get('challengeUUID')},
+            'url': '{}://{}{}'.format(
+                hostParsed.scheme,
+                hostParsed.netloc,
+                payload.get('challengeUUID', '')
+            ),
             'data': OrderedDict([
-                ('r', ''),
-                ('id', params.get('data_ray')),
+                ('r', payload.get('r', '')),
+                ('id', payload.get('data_ray')),
                 (
                     'g-recaptcha-response',
                     reCaptcha.dynamicImport(
                         provider.lower()
-                    ).solveCaptcha(url, params.get('site_key'), provider_params)
+                    ).solveCaptcha(url, payload.get('site_key'), provider_params)
                 )
             ])
         }
@@ -407,7 +416,7 @@ class CloudScraper(Session):
 
             submit_url = self.IUAM_Challenge_Response(
                 resp.text,
-                urlparse(resp.url).netloc,
+                resp.url,
                 self.interpreter
             )
 
@@ -427,18 +436,27 @@ class CloudScraper(Session):
 
             cloudflare_kwargs = deepcopy(kwargs)
             cloudflare_kwargs['allow_redirects'] = False
-            cloudflare_kwargs['params'] = updateAttr(cloudflare_kwargs, 'params', submit_url['params'])
-            cloudflare_kwargs['data'] = updateAttr(cloudflare_kwargs, 'data', submit_url['data'])
-            cloudflare_kwargs['headers'] = updateAttr(cloudflare_kwargs, 'headers', {'Referer': resp.url})
+            cloudflare_kwargs['data'] = updateAttr(
+                cloudflare_kwargs,
+                'data',
+                submit_url['data']
+            )
+            cloudflare_kwargs['headers'] = updateAttr(
+                cloudflare_kwargs,
+                'headers',
+                {
+                    'Referer': resp.url
+                }
+            )
 
-            self.request(
+            return self.request(
                 'POST',
                 submit_url['url'],
                 **cloudflare_kwargs
             )
 
         # ------------------------------------------------------------------------------- #
-        # Request the original query request and return it
+        # We shouldn't be here.... Re-request the original query and process again....
         # ------------------------------------------------------------------------------- #
 
         return self.request(resp.request.method, resp.url, **kwargs)
