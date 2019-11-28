@@ -2,6 +2,7 @@ import json
 import os
 import random
 import sys
+import ssl
 
 from collections import OrderedDict
 
@@ -45,10 +46,12 @@ class User_Agent():
         self.browser = kwargs.pop('browser', None)
 
         if isinstance(self.browser, dict):
+            self.custom = self.browser.get('custom', None)
             self.desktop = self.browser.get('desktop', True)
             self.mobile = self.browser.get('mobile', True)
             self.browser = self.browser.get('browser', None)
         else:
+            self.custom = kwargs.pop('custom', None)
             self.desktop = kwargs.pop('desktop', True)
             self.mobile = kwargs.pop('mobile', True)
 
@@ -61,22 +64,31 @@ class User_Agent():
             object_pairs_hook=OrderedDict
         )
 
-        if self.browser and not user_agents.get(self.browser):
-            sys.tracebacklimit = 0
-            raise RuntimeError('Sorry "{}" browser User-Agent was not found.'.format(self.browser))
+        if self.custom:
+            self.cipherSuite = '{}:!ECDHE+SHA:!AES128-SHA'.format(ssl._DEFAULT_CIPHERS).split(':')
+            self.headers = OrderedDict([
+                ('User-Agent', self.custom),
+                ('Accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8'),
+                ('Accept-Language', 'en-US,en;q=0.9'),
+                ('Accept-Encoding', 'gzip, deflate, br')
+            ])
+        else:
+            if self.browser and not user_agents.get(self.browser):
+                sys.tracebacklimit = 0
+                raise RuntimeError('Sorry "{}" browser User-Agent was not found.'.format(self.browser))
 
-        if not self.browser:
-            self.browser = random.SystemRandom().choice(list(user_agents))
+            if not self.browser:
+                self.browser = random.SystemRandom().choice(list(user_agents))
 
-        self.cipherSuite = user_agents.get(self.browser).get('cipherSuite', [])
+            self.cipherSuite = user_agents.get(self.browser).get('cipherSuite', [])
 
-        filteredAgents = self.filterAgents(user_agents.get(self.browser).get('releases'))
+            filteredAgents = self.filterAgents(user_agents.get(self.browser).get('releases'))
 
-        user_agent_version = random.SystemRandom().choice(list(filteredAgents))
+            user_agent_version = random.SystemRandom().choice(list(filteredAgents))
 
-        self.loadHeaders(user_agents, user_agent_version)
+            self.loadHeaders(user_agents, user_agent_version)
 
-        self.headers['User-Agent'] = random.SystemRandom().choice(filteredAgents[user_agent_version])
+            self.headers['User-Agent'] = random.SystemRandom().choice(filteredAgents[user_agent_version])
 
         if not kwargs.get('allow_brotli', False):
             if 'br' in self.headers['Accept-Encoding']:
