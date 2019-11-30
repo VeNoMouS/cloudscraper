@@ -46,7 +46,9 @@ class ChallengeInterpreter(JavaScriptInterpreter):
                 expression = re.findall(r"^(.*?)(.)\(function", jsfuckMath[1])[0]
                 expression_value = operators[expression[1]](
                     float(jsfuckToNumber(expression[0])),
-                    float(ord(domain[jsfuckToNumber(jsfuckMath[1][jsfuckMath[1].find('"("+p+")")}') + len('"("+p+")")}'):-2])]))
+                    float(ord(domain[jsfuckToNumber(jsfuckMath[1][
+                        jsfuckMath[1].find('"("+p+")")}') + len('"("+p+")")}') : -2
+                    ])]))
                 )
             else:
                 expression_value = jsfuckToNumber(jsfuckMath[1])
@@ -59,15 +61,22 @@ class ChallengeInterpreter(JavaScriptInterpreter):
 
         def challengeSolve(body, domain):
             jschl_answer = 0
+
             jsfuckChallenge = re.search(
-                r"setTimeout\(function\(\){\s+var.*?.*:(?P<init>\S+)};.*"
-                r"?document\.getElementById\(\'challenge-form\'\);\s*;(?P<challenge>.*?)a\.value"
-                r".*?\"\s+id=\"cf\-.*?\">(?P<k>\S+)</",
+                r"setTimeout\(function\(\){\s+var.*?f,\s*(?P<variable>\w+).*?:(?P<init>\S+)};"
+                r".*?\(\'challenge-form\'\);\s+;(?P<challenge>.*?a\.value)"
+                r"(?:.*id=\"cf-dn-.*?>(?P<k>\S+)<)?",
                 body,
                 re.DOTALL | re.MULTILINE
             ).groupdict()
 
-            jsfuckChallenge['challenge'] = jsfuckChallenge['challenge'].replace(' return +(p)}();', '', 1).split(';')
+            jsfuckChallenge['challenge'] = re.findall(
+                '{}.*?([+\-*/])=(.*?);(?=a\.value|{})'.format(
+                    jsfuckChallenge['variable'],
+                    jsfuckChallenge['variable']
+                ),
+                jsfuckChallenge['challenge']
+            )
 
             # ------------------------------------------------------------------------------- #
 
@@ -79,12 +88,7 @@ class ChallengeInterpreter(JavaScriptInterpreter):
 
             # ------------------------------------------------------------------------------- #
 
-            for jsfuckExpression in jsfuckChallenge['challenge']:
-                if not jsfuckExpression.strip():
-                    continue
-
-                oper, expression = jsfuckExpression.split('=', 1)
-
+            for oper, expression in jsfuckChallenge['challenge']:
                 if '/' in expression:
                     expression_value = divisorMath(expression, 'function(p)', domain)
                 else:
@@ -93,7 +97,12 @@ class ChallengeInterpreter(JavaScriptInterpreter):
                     else:
                         expression_value = jsfuckToNumber(expression)
 
-                jschl_answer = operators[oper[-1]](jschl_answer, expression_value)
+                jschl_answer = operators[oper](jschl_answer, expression_value)
+
+            # ------------------------------------------------------------------------------- #
+
+            if not jsfuckChallenge['k'] and 't.length' in body:
+                jschl_answer += len(domain)
 
             # ------------------------------------------------------------------------------- #
 
