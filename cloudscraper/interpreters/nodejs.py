@@ -3,16 +3,21 @@ import subprocess
 import sys
 
 from . import JavaScriptInterpreter
+from .encapsulated import template
 
 # ------------------------------------------------------------------------------- #
 
 
 class ChallengeInterpreter(JavaScriptInterpreter):
 
+    # ------------------------------------------------------------------------------- #
+
     def __init__(self):
         super(ChallengeInterpreter, self).__init__('nodejs')
 
-    def eval(self, jsEnv, js):
+    # ------------------------------------------------------------------------------- #
+
+    def eval(self, body, domain):
         try:
             js = 'var atob = function(str) {return Buffer.from(str, "base64").toString("binary");};' \
                  'var challenge = atob("%s");' \
@@ -20,7 +25,7 @@ class ChallengeInterpreter(JavaScriptInterpreter):
                  'var options = {filename: "iuam-challenge.js", timeout: 4000};' \
                  'var answer = require("vm").runInNewContext(challenge, context, options);' \
                  'process.stdout.write(String(answer));' \
-                 % base64.b64encode('{}{}'.format(jsEnv, js).encode('UTF-8')).decode('ascii')
+                 % base64.b64encode(template(body, domain).encode('UTF-8')).decode('ascii')
 
             return subprocess.check_output(['node', '-e', js])
 

@@ -7,15 +7,21 @@ import ctypes.util
 from ctypes import c_void_p, c_size_t, byref, create_string_buffer, CDLL
 
 from . import JavaScriptInterpreter
+from .encapsulated import template
+
+# ------------------------------------------------------------------------------- #
 
 
 class ChallengeInterpreter(JavaScriptInterpreter):
 
+    # ------------------------------------------------------------------------------- #
+
     def __init__(self):
         super(ChallengeInterpreter, self).__init__('chakracore')
 
-    def eval(self, jsEnv, js):
+    # ------------------------------------------------------------------------------- #
 
+    def eval(self, body, domain):
         chakraCoreLibrary = None
 
         # check current working directory.
@@ -45,7 +51,7 @@ class ChallengeInterpreter(JavaScriptInterpreter):
             chakraCore.DllMain(0, 1, 0)
             chakraCore.DllMain(0, 2, 0)
 
-        script = create_string_buffer('{}{}'.format(jsEnv, js).encode('utf-16'))
+        script = create_string_buffer(template(body, domain).encode('utf-16'))
 
         runtime = c_void_p()
         chakraCore.JsCreateRuntime(0, 0, byref(runtime))
@@ -91,5 +97,7 @@ class ChallengeInterpreter(JavaScriptInterpreter):
 
         return resultSTR.value
 
+
+# ------------------------------------------------------------------------------- #
 
 ChallengeInterpreter()
