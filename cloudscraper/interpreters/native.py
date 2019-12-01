@@ -47,7 +47,7 @@ class ChallengeInterpreter(JavaScriptInterpreter):
                 expression_value = operators[expression[1]](
                     float(jsfuckToNumber(expression[0])),
                     float(ord(domain[jsfuckToNumber(jsfuckMath[1][
-                        jsfuckMath[1].find('"("+p+")")}') + len('"("+p+")")}') : -2
+                        jsfuckMath[1].find('"("+p+")")}') + len('"("+p+")")}'):-2
                     ])]))
                 )
             else:
