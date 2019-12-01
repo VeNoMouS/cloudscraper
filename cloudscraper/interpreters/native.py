@@ -64,14 +64,14 @@ class ChallengeInterpreter(JavaScriptInterpreter):
 
             jsfuckChallenge = re.search(
                 r"setTimeout\(function\(\){\s+var.*?f,\s*(?P<variable>\w+).*?:(?P<init>\S+)};"
-                r".*?\(\'challenge-form\'\);\s+;(?P<challenge>.*?a\.value)"
+                r".*?\('challenge-form'\);\s+;(?P<challenge>.*?a\.value)"
                 r"(?:.*id=\"cf-dn-.*?>(?P<k>\S+)<)?",
                 body,
                 re.DOTALL | re.MULTILINE
             ).groupdict()
 
             jsfuckChallenge['challenge'] = re.finditer(
-                '{}.*?([+\-*/])=(.*?);(?=a\.value|{})'.format(
+                r'{}.*?([+\-*/])=(.*?);(?=a\.value|{})'.format(
                     jsfuckChallenge['variable'],
                     jsfuckChallenge['variable']
                 ),
@@ -103,7 +103,7 @@ class ChallengeInterpreter(JavaScriptInterpreter):
 
             # ------------------------------------------------------------------------------- #
 
-            if '+ t.length' in body:
+            if not jsfuckChallenge['k'] and '+ t.length' in body:
                 jschl_answer += len(domain)
 
             # ------------------------------------------------------------------------------- #
