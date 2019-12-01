@@ -70,7 +70,7 @@ class ChallengeInterpreter(JavaScriptInterpreter):
                 re.DOTALL | re.MULTILINE
             ).groupdict()
 
-            jsfuckChallenge['challenge'] = re.findall(
+            jsfuckChallenge['challenge'] = re.finditer(
                 '{}.*?([+\-*/])=(.*?);(?=a\.value|{})'.format(
                     jsfuckChallenge['variable'],
                     jsfuckChallenge['variable']
@@ -88,7 +88,9 @@ class ChallengeInterpreter(JavaScriptInterpreter):
 
             # ------------------------------------------------------------------------------- #
 
-            for oper, expression in jsfuckChallenge['challenge']:
+            for expressionMatch in jsfuckChallenge['challenge']:
+                oper, expression = expressionMatch.groups()
+
                 if '/' in expression:
                     expression_value = divisorMath(expression, 'function(p)', domain)
                 else:
@@ -101,7 +103,7 @@ class ChallengeInterpreter(JavaScriptInterpreter):
 
             # ------------------------------------------------------------------------------- #
 
-            if not jsfuckChallenge['k'] and 't.length' in body:
+            if '+ t.length' in body:
                 jschl_answer += len(domain)
 
             # ------------------------------------------------------------------------------- #
