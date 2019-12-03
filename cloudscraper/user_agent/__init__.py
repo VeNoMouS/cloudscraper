@@ -3,6 +3,7 @@ import os
 import random
 import sys
 import ssl
+import re
 
 from collections import OrderedDict
 
@@ -42,6 +43,20 @@ class User_Agent():
 
     # ------------------------------------------------------------------------------- #
 
+    def tryMatchCustom(self, user_agents):
+        for browser in user_agents:
+            for release in user_agents[browser]['releases']:
+                for platform in ['mobile', 'desktop']:
+                    if re.search(self.custom, ' '.join(user_agents[browser]['releases'][release]['User-Agent'][platform])):
+                        self.browser = browser
+                        self.loadHeaders(user_agents, release)
+                        self.headers['User-Agent'] = self.custom
+                        self.cipherSuite = user_agents[self.browser].get('cipherSuite', [])
+                        return True
+        return None
+
+    # ------------------------------------------------------------------------------- #
+
     def loadUserAgent(self, *args, **kwargs):
         self.browser = kwargs.pop('browser', None)
 
@@ -65,13 +80,14 @@ class User_Agent():
         )
 
         if self.custom:
-            self.cipherSuite = '{}:!ECDHE+SHA:!AES128-SHA'.format(ssl._DEFAULT_CIPHERS).split(':')
-            self.headers = OrderedDict([
-                ('User-Agent', self.custom),
-                ('Accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8'),
-                ('Accept-Language', 'en-US,en;q=0.9'),
-                ('Accept-Encoding', 'gzip, deflate, br')
-            ])
+            if not self.tryMatchCustom(user_agents):
+                self.cipherSuite = '{}:!ECDHE+SHA:!AES128-SHA'.format(ssl._DEFAULT_CIPHERS).split(':')
+                self.headers = OrderedDict([
+                    ('User-Agent', self.custom),
+                    ('Accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8'),
+                    ('Accept-Language', 'en-US,en;q=0.9'),
+                    ('Accept-Encoding', 'gzip, deflate, br')
+                ])
         else:
             if self.browser and not user_agents.get(self.browser):
                 sys.tracebacklimit = 0
