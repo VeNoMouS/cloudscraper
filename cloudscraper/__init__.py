@@ -1,6 +1,5 @@
 import logging
 import re
-import OpenSSL
 import sys
 import ssl
 import requests
@@ -112,7 +111,9 @@ class CloudScraper(Session):
         self.mount(
             'https://',
             CipherSuiteAdapter(
-                cipherSuite=self.loadCipherSuite() if not self.cipherSuite else self.cipherSuite
+                cipherSuite=':'.join(self.user_agent.cipherSuite)
+                if not self.cipherSuite else ':'.join(self.cipherSuite)
+                if isinstance(self.cipherSuite, list) else self.cipherSuite
             )
         )
 
@@ -154,29 +155,6 @@ class CloudScraper(Session):
                 )
 
         return resp
-
-    # ------------------------------------------------------------------------------- #
-    # construct a cipher suite of ciphers the system actually supports
-    # ------------------------------------------------------------------------------- #
-
-    def loadCipherSuite(self):
-        if self.cipherSuite:
-            return self.cipherSuite
-
-        if hasattr(ssl, 'Purpose') and hasattr(ssl.Purpose, 'SERVER_AUTH'):
-            for cipher in self.user_agent.cipherSuite[:]:
-                try:
-                    context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
-                    context.set_ciphers(cipher)
-                except (OpenSSL.SSL.Error, ssl.SSLError):
-                    self.user_agent.cipherSuite.remove(cipher)
-
-            if self.user_agent.cipherSuite:
-                self.cipherSuite = ':'.join(self.user_agent.cipherSuite)
-                return self.cipherSuite
-
-        sys.tracebacklimit = 0
-        raise RuntimeError("The OpenSSL on this system does not meet the minimum cipher requirements.")
 
     # ------------------------------------------------------------------------------- #
     # Our hijacker request function

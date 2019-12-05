@@ -1,9 +1,10 @@
 import json
 import os
 import random
+import re
 import sys
 import ssl
-import re
+
 
 from collections import OrderedDict
 
@@ -53,7 +54,7 @@ class User_Agent():
                         self.headers['User-Agent'] = self.custom
                         self.cipherSuite = user_agents[self.browser].get('cipherSuite', [])
                         return True
-        return None
+        return False
 
     # ------------------------------------------------------------------------------- #
 
@@ -81,7 +82,11 @@ class User_Agent():
 
         if self.custom:
             if not self.tryMatchCustom(user_agents):
-                self.cipherSuite = '{}:!ECDHE+SHA:!AES128-SHA'.format(ssl._DEFAULT_CIPHERS).split(':')
+                self.cipherSuite = [
+                    ssl._DEFAULT_CIPHERS,
+                    '!ECDHE+SHA',
+                    '!AES128-SHA'
+                ]
                 self.headers = OrderedDict([
                     ('User-Agent', self.custom),
                     ('Accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8'),
