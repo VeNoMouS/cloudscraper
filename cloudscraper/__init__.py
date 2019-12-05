@@ -186,7 +186,9 @@ class CloudScraper(Session):
                 sys.tracebacklimit = 0
                 _ = self._solveDepthCnt
                 self._solveDepthCnt = 0
-                raise RuntimeError("!!Loop Protection!! We have tried to solve {} time(s) in a row.".format(_))
+                raise RuntimeError(
+                    "!!Loop Protection!! We have tried to solve {} time(s) in a row.".format(_)
+                )
 
             self._solveDepthCnt += 1
 
@@ -240,10 +242,38 @@ class CloudScraper(Session):
         return False
 
     # ------------------------------------------------------------------------------- #
-    # Wrapper for is_reCaptcha_Challenge and is_IUAM_Challenge
+    # check if the response contains a valid Cloudflare reCaptcha challenge
+    # ------------------------------------------------------------------------------- #
+
+    @staticmethod
+    def is_Firewall_Blocked(resp):
+        try:
+            return (
+                resp.headers.get('Server', '').startswith('cloudflare')
+                and resp.status_code == 403
+                and re.search(
+                    r'<span class="cf-error-code">1020</span>',
+                    resp.text,
+                    re.M | re.DOTALL
+                )
+            )
+        except AttributeError:
+            pass
+
+        return False
+
+    # ------------------------------------------------------------------------------- #
+    # Wrapper for is_reCaptcha_Challenge, is_IUAM_Challenge, is_Firewall_Blocked
     # ------------------------------------------------------------------------------- #
 
     def is_Challenge_Request(self, resp):
+        if self.is_Firewall_Blocked(resp):
+            sys.tracebacklimit = 0
+            raise RuntimeError(
+                'Cloudflare has a restriction on your IP (Code 1020 Detected), '
+                'you are BLOCKED.'
+            )
+
         if self.is_reCaptcha_Challenge(resp) or self.is_IUAM_Challenge(resp):
             return True
 
