@@ -2,7 +2,7 @@
 # Production
 pyopenssl >= 17.0
 requests >= 2.9.2
-js2py == 0.60
+js2py==0.66
 requests_toolbelt >= 0.9.1
 brotli >= 1.0.7
 # Development
