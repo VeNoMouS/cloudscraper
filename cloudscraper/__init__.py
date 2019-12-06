@@ -457,11 +457,14 @@ class CloudScraper(Session):
                 }
             )
 
-            return self.request(
+            ret = self.request(
                 'POST',
                 submit_url['url'],
                 **cloudflare_kwargs
             )
+
+            if ret.status_code != 302:
+                return ret
 
         # ------------------------------------------------------------------------------- #
         # We shouldn't be here.... Re-request the original query and process again....
