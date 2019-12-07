@@ -14,7 +14,7 @@ setup(
     author = 'VeNoMouS',
     author_email = 'venom@gen-x.co.nz',
     version=VERSION,
-    packages = find_packages(),
+    packages = find_packages(exclude=['tests*']),
     description = 'A Python module to bypass Cloudflare\'s anti-bot page.',
     long_description=readme,
     long_description_content_type='text/markdown',
