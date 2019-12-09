@@ -463,11 +463,16 @@ class CloudScraper(Session):
                 **cloudflare_kwargs
             )
 
-            if ret.status_code != 302:
+            # ------------------------------------------------------------------------------- #
+            # Return response if Cloudflare is doing content pass through instead of 3xx
+            # ------------------------------------------------------------------------------- #
+
+            if not ret.is_redirect:
                 return ret
 
         # ------------------------------------------------------------------------------- #
-        # We shouldn't be here.... Re-request the original query and process again....
+        # Cloudflare is doing http 3xx instead of pass through again....
+        # Re-request the original query and/or process again....
         # ------------------------------------------------------------------------------- #
 
         return self.request(resp.request.method, resp.url, **kwargs)
