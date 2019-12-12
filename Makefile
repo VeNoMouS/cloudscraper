@@ -16,8 +16,7 @@ retry:
 	py.test -n auto --forked --looponfail
 
 ci:
-	/bin/true
-	#py.test -n 8 --forked --junitxml=report.xml --collect-only
+	py.test -n 8 --forked --junitxml=report.xml
 
 lint:
 	flake8 --ignore $(pep8-rules) cloudscraper tests
@@ -27,7 +26,7 @@ format:
 	autopep8 -aaa --ignore $(pep8-rules) --in-place --recursive cloudscraper tests
 
 coverage:
-	py.test --cov-config .coveragerc --verbose --cov-report term --cov-report xml --cov=cloudscraper tests
+	py.test --cov-config=.coveragerc --verbose --cov-report=term --cov-report=xml --cov=cloudscraper tests
 	coveralls
 
 clean:

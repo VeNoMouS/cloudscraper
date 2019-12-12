@@ -33,9 +33,7 @@ setup(
     ],
     include_package_data = True,
     install_requires = [
-        'pyopenssl >= 17.0',
         'requests >= 2.9.2',
-        'js2py >= 0.60',
         'requests_toolbelt >= 0.9.1',
         'brotli >= 1.0.7'
     ],
@@ -43,8 +41,8 @@ setup(
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
         'Natural Language :: English',
-        "License :: OSI Approved :: MIT License",
-        "Operating System :: OS Independent",
+        'License :: OSI Approved :: MIT License',
+        'Operating System :: OS Independent',
         'Programming Language :: Python',
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',

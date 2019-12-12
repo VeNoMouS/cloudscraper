@@ -1,5 +1,3 @@
 [run]
 source = cloudscraper
-omit =
-    *test*
-    cloudscraper/interpreters/jsfuck.py
+omit = tests/*,cloudscraper/interpreters/jsfuck.py

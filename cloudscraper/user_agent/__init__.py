@@ -5,7 +5,6 @@ import re
 import sys
 import ssl
 
-
 from collections import OrderedDict
 
 # ------------------------------------------------------------------------------- #
@@ -111,6 +110,7 @@ class User_Agent():
 
             self.headers['User-Agent'] = random.SystemRandom().choice(filteredAgents[user_agent_version])
 
-        if not kwargs.get('allow_brotli', False):
-            if 'br' in self.headers['Accept-Encoding']:
-                self.headers['Accept-Encoding'] = ','.join([encoding for encoding in self.headers['Accept-Encoding'].split(',') if encoding.strip() != 'br']).strip()
+        if not kwargs.get('allow_brotli', False) and 'br' in self.headers['Accept-Encoding']:
+            self.headers['Accept-Encoding'] = ','.join([
+                encoding for encoding in self.headers['Accept-Encoding'].split(',') if encoding.strip() != 'br'
+            ]).strip()

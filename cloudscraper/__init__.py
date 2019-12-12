@@ -194,7 +194,7 @@ class CloudScraper(Session):
 
             resp = self.Challenge_Response(resp, **kwargs)
         else:
-            if resp.status_code not in [302, 429, 503]:
+            if not resp.is_redirect and resp.status_code not in [429, 503]:
                 self._solveDepthCnt = 0
 
         return resp
@@ -452,9 +452,7 @@ class CloudScraper(Session):
             cloudflare_kwargs['headers'] = updateAttr(
                 cloudflare_kwargs,
                 'headers',
-                {
-                    'Referer': resp.url
-                }
+                {'Referer': resp.url}
             )
 
             ret = self.request(
