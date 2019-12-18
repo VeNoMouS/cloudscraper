@@ -37,7 +37,7 @@ except ImportError:
 
 # ------------------------------------------------------------------------------- #
 
-__version__ = '1.2.16'
+__version__ = '1.2.17'
 
 # ------------------------------------------------------------------------------- #
 
@@ -242,7 +242,7 @@ class CloudScraper(Session):
         return False
 
     # ------------------------------------------------------------------------------- #
-    # check if the response contains a valid Cloudflare reCaptcha challenge
+    # check if the response contains Firewall 1020 Error
     # ------------------------------------------------------------------------------- #
 
     @staticmethod
@@ -270,8 +270,9 @@ class CloudScraper(Session):
         if self.is_Firewall_Blocked(resp):
             sys.tracebacklimit = 0
             raise RuntimeError(
-                'Cloudflare has a restriction on your IP (Code 1020 Detected), '
-                'you are BLOCKED.'
+                'Cloudflare has placed a restriction on the request (Code 1020 Detected).\n'
+                'This can also occur due to the OpenSSL being used by python '
+                'being too old and not supporting TLS 1.3.'
             )
 
         if self.is_reCaptcha_Challenge(resp) or self.is_IUAM_Challenge(resp):
@@ -550,6 +551,17 @@ class CloudScraper(Session):
         tokens, user_agent = cls.get_tokens(url, **kwargs)
         return '; '.join('='.join(pair) for pair in tokens.items()), user_agent
 
+
+# ------------------------------------------------------------------------------- #
+
+if ssl.OPENSSL_VERSION_INFO < (1, 1, 1):
+    sys.tracebacklimit = 0
+    raise RuntimeError(
+        "Sorry but the OpenSSL being used by this python install ({}) does not meet the minimum "
+        "version (>= OpenSSL 1.1.1) in order to support TLS 1.3 required by Cloudflare.".format(
+            ssl.OPENSSL_VERSION
+        )
+    )
 
 # ------------------------------------------------------------------------------- #
 
