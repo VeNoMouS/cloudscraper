@@ -98,8 +98,6 @@ class TestCloudScraper:
 
     # ------------------------------------------------------------------------------- #
 
-    '''
-    # cant test cookies as responses module broken, fixed in dev
     @mockCloudflare(
         fixture='js_challenge_11_12_2019.html',
         payload=OrderedDict([
@@ -110,9 +108,8 @@ class TestCloudScraper:
         ])
     )
     def test_getCookieString_challenge_11_12_2019(self, **kwargs):
-        scraper=cloudscraper.create_scraper()
-        resp = scraper.get_tokens(url,debug=True)
-    '''
+        scraper = cloudscraper.create_scraper(delay=0)
+        assert '__cfduid' in scraper.get_cookie_string(url)[0]
 
     # ------------------------------------------------------------------------------- #
 

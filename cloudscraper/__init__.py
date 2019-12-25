@@ -269,11 +269,7 @@ class CloudScraper(Session):
     def is_Challenge_Request(self, resp):
         if self.is_Firewall_Blocked(resp):
             sys.tracebacklimit = 0
-            raise RuntimeError(
-                'Cloudflare has placed a restriction on the request (Code 1020 Detected).\n'
-                'This can also occur due to the OpenSSL being used by python '
-                'being too old and not supporting TLS 1.3.'
-            )
+            raise RuntimeError('Cloudflare has blocked this request (Code 1020 Detected).')
 
         if self.is_reCaptcha_Challenge(resp) or self.is_IUAM_Challenge(resp):
             return True
@@ -434,6 +430,7 @@ class CloudScraper(Session):
         # ------------------------------------------------------------------------------- #
 
         if submit_url:
+
             def updateAttr(obj, name, newValue):
                 try:
                     obj[name].update(newValue)
@@ -450,13 +447,18 @@ class CloudScraper(Session):
                 'data',
                 submit_url['data']
             )
+
+            urlParsed = urlparse(resp.url)
             cloudflare_kwargs['headers'] = updateAttr(
                 cloudflare_kwargs,
                 'headers',
-                {'Referer': resp.url}
+                {
+                    'Origin': '{}://{}'.format(urlParsed.scheme, urlParsed.netloc),
+                    'Referer': resp.url
+                }
             )
 
-            ret = self.request(
+            challengeSubmitResponse = self.request(
                 'POST',
                 submit_url['url'],
                 **cloudflare_kwargs
@@ -464,13 +466,44 @@ class CloudScraper(Session):
 
             # ------------------------------------------------------------------------------- #
             # Return response if Cloudflare is doing content pass through instead of 3xx
+            # else request with redirect URL also handle protocol scheme change http -> https
             # ------------------------------------------------------------------------------- #
 
-            if not ret.is_redirect:
-                return ret
+            if not challengeSubmitResponse.is_redirect:
+                return challengeSubmitResponse
+            else:
+                cloudflare_kwargs = deepcopy(kwargs)
+
+                if not urlparse(challengeSubmitResponse.headers['Location']).netloc:
+                    cloudflare_kwargs['headers'] = updateAttr(
+                        cloudflare_kwargs,
+                        'headers',
+                        {'Referer': '{}://{}'.format(urlParsed.scheme, urlParsed.netloc)}
+                    )
+                    return self.request(
+                        resp.request.method,
+                        '{}://{}{}'.format(
+                            urlParsed.scheme,
+                            urlParsed.netloc,
+                            challengeSubmitResponse.headers['Location']
+                        ),
+                        **cloudflare_kwargs
+                    )
+                else:
+                    redirectParsed = urlparse(challengeSubmitResponse.headers['Location'])
+                    cloudflare_kwargs['headers'] = updateAttr(
+                        cloudflare_kwargs,
+                        'headers',
+                        {'Referer': '{}://{}'.format(redirectParsed.scheme, redirectParsed.netloc)}
+                    )
+                    return self.request(
+                        resp.request.method,
+                        challengeSubmitResponse.headers['Location'],
+                        **cloudflare_kwargs
+                    )
 
         # ------------------------------------------------------------------------------- #
-        # Cloudflare is doing http 3xx instead of pass through again....
+        # We shouldn't be here...
         # Re-request the original query and/or process again....
         # ------------------------------------------------------------------------------- #
 

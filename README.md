@@ -40,7 +40,6 @@ Alternatively, clone this repository and run `python setup.py install`.
 
 - Python 2.7 - 3.x
 - **[Requests](https://github.com/kennethreitz/requests)** >= 2.9.2
-- **[pyOpenSSL](https://pypi.org/project/pyOpenSSL/)** >= 17.0
 - **[Brotli](https://pypi.org/project/Brotli/)** >= 1.0.7
 - **[requests_toolbelt](https://pypi.org/project/requests-toolbelt/)** >= 0.9.1
 
@@ -51,7 +50,8 @@ Alternatively, clone this repository and run `python setup.py install`.
 We support the following Javascript interpreters/engines.
 
 - **[ChakraCore](https://github.com/microsoft/ChakraCore):** Library binaries can also be located [here](https://www.github.com/VeNoMouS/cloudscraper/tree/ChakraCore/).
-- **[js2py](https://github.com/PiotrDabkowski/Js2Py):** >=0.60 (Default)
+- **[js2py](https://github.com/PiotrDabkowski/Js2Py):** >=0.67
+- **native**: Self made native python solver **(Default)**
 - **[Node.js](https://nodejs.org/)**
 - **[V8](https://github.com/sony/v8eval/):** We use Sony's [v8eval](https://v8.dev)() python module.
 
@@ -89,7 +89,7 @@ import cloudscraper
 
 scraper = cloudscraper.create_scraper()  # returns a CloudScraper instance
 # Or: scraper = cloudscraper.CloudScraper()  # CloudScraper inherits from requests.Session
-print scraper.get("http://somesite.com").content  # => "<!DOCTYPE html><html><head>..."
+print scraper.get("http://somesite.com").text  # => "<!DOCTYPE html><html><head>..."
 ```
 
 That's it...
@@ -149,7 +149,7 @@ Or
 |browser|(string) `chrome` or `firefox`|None|
 |mobile|(boolean)|True|
 |desktop|(boolean)|True|
-
+|custom|(string)|None|
 #### Example
 
 ```python
@@ -160,10 +160,29 @@ or
 
 ```python
 # will give you only mobile chrome User-Agents
-scraper = cloudscraper.create_scraper(browser={'browser': 'chrome', 'desktop': False)
+scraper = cloudscraper.create_scraper(
+    browser={
+        'browser': 'chrome',
+        'desktop': False
+    }
+)
 
 # will give you only desktop firefox User-Agents
-scraper = cloudscraper.create_scraper(browser={'browser': 'firefox', 'mobile': False)
+scraper = cloudscraper.create_scraper(
+    browser={
+        'browser': 'firefox',
+        'mobile': False
+    }
+)
+
+# Custom will also try find the user-agent string in the browsers.json,
+# If a match is found, it will use the headers and cipherSuite from that "browser",
+# Otherwise a generic set of headers and cipherSuite will be used.
+scraper = cloudscraper.create_scraper(
+    browser={
+        'custom': 'ScraperBot/1.0',
+    }
+)
 ```
 ------
 
@@ -179,7 +198,7 @@ Can be set as an attribute via your `cloudscraper` object or passed as an argume
 
 |Parameter|Value|Default|
 |-------------|:-------------:|:-----:|
-|debug|(boolean)|True|
+|debug|(boolean)|False|
 
 #### Example
 
@@ -256,6 +275,7 @@ cloudscraper currently supports the following JavaScript Engines/Interpreters
 
 - **[ChakraCore](https://github.com/microsoft/ChakraCore)**
 - **[js2py](https://github.com/PiotrDabkowski/Js2Py)**
+- **native**: Self made native python solver **(Default)**
 - **[Node.js](https://nodejs.org/)**
 - **[V8](https://github.com/sony/v8eval/)**
 
@@ -265,7 +285,7 @@ Can be set as an attribute via your `cloudscraper` object or passed as an argume
 
 |Parameter|Value|Default|
 |-------------|:-------------:|:-----:|
-|interpreter|(string)|`js2py`|
+|interpreter|(string)|`native`|
 
 #### Example
 
@@ -434,9 +454,9 @@ proxies = {"http": "http://localhost:8080", "https": "http://localhost:8080"}
 tokens, user_agent = cloudscraper.get_tokens("http://somesite.com", proxies=proxies)
 print(tokens)
 # => {
-         'cf_clearance': 'c8f913c707b818b47aa328d81cab57c349b1eee5-1426733163-3600',
-         '__cfduid': 'dd8ec03dfdbcb8c2ea63e920f1335c1001426733158'
-     }
+    'cf_clearance': 'c8f913c707b818b47aa328d81cab57c349b1eee5-1426733163-3600',
+    '__cfduid': 'dd8ec03dfdbcb8c2ea63e920f1335c1001426733158'
+}
 ```
 
 ------
