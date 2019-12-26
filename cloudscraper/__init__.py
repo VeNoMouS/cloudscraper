@@ -37,7 +37,7 @@ except ImportError:
 
 # ------------------------------------------------------------------------------- #
 
-__version__ = '1.2.18'
+__version__ = '1.2.19'
 
 # ------------------------------------------------------------------------------- #
 
@@ -588,10 +588,10 @@ class CloudScraper(Session):
 # ------------------------------------------------------------------------------- #
 
 if ssl.OPENSSL_VERSION_INFO < (1, 1, 1):
-    sys.tracebacklimit = 0
-    raise RuntimeError(
-        "Sorry but the OpenSSL being used by this python install ({}) does not meet the minimum "
-        "version (>= OpenSSL 1.1.1) in order to support TLS 1.3 required by Cloudflare.".format(
+    print(
+        "DEPRECATION: The OpenSSL being used by this python install ({}) does not meet the minimum supported "
+        "version (>= OpenSSL 1.1.1) in order to support TLS 1.3 required by Cloudflare, "
+        "You may encounter an unexpected reCaptcha or cloudflare 1020 blocks.".format(
             ssl.OPENSSL_VERSION
         )
     )
