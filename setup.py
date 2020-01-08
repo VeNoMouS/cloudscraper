@@ -35,7 +35,6 @@ setup(
     install_requires = [
         'requests >= 2.9.2',
         'requests_toolbelt >= 0.9.1',
-        'brotli >= 1.0.7'
     ],
     classifiers=[
         'Development Status :: 5 - Production/Stable',
