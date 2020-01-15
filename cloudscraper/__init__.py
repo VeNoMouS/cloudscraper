@@ -91,6 +91,7 @@ class CloudScraper(Session):
             'allow_brotli',
             True if 'brotli' in sys.modules.keys() else False
         )
+
         self.user_agent = User_Agent(
             allow_brotli=self.allow_brotli,
             browser=kwargs.pop('browser', None)
@@ -107,13 +108,16 @@ class CloudScraper(Session):
             # Set a random User-Agent if no custom User-Agent has been set
             # ------------------------------------------------------------------------------- #
             self.headers = self.user_agent.headers
+            if not self.cipherSuite:
+                self.cipherSuite = self.user_agent.cipherSuite
+
+        if isinstance(self.cipherSuite, list):
+            self.cipherSuite = ':'.join(self.user_agent.cipherSuite)
 
         self.mount(
             'https://',
             CipherSuiteAdapter(
-                cipherSuite=':'.join(self.user_agent.cipherSuite)
-                if not self.cipherSuite else ':'.join(self.cipherSuite)
-                if isinstance(self.cipherSuite, list) else self.cipherSuite
+                cipherSuite=self.cipherSuite
             )
         )
 

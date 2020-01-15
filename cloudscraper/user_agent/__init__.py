@@ -47,7 +47,7 @@ class User_Agent():
         for browser in user_agents:
             for release in user_agents[browser]['releases']:
                 for platform in ['mobile', 'desktop']:
-                    if re.search(self.custom, ' '.join(user_agents[browser]['releases'][release]['User-Agent'][platform])):
+                    if re.search(re.escape(self.custom), ' '.join(user_agents[browser]['releases'][release]['User-Agent'][platform])):
                         self.browser = browser
                         self.loadHeaders(user_agents, release)
                         self.headers['User-Agent'] = self.custom
