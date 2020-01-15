@@ -112,7 +112,7 @@ class CloudScraper(Session):
                 self.cipherSuite = self.user_agent.cipherSuite
 
         if isinstance(self.cipherSuite, list):
-            self.cipherSuite = ':'.join(self.user_agent.cipherSuite)
+            self.cipherSuite = ':'.join(self.cipherSuite)
 
         self.mount(
             'https://',
