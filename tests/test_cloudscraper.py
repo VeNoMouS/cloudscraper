@@ -2,6 +2,7 @@
 
 import pytest
 import cloudscraper
+from cloudscraper.reCaptcha.exceptions import reCaptchaBadParameter
 import requests
 from collections import OrderedDict
 from . import url, mockCloudflare
@@ -146,11 +147,12 @@ class TestCloudScraper:
     # test 9kw ReCaptcha
 
     @mockCloudflare(fixture='reCaptcha_challenge_12_12_2019.html', payload={})
-    def test_reCaptcha_provider_9kw(self, **kwargs):
-        with pytest.raises(ValueError, match=r".*?: Missing .*? parameter\."):
-            scraper = cloudscraper.create_scraper(
-                recaptcha={
-                    'provider': '9kw'
-                }
-            )
-            scraper.get(url)
+    def test_reCaptcha_providers(self, **kwargs):
+        for provider in ['9kw', '2captcha', 'anticaptcha', 'deathbycaptcha']:
+            with pytest.raises(reCaptchaBadParameter, match=r".*?: Missing .*? parameter\."):
+                scraper = cloudscraper.create_scraper(
+                    recaptcha={
+                        'provider': provider
+                    }
+                )
+                scraper.get(url)

@@ -2,13 +2,17 @@ from __future__ import absolute_import
 
 import re
 import requests
+from . import exceptions
 
 try:
     import polling
 except ImportError:
     import sys
     sys.tracebacklimit = 0
-    raise RuntimeError("Please install the python module 'polling' via pip or download it from https://github.com/justiniso/polling/")
+    raise exceptions.reCaptchaImportError(
+        "Please install the python module 'polling' via pip or download it from "
+        "https://github.com/justiniso/polling/"
+    )
 
 from . import reCaptcha
 
@@ -26,7 +30,9 @@ class captchaSolver(reCaptcha):
     @staticmethod
     def checkErrorStatus(response):
         if response.status_code in [500, 502]:
-            raise RuntimeError('9kw: Server Side Error {}'.format(response.status_code))
+            raise exceptions.reCaptchaServiceUnavailable(
+                '9kw: Server Side Error {}'.format(response.status_code)
+            )
 
         error_codes = {
             1: 'No API Key available.',
@@ -85,23 +91,21 @@ class captchaSolver(reCaptcha):
             54: 'Assignment was not found.'
         }
 
-        try:
-            if response.text.startswith('{'):
-                if response.json().get('error'):
-                    RuntimeError(error_codes.get(int(response.json().get('error'))))
-            else:
-                error_code = int(re.search(r'^00(?P<error_code>\d+)', response.text).groupdict().get('error_code', 0))
-                if error_code:
-                    raise RuntimeError(error_codes.get(error_code))
-
-        except AttributeError:
-            pass
+        if response.text.startswith('{'):
+            if response.json().get('error'):
+                raise exceptions.reCaptchaErrorFromAPI(error_codes.get(int(response.json().get('error'))))
+        else:
+            error_code = int(re.search(r'^00(?P<error_code>\d+)', response.text).groupdict().get('error_code', 0))
+            if error_code:
+                raise exceptions.reCaptchaErrorFromAPI(error_codes.get(error_code))
 
     # ------------------------------------------------------------------------------- #
 
     def requestJob(self, jobID):
         if not jobID:
-            raise RuntimeError("9kw: Error bad job id to request reCaptcha.")
+            raise exceptions.reCaptchaBadJobID(
+                "9kw: Error bad job id to request reCaptcha against."
+            )
 
         def _checkRequest(response):
             if response.ok and response.json().get('answer') != 'NO DATA':
@@ -130,13 +134,13 @@ class captchaSolver(reCaptcha):
         if response:
             return response.json().get('answer')
         else:
-            raise RuntimeError("9kw: Error failed to solve reCaptcha.")
+            raise exceptions.reCaptchaTimeout("9kw: Error failed to solve reCaptcha.")
 
     # ------------------------------------------------------------------------------- #
 
     def requestSolve(self, site_url, site_key):
         def _checkRequest(response):
-            if response.ok and response.json().get('captchaid'):
+            if response.ok and response.text.startswith('{') and response.json().get('captchaid'):
                 return response
 
             self.checkErrorStatus(response)
@@ -166,7 +170,7 @@ class captchaSolver(reCaptcha):
         if response:
             return response.json().get('captchaid')
         else:
-            raise RuntimeError('9kw: Error no job id was returned.')
+            raise exceptions.reCaptchaBadJobID('9kw: Error no valid job id was returned.')
 
     # ------------------------------------------------------------------------------- #
 
@@ -174,7 +178,7 @@ class captchaSolver(reCaptcha):
         jobID = None
 
         if not reCaptchaParams.get('api_key'):
-            raise ValueError("9kw: Missing api_key parameter.")
+            raise exceptions.reCaptchaBadParameter("9kw: Missing api_key parameter.")
 
         self.api_key = reCaptchaParams.get('api_key')
 
@@ -188,7 +192,9 @@ class captchaSolver(reCaptcha):
             jobID = self.requestSolve(site_url, site_key)
             return self.requestJob(jobID)
         except polling.TimeoutException:
-            raise RuntimeError("9kw: reCaptcha solve took to long to execute 'captchaid' {}, aborting.".format(jobID))
+            raise exceptions.reCaptchaTimeout(
+                "9kw: reCaptcha solve took to long to execute 'captchaid' {}, aborting.".format(jobID)
+            )
 
 # ------------------------------------------------------------------------------- #
 
