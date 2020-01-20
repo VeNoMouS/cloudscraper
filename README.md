@@ -303,6 +303,7 @@ scraper = cloudscraper.create_scraper(interpreter='nodejs')
 - **[anticaptcha](https://www.anti-captcha.com/)**
 - **[deathbycaptcha](https://www.deathbycaptcha.com/)**
 - **[2captcha](https://www.2captcha.com/)**
+- **[9kw](https://www.9kw.eu/)**
 - **__return_response__**
 
 #### Note
@@ -389,6 +390,32 @@ scraper = cloudscraper.create_scraper(
   recaptcha={
     'provider': '2captcha',
     'api_key': 'your_2captcha_api_key'
+  }
+)
+```
+
+------
+
+#### 9kw
+
+##### Required `recaptcha` Parameters
+
+|Parameter|Value|Required|Default|
+|-------------|:-------------:|:-----:|:-----:|
+|provider|(string) `9kw`|yes||
+|api_key|(string)|yes||
+|proxy|(boolean)|no|False|
+|maxtimeout|(int)|no|180|
+
+##### Example
+
+```python
+scraper = cloudscraper.create_scraper(
+  interpreter='nodejs',
+  recaptcha={
+    'provider': '9kw',
+    'api_key': 'your_9kw_api_key',
+    'maxtimeout': 300
   }
 )
 ```
