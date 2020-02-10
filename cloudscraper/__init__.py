@@ -9,6 +9,14 @@ try:
 except ImportError:
     import copy_reg as copyreg
 
+try:
+    from HTMLParser import HTMLParser
+except ImportError:
+    if sys.version_info >= (3, 4):
+        import html
+    else:
+        from html.parser import HTMLParser
+
 from copy import deepcopy
 from time import sleep
 from collections import OrderedDict
@@ -286,12 +294,29 @@ class CloudScraper(Session):
 
     @staticmethod
     def IUAM_Challenge_Response(body, url, interpreter):
+
+        # ------------------------------------------------------------------------------- #
+
+        def unescape(html_text):
+            if sys.version_info >= (3, 0):
+                if sys.version_info >= (3, 4):
+                    return html.unescape(html_text)
+
+                return HTMLParser().unescape(html_text)
+
+            return HTMLParser().unescape(html_text)
+
+        # ------------------------------------------------------------------------------- #
+
         try:
-            challengeUUID = re.search(
-                r'id="challenge-form" action="(?P<challengeUUID>\S+)"',
-                body, re.M | re.DOTALL
-            ).groupdict().get('challengeUUID', '')
+            challengeUUID = unescape(
+                re.search(
+                    r'id="challenge-form" action="(?P<challengeUUID>\S+)"',
+                    body, re.M | re.DOTALL
+                ).groupdict().get('challengeUUID', '')
+            )
             payload = OrderedDict(re.findall(r'name="(r|jschl_vc|pass)"\svalue="(.*?)"', body))
+
         except AttributeError:
             sys.tracebacklimit = 0
             raise RuntimeError(
