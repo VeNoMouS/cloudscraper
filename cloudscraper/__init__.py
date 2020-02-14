@@ -156,6 +156,20 @@ class CloudScraper(Session):
             print("Debug Error: {}".format(getattr(e, 'message', e)))
 
     # ------------------------------------------------------------------------------- #
+    # Unescape / decode html entities
+    # ------------------------------------------------------------------------------- #
+
+    @staticmethod
+    def unescape(html_text):
+        if sys.version_info >= (3, 0):
+            if sys.version_info >= (3, 4):
+                return html.unescape(html_text)
+
+            return HTMLParser().unescape(html_text)
+
+        return HTMLParser().unescape(html_text)
+
+    # ------------------------------------------------------------------------------- #
     # Decode Brotli on older versions of urllib3 manually
     # ------------------------------------------------------------------------------- #
 
@@ -297,29 +311,13 @@ class CloudScraper(Session):
     # Try to solve cloudflare javascript challenge.
     # ------------------------------------------------------------------------------- #
 
-    @staticmethod
-    def IUAM_Challenge_Response(body, url, interpreter):
-
-        # ------------------------------------------------------------------------------- #
-
-        def unescape(html_text):
-            if sys.version_info >= (3, 0):
-                if sys.version_info >= (3, 4):
-                    return html.unescape(html_text)
-
-                return HTMLParser().unescape(html_text)
-
-            return HTMLParser().unescape(html_text)
-
-        # ------------------------------------------------------------------------------- #
-
+    def IUAM_Challenge_Response(self, body, url, interpreter):
         try:
-            challengeUUID = unescape(
-                re.search(
-                    r'id="challenge-form" action="(?P<challengeUUID>\S+)"',
-                    body, re.M | re.DOTALL
-                ).groupdict().get('challengeUUID', '')
-            )
+            challengeUUID = re.search(
+                r'id="challenge-form" action="(?P<challengeUUID>\S+)"',
+                body, re.M | re.DOTALL
+            ).groupdict().get('challengeUUID', '')
+
             payload = OrderedDict(re.findall(r'name="(r|jschl_vc|pass)"\svalue="(.*?)"', body))
 
         except AttributeError:
@@ -345,7 +343,7 @@ class CloudScraper(Session):
             'url': '{}://{}{}'.format(
                 hostParsed.scheme,
                 hostParsed.netloc,
-                challengeUUID
+                self.unescape(challengeUUID)
             ),
             'data': payload
         }
@@ -354,8 +352,7 @@ class CloudScraper(Session):
     #  Try to solve the reCaptcha challenge via 3rd party.
     # ------------------------------------------------------------------------------- #
 
-    @staticmethod
-    def reCaptcha_Challenge_Response(provider, provider_params, body, url):
+    def reCaptcha_Challenge_Response(self, provider, provider_params, body, url):
         try:
             payload = re.search(
                 r'(name="r"\svalue="(?P<r>\S+)"|).*?challenge-form" action="(?P<challengeUUID>\S+)".*?'
@@ -373,7 +370,7 @@ class CloudScraper(Session):
             'url': '{}://{}{}'.format(
                 hostParsed.scheme,
                 hostParsed.netloc,
-                payload.get('challengeUUID', '')
+                self.unescape(payload.get('challengeUUID', ''))
             ),
             'data': OrderedDict([
                 ('r', payload.get('r', '')),
@@ -507,6 +504,16 @@ class CloudScraper(Session):
                 return challengeSubmitResponse
             else:
                 cloudflare_kwargs = deepcopy(kwargs)
+
+                # Merge the cookies from the chalengeSubmitResponse with the original request
+                cloudflare_kwargs['cookies'] = updateAttr(
+                    cloudflare_kwargs,
+                    'cookies',
+                    requests.cookies.merge_cookies(
+                        cloudflare_kwargs.get('cookies', requests.cookies.RequestsCookieJar()),
+                        challengeSubmitResponse.cookies
+                    )
+                )
 
                 if not urlparse(challengeSubmitResponse.headers['Location']).netloc:
                     cloudflare_kwargs['headers'] = updateAttr(
