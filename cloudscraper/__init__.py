@@ -504,55 +504,26 @@ class CloudScraper(Session):
                 return challengeSubmitResponse
             else:
                 cloudflare_kwargs = deepcopy(kwargs)
-
-                # Merge the cookies from the chalengeSubmitResponse with the original request
-                if cloudflare_kwargs.get('cookies') != challengeSubmitResponse.cookies:
-                    cloudflare_kwargs['cookies'] = updateAttr(
-                        cloudflare_kwargs,
-                        'cookies',
-                        requests.cookies.merge_cookies(
-                            cloudflare_kwargs.get('cookies', requests.cookies.RequestsCookieJar()),
-                            challengeSubmitResponse.cookies
-                        )
-                    )
+                cloudflare_kwargs['headers'] = updateAttr(
+                    cloudflare_kwargs,
+                    'headers',
+                    {'Referer': resp.url}
+                )
 
                 if not urlparse(challengeSubmitResponse.headers['Location']).netloc:
-                    cloudflare_kwargs['headers'] = updateAttr(
-                        cloudflare_kwargs,
-                        'headers',
-                        {'Referer': '{}://{}'.format(urlParsed.scheme, urlParsed.netloc)}
-                    )
-
-                    # nasty hack for shitty 302 in current path
-                    # needs to be replaced with soemthing better...
-                    location = challengeSubmitResponse.headers['Location']
-
-                    if not location.startswith('/') or location.startswith('./'):
-                        if location.startswith('./'):
-                            location = location[2:]
-
-                        origPath = os.path.dirname(urlParsed.path)
-                        if not origPath.endswith('/'):
-                            origPath = '{}/'.format(origPath)
-
-                        location = '{}{}'.format(origPath, location)
-                    #  end of nasty hack
-
                     return self.request(
                         resp.request.method,
-                        '{}://{}{}'.format(
-                            urlParsed.scheme,
-                            urlParsed.netloc,
-                            location
+                        requests.urllib3.packages.six.moves.urllib.parse.urljoin(
+                            challengeSubmitResponse.url,
+                            challengeSubmitResponse.headers['Location']
                         ),
                         **cloudflare_kwargs
                     )
                 else:
-                    redirectParsed = urlparse(challengeSubmitResponse.headers['Location'])
                     cloudflare_kwargs['headers'] = updateAttr(
                         cloudflare_kwargs,
                         'headers',
-                        {'Referer': '{}://{}'.format(redirectParsed.scheme, redirectParsed.netloc)}
+                        {'Referer': resp.url}
                     )
 
                     return self.request(
