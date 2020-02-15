@@ -511,26 +511,18 @@ class CloudScraper(Session):
                 )
 
                 if not urlparse(challengeSubmitResponse.headers['Location']).netloc:
-                    return self.request(
-                        resp.request.method,
-                        requests.urllib3.packages.six.moves.urllib.parse.urljoin(
-                            challengeSubmitResponse.url,
-                            challengeSubmitResponse.headers['Location']
-                        ),
-                        **cloudflare_kwargs
+                    redirect_location = requests.urllib3.packages.six.moves.urllib.parse.urljoin(
+                        challengeSubmitResponse.url,
+                        challengeSubmitResponse.headers['Location']
                     )
                 else:
-                    cloudflare_kwargs['headers'] = updateAttr(
-                        cloudflare_kwargs,
-                        'headers',
-                        {'Referer': resp.url}
-                    )
+                    redirect_location = challengeSubmitResponse.headers['Location']
 
-                    return self.request(
-                        resp.request.method,
-                        challengeSubmitResponse.headers['Location'],
-                        **cloudflare_kwargs
-                    )
+                return self.request(
+                    resp.request.method,
+                    redirect_location,
+                    **cloudflare_kwargs
+                )
 
         # ------------------------------------------------------------------------------- #
         # We shouldn't be here...
