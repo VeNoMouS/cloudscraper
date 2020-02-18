@@ -40,9 +40,9 @@ except ImportError:
     pass
 
 try:
-    from urlparse import urlparse
+    from urlparse import urlparse, urljoin
 except ImportError:
-    from urllib.parse import urlparse
+    from urllib.parse import urlparse, urljoin
 
 # Add exceptions path
 sys.path.append(os.path.join(os.path.dirname(__file__), 'exceptions'))
@@ -507,11 +507,11 @@ class CloudScraper(Session):
                 cloudflare_kwargs['headers'] = updateAttr(
                     cloudflare_kwargs,
                     'headers',
-                    {'Referer': resp.url}
+                    {'Referer': challengeSubmitResponse.url}
                 )
 
                 if not urlparse(challengeSubmitResponse.headers['Location']).netloc:
-                    redirect_location = requests.urllib3.packages.six.moves.urllib.parse.urljoin(
+                    redirect_location = urljoin(
                         challengeSubmitResponse.url,
                         challengeSubmitResponse.headers['Location']
                     )
