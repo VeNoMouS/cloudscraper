@@ -218,9 +218,9 @@ class CloudScraper(Session):
             # ------------------------------------------------------------------------------- #
 
             if self._solveDepthCnt >= self.solveDepth:
-                sys.tracebacklimit = 0
                 _ = self._solveDepthCnt
                 self._solveDepthCnt = 0
+                sys.tracebacklimit = 0
                 raise CloudflareLoopProtection(
                     "!!Loop Protection!! We have tried to solve {} time(s) in a row.".format(_)
                 )
@@ -325,6 +325,7 @@ class CloudScraper(Session):
             payload = OrderedDict(re.findall(r'name="(r|jschl_vc|pass)"\svalue="(.*?)"', body))
 
         except AttributeError:
+            sys.tracebacklimit = 0
             raise CloudflareIUAMError(
                 "Cloudflare IUAM detected, unfortunately we can't extract the parameters correctly."
             )
@@ -336,6 +337,7 @@ class CloudScraper(Session):
                 interpreter
             ).solveChallenge(body, hostParsed.netloc)
         except Exception as e:
+            sys.tracebacklimit = 0
             raise CloudflareIUAMError(
                 'Unable to parse Cloudflare anti-bots page: {}'.format(
                     getattr(e, 'message', e)
@@ -363,6 +365,7 @@ class CloudScraper(Session):
                 body, re.M | re.DOTALL
             ).groupdict()
         except (AttributeError):
+            sys.tracebacklimit = 0
             raise CloudflareReCaptchaError(
                 "Cloudflare reCaptcha detected, unfortunately we can't extract the parameters correctly."
             )
@@ -409,6 +412,7 @@ class CloudScraper(Session):
             # ------------------------------------------------------------------------------- #
 
             if not self.recaptcha or not isinstance(self.recaptcha, dict) or not self.recaptcha.get('provider'):
+                sys.tracebacklimit = 0
                 raise CloudflareReCaptchaProvider(
                     "Cloudflare reCaptcha detected, unfortunately you haven't loaded an anti reCaptcha provider "
                     "correctly via the 'recaptcha' parameter."
@@ -444,6 +448,7 @@ class CloudScraper(Session):
                     if isinstance(delay, (int, float)):
                         self.delay = delay
                 except (AttributeError, ValueError):
+                    sys.tracebacklimit = 0
                     raise CloudflareIUAMError("Cloudflare IUAM possibility malformed, issue extracing delay value.")
 
             sleep(self.delay)
