@@ -2,17 +2,23 @@ from __future__ import absolute_import
 
 import json
 import requests
-import reCaptcha_exceptions
 
 try:
     import polling
 except ImportError:
-    import sys
-    sys.tracebacklimit = 0
-    raise reCaptcha_exceptions.reCaptcha_Import_Error(
+    raise ImportError(
         "Please install the python module 'polling' via pip or download it from "
         "https://github.com/justiniso/polling/"
     )
+
+from ..exceptions import (
+    reCaptchaServiceUnavailable,
+    reCaptchaAccountError,
+    reCaptchaTimeout,
+    reCaptchaParameter,
+    reCaptchaBadJobID,
+    reCaptchaReportError
+)
 
 from . import reCaptcha
 
@@ -38,7 +44,7 @@ class captchaSolver(reCaptcha):
         )
 
         if response.status_code in errors:
-            raise reCaptcha_exceptions.reCaptcha_Service_Unavailable(errors.get(response.status_code))
+            raise reCaptchaServiceUnavailable(errors.get(response.status_code))
 
     # ------------------------------------------------------------------------------- #
 
@@ -49,10 +55,10 @@ class captchaSolver(reCaptcha):
         def _checkRequest(response):
             if response.ok:
                 if response.json().get('is_banned'):
-                    raise reCaptcha_exceptions.reCaptcha_Account_Error('DeathByCaptcha: Your account is banned.')
+                    raise reCaptchaAccountError('DeathByCaptcha: Your account is banned.')
 
                 if response.json().get('balanace') == 0:
-                    raise reCaptcha_exceptions.reCaptcha_Account_Error('DeathByCaptcha: insufficient credits.')
+                    raise reCaptchaAccountError('DeathByCaptcha: insufficient credits.')
 
                 return response
 
@@ -80,7 +86,7 @@ class captchaSolver(reCaptcha):
 
     def reportJob(self, jobID):
         if not jobID:
-            raise reCaptcha_exceptions.reCaptcha_Bad_Job_ID(
+            raise reCaptchaBadJobID(
                 "DeathByCaptcha: Error bad job id to report failed reCaptcha."
             )
 
@@ -109,7 +115,7 @@ class captchaSolver(reCaptcha):
         if response:
             return True
         else:
-            raise reCaptcha_exceptions.reCaptcha_Report_Error(
+            raise reCaptchaReportError(
                 "DeathByCaptcha: Error report failed reCaptcha."
             )
 
@@ -117,7 +123,7 @@ class captchaSolver(reCaptcha):
 
     def requestJob(self, jobID):
         if not jobID:
-            raise reCaptcha_exceptions.reCaptcha_Bad_Job_ID(
+            raise reCaptchaBadJobID(
                 "DeathByCaptcha: Error bad job id to request reCaptcha."
             )
 
@@ -142,7 +148,7 @@ class captchaSolver(reCaptcha):
         if response:
             return response.json().get('text')
         else:
-            raise reCaptcha_exceptions.reCaptcha_Timeout(
+            raise reCaptchaTimeout(
                 "DeathByCaptcha: Error failed to solve reCaptcha."
             )
 
@@ -180,7 +186,7 @@ class captchaSolver(reCaptcha):
         if response:
             return response.json().get('captcha')
         else:
-            raise reCaptcha_exceptions.reCaptcha_Bad_Job_ID(
+            raise reCaptchaBadJobID(
                 'DeathByCaptcha: Error no job id was returned.'
             )
 
@@ -191,7 +197,7 @@ class captchaSolver(reCaptcha):
 
         for param in ['username', 'password']:
             if not reCaptchaParams.get(param):
-                raise reCaptcha_exceptions.reCaptcha_Bad_Parameter(
+                raise reCaptchaParameter(
                     "DeathByCaptcha: Missing '{}' parameter.".format(param)
                 )
             setattr(self, param, reCaptchaParams.get(param))
@@ -207,11 +213,11 @@ class captchaSolver(reCaptcha):
                 if jobID:
                     self.reportJob(jobID)
             except polling.TimeoutException:
-                raise reCaptcha_exceptions.reCaptcha_Timeout(
+                raise reCaptchaTimeout(
                     "DeathByCaptcha: reCaptcha solve took to long and also failed reporting the job id {}.".format(jobID)
                 )
 
-            raise reCaptcha_exceptions.reCaptcha_Timeout(
+            raise reCaptchaTimeout(
                 "DeathByCaptcha: reCaptcha solve took to long to execute job id {}, aborting.".format(jobID)
             )
 

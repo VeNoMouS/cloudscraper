@@ -1,13 +1,14 @@
 from __future__ import absolute_import
 
-import sys
-import reCaptcha_exceptions
+from ..exceptions import reCaptchaParameter
 
 try:
-    from python_anticaptcha import AnticaptchaClient, NoCaptchaTaskProxylessTask
+    from python_anticaptcha import (
+        AnticaptchaClient,
+        NoCaptchaTaskProxylessTask
+    )
 except ImportError:
-    sys.tracebacklimit = 0
-    raise reCaptcha_exceptions.reCaptcha_Import_Error(
+    raise ImportError(
         "Please install the python module 'python_anticaptcha' via pip or download it from "
         "https://github.com/ad-m/python-anticaptcha"
     )
@@ -24,7 +25,7 @@ class captchaSolver(reCaptcha):
 
     def getCaptchaAnswer(self, site_url, site_key, reCaptchaParams):
         if not reCaptchaParams.get('api_key'):
-            raise reCaptcha_exceptions.reCaptcha_Bad_Parameter("anticaptcha: Missing api_key parameter.")
+            raise reCaptchaParameter("anticaptcha: Missing api_key parameter.")
 
         client = AnticaptchaClient(reCaptchaParams.get('api_key'))
 
@@ -34,9 +35,9 @@ class captchaSolver(reCaptcha):
         task = NoCaptchaTaskProxylessTask(site_url, site_key)
 
         if not hasattr(client, 'createTaskSmee'):
-            sys.tracebacklimit = 0
-            raise reCaptcha_exceptions.reCaptcha_Import_Error(
-                "Please upgrade 'python_anticaptcha' via pip or download it from https://github.com/ad-m/python-anticaptcha"
+            raise NotImplementedError(
+                "Please upgrade 'python_anticaptcha' via pip or download it from "
+                "https://github.com/ad-m/python-anticaptcha"
             )
 
         job = client.createTaskSmee(task)
