@@ -1,6 +1,6 @@
-import sys
-import logging
 import abc
+import logging
+import sys
 
 if sys.version_info >= (3, 4):
     ABC = abc.ABC  # noqa

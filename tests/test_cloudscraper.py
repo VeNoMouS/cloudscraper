@@ -1,14 +1,18 @@
 # -*- coding: utf-8 -*-
 
 import pytest
-
-import cloudscraper
-import cloudflare_exceptions
-import reCaptcha_exceptions
-
 import requests
+import cloudscraper
 
 from collections import OrderedDict
+
+from cloudscraper.exceptions import (
+    CloudflareLoopProtection,
+    CloudflareIUAMError,
+    CloudflareReCaptchaError,
+    CloudflareReCaptchaProvider,
+    reCaptchaParameter
+)
 
 from . import url, mockCloudflare
 
@@ -46,7 +50,7 @@ class TestCloudScraper:
     def test_bad_interpreter_js_challenge_11_12_2019(self, **kwargs):
         # test bad interpreter
         with pytest.raises(
-            cloudflare_exceptions.Cloudflare_Error_IUAM,
+            CloudflareIUAMError,
             match=r"Unable to parse Cloudflare anti-bots page: No module named*?"
         ):
             scraper = cloudscraper.create_scraper(interpreter='badInterpreter', **kwargs)
@@ -66,7 +70,7 @@ class TestCloudScraper:
     def test_bad_solve_js_challenge_11_12_2019(self, **kwargs):
         # test bad solve loop protection.
         with pytest.raises(
-            cloudflare_exceptions.Cloudflare_Loop_Protection,
+            CloudflareLoopProtection,
             match=r".*?Loop Protection.*?"
         ):
             scraper = cloudscraper.create_scraper(**kwargs)
@@ -77,14 +81,14 @@ class TestCloudScraper:
     def test_bad_js_challenge_12_12_2019(self, **kwargs):
         # test bad reCaptcha extraction.
         with pytest.raises(
-            cloudflare_exceptions.Cloudflare_Error_IUAM,
+            CloudflareIUAMError,
             match=r".*?we can't extract the parameters correctly.*?"
         ):
             scraper = cloudscraper.create_scraper(**kwargs)
             scraper.IUAM_Challenge_Response('', '', '')
 
         with pytest.raises(
-            cloudflare_exceptions.Cloudflare_Error_IUAM,
+            CloudflareIUAMError,
             match=r".*?Unable to parse Cloudflare anti-bots.*?"
         ):
             scraper = cloudscraper.create_scraper(**kwargs)
@@ -100,7 +104,7 @@ class TestCloudScraper:
     def test_reCaptcha_challenge_12_12_2019(self, **kwargs):
         # test bad reCaptcha detection.
         with pytest.raises(
-            cloudflare_exceptions.Cloudflare_reCaptcha_Provider,
+            CloudflareReCaptchaProvider,
             match=r".*?reCaptcha detected*?"
         ):
             scraper = cloudscraper.create_scraper(**kwargs)
@@ -114,7 +118,7 @@ class TestCloudScraper:
     def test_bad_reCaptcha_challenge_12_12_2019(self, **kwargs):
         # test bad reCaptcha extraction.
         with pytest.raises(
-            cloudflare_exceptions.Cloudflare_Error_reCaptcha,
+            CloudflareReCaptchaError,
             match=r".*?we can't extract the parameters correctly.*?"
         ):
             scraper = cloudscraper.create_scraper(**kwargs)
@@ -176,7 +180,7 @@ class TestCloudScraper:
     def test_reCaptcha_providers(self, **kwargs):
         for provider in ['9kw', '2captcha', 'anticaptcha', 'deathbycaptcha']:
             with pytest.raises(
-                reCaptcha_exceptions.reCaptcha_Bad_Parameter,
+                reCaptchaParameter,
                 match=r".*?: Missing .*? parameter\."
             ):
                 scraper = cloudscraper.create_scraper(
