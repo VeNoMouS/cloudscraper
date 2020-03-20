@@ -84,8 +84,8 @@ class User_Agent():
             if not self.tryMatchCustom(user_agents):
                 self.cipherSuite = [
                     ssl._DEFAULT_CIPHERS,
-                    '!ECDHE+SHA',
-                    '!AES128-SHA'
+                    '!AES128-SHA',
+                    '!ECDHE-RSA-AES256-SHA',
                 ]
                 self.headers = OrderedDict([
                     ('User-Agent', self.custom),
