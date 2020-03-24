@@ -322,7 +322,9 @@ class CloudScraper(Session):
                 body, re.M | re.DOTALL
             ).groupdict().get('challengeUUID', '')
 
-            payload = OrderedDict(re.findall(r'name="(r|jschl_vc|pass)"\svalue="(.*?)"', body))
+            payload = re.findall(r'name="(r|jschl_vc|pass)"\svalue="(.*?)"', body)
+            payload.reverse()
+            payload = OrderedDict(payload)
 
         except AttributeError:
             sys.tracebacklimit = 0
