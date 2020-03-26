@@ -89,7 +89,7 @@ class TestCloudScraper:
 
         with pytest.raises(
             CloudflareIUAMError,
-            match=r".*?Unable to parse Cloudflare anti-bots.*?"
+            match=r"Cloudflare IUAM detected, unfortunately we can't extract the parameters correctly."
         ):
             scraper = cloudscraper.create_scraper(**kwargs)
             scraper.IUAM_Challenge_Response(
