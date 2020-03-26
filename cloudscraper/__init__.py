@@ -149,6 +149,15 @@ class CloudScraper(Session):
         return self.__dict__
 
     # ------------------------------------------------------------------------------- #
+    # Raise an Exception with no stacktrace and reset depth counter.
+    # ------------------------------------------------------------------------------- #
+
+    def simpleException(self, exception, msg):
+        self._solveDepthCnt = 0
+        sys.tracebacklimit = 0
+        raise exception(msg)
+
+    # ------------------------------------------------------------------------------- #
     # debug the request via the response
     # ------------------------------------------------------------------------------- #
 
@@ -219,9 +228,8 @@ class CloudScraper(Session):
 
             if self._solveDepthCnt >= self.solveDepth:
                 _ = self._solveDepthCnt
-                self._solveDepthCnt = 0
-                sys.tracebacklimit = 0
-                raise CloudflareLoopProtection(
+                self.simpleException(
+                    CloudflareLoopProtection,
                     "!!Loop Protection!! We have tried to solve {} time(s) in a row.".format(_)
                 )
 
@@ -303,8 +311,10 @@ class CloudScraper(Session):
 
     def is_Challenge_Request(self, resp):
         if self.is_Firewall_Blocked(resp):
-            sys.tracebacklimit = 0
-            raise CloudflareCode1020('Cloudflare has blocked this request (Code 1020 Detected).')
+            self.simpleException(
+                CloudflareCode1020,
+                'Cloudflare has blocked this request (Code 1020 Detected).'
+            )
 
         if self.is_reCaptcha_Challenge(resp) or self.is_IUAM_Challenge(resp):
             return True
@@ -317,16 +327,29 @@ class CloudScraper(Session):
 
     def IUAM_Challenge_Response(self, body, url, interpreter):
         try:
-            challengeUUID = re.search(
-                r'id="challenge-form" action="(?P<challengeUUID>\S+)"',
-                body, re.M | re.DOTALL
-            ).groupdict().get('challengeUUID', '')
+            formPayload = re.search(
+                r'<form (?P<form>id="challenge-form" action="(?P<challengeUUID>.*?'
+                r'__cf_chl_jschl_tk__=\S+)"(.*?)</form>)',
+                body,
+                re.M | re.DOTALL
+            ).groupdict()
 
-            payload = OrderedDict(re.findall(r'name="(r|jschl_vc|pass)"\svalue="(.*?)"', body))
+            if not all(key in formPayload for key in ['form', 'challengeUUID']):
+                self.simpleException(
+                    CloudflareIUAMError,
+                    "Cloudflare IUAM detected, unfortunately we can't extract the parameters correctly."
+                )
+
+            payload = OrderedDict(
+                re.findall(
+                    r'name="(r|jschl_vc|pass)"\svalue="(.*?)"',
+                    formPayload['form']
+                )
+            )
 
         except AttributeError:
-            sys.tracebacklimit = 0
-            raise CloudflareIUAMError(
+            self.simpleException(
+                CloudflareIUAMError,
                 "Cloudflare IUAM detected, unfortunately we can't extract the parameters correctly."
             )
 
@@ -337,8 +360,8 @@ class CloudScraper(Session):
                 interpreter
             ).solveChallenge(body, hostParsed.netloc)
         except Exception as e:
-            sys.tracebacklimit = 0
-            raise CloudflareIUAMError(
+            self.simpleException(
+                CloudflareIUAMError,
                 'Unable to parse Cloudflare anti-bots page: {}'.format(
                     getattr(e, 'message', e)
                 )
@@ -348,7 +371,7 @@ class CloudScraper(Session):
             'url': '{}://{}{}'.format(
                 hostParsed.scheme,
                 hostParsed.netloc,
-                self.unescape(challengeUUID)
+                self.unescape(formPayload['challengeUUID'])
             ),
             'data': payload
         }
@@ -359,32 +382,51 @@ class CloudScraper(Session):
 
     def reCaptcha_Challenge_Response(self, provider, provider_params, body, url):
         try:
-            payload = re.search(
-                r'(name="r"\svalue="(?P<r>\S+)"|).*?challenge-form" action="(?P<challengeUUID>\S+)".*?'
-                r'data-ray="(?P<data_ray>\S+)".*?data-sitekey="(?P<site_key>\S+)"',
-                body, re.M | re.DOTALL
+            formPayload = re.search(
+                r'<form class="challenge-form" (?P<form>id="challenge-form" '
+                r'action="(?P<challengeUUID>.*?__cf_chl_captcha_tk__=\S+)"(.*?)</form>)',
+                body,
+                re.M | re.DOTALL
             ).groupdict()
+
+            if not all(key in formPayload for key in ['form', 'challengeUUID']):
+                self.simpleException(
+                    CloudflareReCaptchaError,
+                    "Cloudflare reCaptcha detected, unfortunately we can't extract the parameters correctly."
+                )
+
+            payload = OrderedDict(
+                re.findall(
+                    r'(name="r"\svalue|data-ray|data-sitekey)="(.*?)"',
+                    formPayload['form']
+                )
+            )
         except (AttributeError):
-            sys.tracebacklimit = 0
-            raise CloudflareReCaptchaError(
+            self.simpleException(
+                CloudflareReCaptchaError,
                 "Cloudflare reCaptcha detected, unfortunately we can't extract the parameters correctly."
             )
 
         hostParsed = urlparse(url)
+
         return {
             'url': '{}://{}{}'.format(
                 hostParsed.scheme,
                 hostParsed.netloc,
-                self.unescape(payload.get('challengeUUID', ''))
+                self.unescape(formPayload['challengeUUID'])
             ),
             'data': OrderedDict([
-                ('r', payload.get('r', '')),
-                ('id', payload.get('data_ray')),
+                ('r', payload.get('name="r" value', '')),
+                ('id', payload.get('data-ray')),
                 (
                     'g-recaptcha-response',
                     reCaptcha.dynamicImport(
                         provider.lower()
-                    ).solveCaptcha(url, payload.get('site_key'), provider_params)
+                    ).solveCaptcha(
+                        url,
+                        payload['data-sitekey'],
+                        provider_params
+                    )
                 )
             ])
         }
@@ -412,8 +454,8 @@ class CloudScraper(Session):
             # ------------------------------------------------------------------------------- #
 
             if not self.recaptcha or not isinstance(self.recaptcha, dict) or not self.recaptcha.get('provider'):
-                sys.tracebacklimit = 0
-                raise CloudflareReCaptchaProvider(
+                self.simpleException(
+                    CloudflareReCaptchaProvider,
                     "Cloudflare reCaptcha detected, unfortunately you haven't loaded an anti reCaptcha provider "
                     "correctly via the 'recaptcha' parameter."
                 )
@@ -448,8 +490,10 @@ class CloudScraper(Session):
                     if isinstance(delay, (int, float)):
                         self.delay = delay
                 except (AttributeError, ValueError):
-                    sys.tracebacklimit = 0
-                    raise CloudflareIUAMError("Cloudflare IUAM possibility malformed, issue extracing delay value.")
+                    self.simpleException(
+                        CloudflareIUAMError,
+                        "Cloudflare IUAM possibility malformed, issue extracing delay value."
+                    )
 
             sleep(self.delay)
 
@@ -535,6 +579,7 @@ class CloudScraper(Session):
         # ------------------------------------------------------------------------------- #
 
         return self.request(resp.request.method, resp.url, **kwargs)
+
     # ------------------------------------------------------------------------------- #
 
     @classmethod
@@ -587,8 +632,8 @@ class CloudScraper(Session):
                 cookie_domain = d
                 break
         else:
-            sys.tracebacklimit = 0
-            raise CloudflareIUAMError(
+            cls.simpleException(
+                CloudflareIUAMError,
                 "Unable to find Cloudflare cookies. Does the site actually "
                 "have Cloudflare IUAM (I'm Under Attack Mode) enabled?"
             )
