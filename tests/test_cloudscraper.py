@@ -174,14 +174,14 @@ class TestCloudScraper:
         assert any('!' in _ for _ in scraper.user_agent.cipherSuite)
 
     # ------------------------------------------------------------------------------- #
-    # test 9kw ReCaptcha
+    # test ReCaptcha
 
     @mockCloudflare(fixture='reCaptcha_challenge_12_12_2019.html', payload={})
     def test_reCaptcha_providers(self, **kwargs):
         for provider in ['9kw', '2captcha', 'anticaptcha', 'deathbycaptcha']:
             with pytest.raises(
-                reCaptchaParameter,
-                match=r".*?: Missing .*? parameter\."
+                (reCaptchaParameter, ImportError),
+                match=r".*?: Missing .*? parameter\.|Please install.*?"
             ):
                 scraper = cloudscraper.create_scraper(
                     recaptcha={
