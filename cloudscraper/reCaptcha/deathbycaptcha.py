@@ -12,6 +12,7 @@ except ImportError:
     )
 
 from ..exceptions import (
+    reCaptchaException,
     reCaptchaServiceUnavailable,
     reCaptchaAccountError,
     reCaptchaTimeout,
@@ -154,7 +155,7 @@ class captchaSolver(reCaptcha):
 
     # ------------------------------------------------------------------------------- #
 
-    def requestSolve(self, site_url, site_key):
+    def requestSolve(self, url, siteKey):
         def _checkRequest(response):
             if response.ok and response.json().get("is_correct") and response.json().get('captcha'):
                 return response
@@ -172,8 +173,8 @@ class captchaSolver(reCaptcha):
                     'password': self.password,
                     'type': '4',
                     'token_params': json.dumps({
-                        'googlekey': site_key,
-                        'pageurl': site_url
+                        'googlekey': siteKey,
+                        'pageurl': url
                     })
                 },
                 allow_redirects=False
@@ -192,7 +193,7 @@ class captchaSolver(reCaptcha):
 
     # ------------------------------------------------------------------------------- #
 
-    def getCaptchaAnswer(self, site_url, site_key, reCaptchaParams):
+    def getCaptchaAnswer(self, captchaType, url, siteKey, reCaptchaParams):
         jobID = None
 
         for param in ['username', 'password']:
@@ -202,11 +203,16 @@ class captchaSolver(reCaptcha):
                 )
             setattr(self, param, reCaptchaParams.get(param))
 
+        if captchaType == 'hCaptcha':
+            raise reCaptchaException(
+                'Provider does not support hCaptcha.'
+            )
+
         if reCaptchaParams.get('proxy'):
             self.session.proxies = reCaptchaParams.get('proxies')
 
         try:
-            jobID = self.requestSolve(site_url, site_key)
+            jobID = self.requestSolve(url, siteKey)
             return self.requestJob(jobID)
         except polling.TimeoutException:
             try:

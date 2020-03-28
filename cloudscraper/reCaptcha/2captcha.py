@@ -166,7 +166,7 @@ class captchaSolver(reCaptcha):
 
     # ------------------------------------------------------------------------------- #
 
-    def requestSolve(self, site_url, site_key):
+    def requestSolve(self, captchaType, url, siteKey):
         def _checkRequest(response):
             if response.ok and response.json().get("status") == 1 and response.json().get('request'):
                 return response
@@ -175,17 +175,27 @@ class captchaSolver(reCaptcha):
 
             return None
 
+        data = {
+            'key': self.api_key,
+            'pageurl': url,
+            'json': 1,
+            'soft_id': 5507698
+        }
+
+        data.update(
+            {
+                'method': 'userrcaptcha',
+                'googlekey': siteKey
+            } if captchaType == 'reCaptcha' else {
+                'method': 'hcaptcha',
+                'sitekey': siteKey
+            }
+        )
+
         response = polling.poll(
             lambda: self.session.post(
                 '{}/in.php'.format(self.host),
-                data={
-                    'key': self.api_key,
-                    'method': 'hcaptcha',
-                    'sitekey': site_key,
-                    'pageurl': site_url,
-                    'json': 1,
-                    'soft_id': 5507698
-                },
+                data=data,
                 allow_redirects=False,
                 timeout=30
             ),
@@ -203,7 +213,7 @@ class captchaSolver(reCaptcha):
 
     # ------------------------------------------------------------------------------- #
 
-    def getCaptchaAnswer(self, site_url, site_key, reCaptchaParams):
+    def getCaptchaAnswer(self, captchaType, url, siteKey, reCaptchaParams):
         jobID = None
 
         if not reCaptchaParams.get('api_key'):
@@ -217,7 +227,7 @@ class captchaSolver(reCaptcha):
             self.session.proxies = reCaptchaParams.get('proxies')
 
         try:
-            jobID = self.requestSolve(site_url, site_key)
+            jobID = self.requestSolve(captchaType, url, siteKey)
             return self.requestJob(jobID)
         except polling.TimeoutException:
             try:

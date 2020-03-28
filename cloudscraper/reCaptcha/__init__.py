@@ -37,10 +37,10 @@ class reCaptcha(ABC):
     # ------------------------------------------------------------------------------- #
 
     @abc.abstractmethod
-    def getCaptchaAnswer(self, site_url, site_key, reCaptchaParams):
+    def getCaptchaAnswer(self, captchaType, url, siteKey, reCaptchaParams):
         pass
 
     # ------------------------------------------------------------------------------- #
 
-    def solveCaptcha(self, site_url, site_key, reCaptchaParams):
-        return self.getCaptchaAnswer(site_url, site_key, reCaptchaParams)
+    def solveCaptcha(self, captchaType, url, siteKey, reCaptchaParams):
+        return self.getCaptchaAnswer(captchaType, url, siteKey, reCaptchaParams)

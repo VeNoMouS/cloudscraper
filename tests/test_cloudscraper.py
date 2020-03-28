@@ -180,8 +180,8 @@ class TestCloudScraper:
     def test_reCaptcha_providers(self, **kwargs):
         for provider in ['9kw', '2captcha', 'anticaptcha', 'deathbycaptcha']:
             with pytest.raises(
-                (reCaptchaParameter, ImportError),
-                match=r".*?: Missing .*? parameter\.|Please install.*?"
+                (reCaptchaParameter, ImportError, CloudflareReCaptchaError),
+                match=r".*?: Missing .*? parameter\.|Please install.*?|Cloudflare reCaptcha detected.*?"
             ):
                 scraper = cloudscraper.create_scraper(
                     recaptcha={

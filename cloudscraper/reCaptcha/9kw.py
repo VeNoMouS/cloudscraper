@@ -12,6 +12,7 @@ except ImportError:
     )
 
 from ..exceptions import (
+    reCaptchaException,
     reCaptchaServiceUnavailable,
     reCaptchaAPIError,
     reCaptchaTimeout,
@@ -143,7 +144,7 @@ class captchaSolver(reCaptcha):
 
     # ------------------------------------------------------------------------------- #
 
-    def requestSolve(self, site_url, site_key):
+    def requestSolve(self, url, siteKey):
         def _checkRequest(response):
             if response.ok and response.text.startswith('{') and response.json().get('captchaid'):
                 return response
@@ -159,9 +160,9 @@ class captchaSolver(reCaptcha):
                     'apikey': self.api_key,
                     'action': 'usercaptchaupload',
                     'interactive': 1,
-                    'file-upload-01': site_key,
+                    'file-upload-01': siteKey,
                     'oldsource': 'recaptchav2',
-                    'pageurl': site_url,
+                    'pageurl': url,
                     'maxtimeout': self.maxtimeout,
                     'json': 1
                 },
@@ -179,11 +180,16 @@ class captchaSolver(reCaptcha):
 
     # ------------------------------------------------------------------------------- #
 
-    def getCaptchaAnswer(self, site_url, site_key, reCaptchaParams):
+    def getCaptchaAnswer(self, captchaType, url, siteKey, reCaptchaParams):
         jobID = None
 
         if not reCaptchaParams.get('api_key'):
             raise reCaptchaParameter("9kw: Missing api_key parameter.")
+
+        if captchaType == 'hCaptcha':
+            raise reCaptchaException(
+                'Provider does not support hCaptcha.'
+            )
 
         self.api_key = reCaptchaParams.get('api_key')
 
@@ -194,7 +200,7 @@ class captchaSolver(reCaptcha):
             self.session.proxies = reCaptchaParams.get('proxies')
 
         try:
-            jobID = self.requestSolve(site_url, site_key)
+            jobID = self.requestSolve(url, siteKey)
             return self.requestJob(jobID)
         except polling.TimeoutException:
             raise reCaptchaTimeout(
