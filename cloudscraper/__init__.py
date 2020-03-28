@@ -397,25 +397,39 @@ class CloudScraper(Session):
 
             payload = OrderedDict(
                 re.findall(
-                    r'(name="r"\svalue|data-ray|data-sitekey)="(.*?)"',
+                    r'(name="r"\svalue|data-ray|data-sitekey|name="cf_captcha_kind"\svalue)="(.*?)"',
                     formPayload['form']
                 )
             )
-        except (AttributeError):
+
+            captchaType = 'reCaptcha' if payload['name="cf_captcha_kind" value'] == 're' else 'hCaptcha'
+
+        except (AttributeError, KeyError):
             self.simpleException(
                 CloudflareReCaptchaError,
                 "Cloudflare reCaptcha detected, unfortunately we can't extract the parameters correctly."
             )
 
-        hostParsed = urlparse(url)
-
-        hCaptcha = reCaptcha.dynamicImport(
+        captchaResponse = reCaptcha.dynamicImport(
             provider.lower()
         ).solveCaptcha(
+            captchaType,
             url,
             payload['data-sitekey'],
             provider_params
         )
+
+        dataPayload = OrderedDict([
+            ('r', payload.get('name="r" value', '')),
+            ('cf_captcha_kind', payload['name="cf_captcha_kind" value']),
+            ('id', payload.get('data-ray')),
+            ('g-recaptcha-response', captchaResponse)
+        ])
+
+        if captchaType == 'hCaptcha':
+            dataPayload.update({'h-captcha-response': captchaResponse})
+
+        hostParsed = urlparse(url)
 
         return {
             'url': '{}://{}{}'.format(
@@ -423,13 +437,7 @@ class CloudScraper(Session):
                 hostParsed.netloc,
                 self.unescape(formPayload['challengeUUID'])
             ),
-            'data': OrderedDict([
-                ('r', payload.get('name="r" value', '')),
-                ('cf_captcha_kind', 'h'),
-                ('id', payload.get('data-ray')),
-                ('g-recaptcha-response', hCaptcha),
-                ('h-captcha-response', hCaptcha)
-            ])
+            'data': dataPayload
         }
 
     # ------------------------------------------------------------------------------- #

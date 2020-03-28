@@ -5,6 +5,7 @@ from ..exceptions import reCaptchaParameter
 try:
     from python_anticaptcha import (
         AnticaptchaClient,
+        NoCaptchaTaskProxylessTask,
         HCaptchaTaskProxyless
     )
 except ImportError:
@@ -24,7 +25,7 @@ class captchaSolver(reCaptcha):
 
     # ------------------------------------------------------------------------------- #
 
-    def getCaptchaAnswer(self, site_url, site_key, reCaptchaParams):
+    def getCaptchaAnswer(self, captchaType, url, siteKey, reCaptchaParams):
         if not reCaptchaParams.get('api_key'):
             raise reCaptchaParameter("anticaptcha: Missing api_key parameter.")
 
@@ -33,7 +34,12 @@ class captchaSolver(reCaptcha):
         if reCaptchaParams.get('proxy'):
             client.session.proxies = reCaptchaParams.get('proxies')
 
-        task = HCaptchaTaskProxyless(site_url, site_key)
+        captchaMap = {
+            'reCaptcha': NoCaptchaTaskProxylessTask,
+            'hCaptcha': HCaptchaTaskProxyless
+        }
+
+        task = captchaMap[captchaType](url, siteKey)
 
         if not hasattr(client, 'createTaskSmee'):
             raise NotImplementedError(
