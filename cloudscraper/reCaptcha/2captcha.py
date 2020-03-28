@@ -2,7 +2,6 @@ from __future__ import absolute_import
 
 import requests
 
-
 from ..exceptions import (
     reCaptchaServiceUnavailable,
     reCaptchaAPIError,
@@ -81,7 +80,7 @@ class captchaSolver(reCaptcha):
             }
         }
 
-        if response.json().get('status') is False and response.json().get('request') in errors.get(request_type):
+        if response.json().get('status') == 0 and response.json().get('request') in errors.get(request_type):
             raise reCaptchaAPIError(
                 '{} {}'.format(
                     response.json().get('request'),
@@ -113,7 +112,8 @@ class captchaSolver(reCaptcha):
                     'action': 'reportbad',
                     'id': jobID,
                     'json': '1'
-                }
+                },
+                timeout=30
             ),
             check_success=_checkRequest,
             step=5,
@@ -149,7 +149,8 @@ class captchaSolver(reCaptcha):
                     'action': 'get',
                     'id': jobID,
                     'json': '1'
-                }
+                },
+                timeout=30
             ),
             check_success=_checkRequest,
             step=5,
@@ -179,13 +180,14 @@ class captchaSolver(reCaptcha):
                 '{}/in.php'.format(self.host),
                 data={
                     'key': self.api_key,
-                    'method': 'userrecaptcha',
-                    'googlekey': site_key,
+                    'method': 'hcaptcha',
+                    'sitekey': site_key,
                     'pageurl': site_url,
-                    'json': '1',
-                    'soft_id': '5507698'
+                    'json': 1,
+                    'soft_id': 5507698
                 },
-                allow_redirects=False
+                allow_redirects=False,
+                timeout=30
             ),
             check_success=_checkRequest,
             step=5,
