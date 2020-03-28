@@ -5,12 +5,12 @@ from ..exceptions import reCaptchaParameter
 try:
     from python_anticaptcha import (
         AnticaptchaClient,
-        NoCaptchaTaskProxylessTask
+        HCaptchaTaskProxyless
     )
 except ImportError:
     raise ImportError(
-        "Please install the python module 'python_anticaptcha' via pip or download it from "
-        "https://github.com/ad-m/python-anticaptcha"
+        "Please install/upgrade the python module 'python_anticaptcha' via "
+        "https://github.com/ad-m/python-anticaptcha/tree/hcaptcha"
     )
 
 from . import reCaptcha
@@ -32,7 +32,7 @@ class captchaSolver(reCaptcha):
         if reCaptchaParams.get('proxy'):
             client.session.proxies = reCaptchaParams.get('proxies')
 
-        task = NoCaptchaTaskProxylessTask(site_url, site_key)
+        task = HCaptchaTaskProxyless(site_url, site_key)
 
         if not hasattr(client, 'createTaskSmee'):
             raise NotImplementedError(
