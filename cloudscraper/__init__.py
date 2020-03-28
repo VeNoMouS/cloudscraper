@@ -409,6 +409,14 @@ class CloudScraper(Session):
 
         hostParsed = urlparse(url)
 
+        hCaptcha = reCaptcha.dynamicImport(
+            provider.lower()
+        ).solveCaptcha(
+            url,
+            payload['data-sitekey'],
+            provider_params
+        )
+
         return {
             'url': '{}://{}{}'.format(
                 hostParsed.scheme,
@@ -417,17 +425,10 @@ class CloudScraper(Session):
             ),
             'data': OrderedDict([
                 ('r', payload.get('name="r" value', '')),
+                ('cf_captcha_kind', 'h'),
                 ('id', payload.get('data-ray')),
-                (
-                    'g-recaptcha-response',
-                    reCaptcha.dynamicImport(
-                        provider.lower()
-                    ).solveCaptcha(
-                        url,
-                        payload['data-sitekey'],
-                        provider_params
-                    )
-                )
+                ('g-recaptcha-response', hCaptcha),
+                ('h-captcha-response', hCaptcha)
             ])
         }
 
@@ -551,6 +552,7 @@ class CloudScraper(Session):
 
             if not challengeSubmitResponse.is_redirect:
                 return challengeSubmitResponse
+
             else:
                 cloudflare_kwargs = deepcopy(kwargs)
                 cloudflare_kwargs['headers'] = updateAttr(
