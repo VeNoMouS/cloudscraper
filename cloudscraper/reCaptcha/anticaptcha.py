@@ -10,6 +10,7 @@ try:
 except ImportError:
     raise ImportError(
         "Please install/upgrade the python module 'python_anticaptcha' via "
+        "pip install git+https://github.com/ad-m/python-anticaptcha.git@hcaptcha or "
         "https://github.com/ad-m/python-anticaptcha/tree/hcaptcha"
     )
 
@@ -37,7 +38,7 @@ class captchaSolver(reCaptcha):
         if not hasattr(client, 'createTaskSmee'):
             raise NotImplementedError(
                 "Please upgrade 'python_anticaptcha' via pip or download it from "
-                "https://github.com/ad-m/python-anticaptcha"
+                "https://github.com/ad-m/python-anticaptcha/tree/hcaptcha"
             )
 
         job = client.createTaskSmee(task)
