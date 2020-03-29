@@ -1,18 +1,22 @@
 from __future__ import absolute_import
 
-from ..exceptions import reCaptchaParameter
+from ..exceptions import (
+    reCaptchaParameter,
+    reCaptchaTimeout,
+    reCaptchaAPIError
+)
 
 try:
     from python_anticaptcha import (
         AnticaptchaClient,
         NoCaptchaTaskProxylessTask,
-        HCaptchaTaskProxyless
+        HCaptchaTaskProxyless,
+        AnticaptchaException
     )
 except ImportError:
     raise ImportError(
         "Please install/upgrade the python module 'python_anticaptcha' via "
-        "pip install git+https://github.com/ad-m/python-anticaptcha.git@hcaptcha or "
-        "https://github.com/ad-m/python-anticaptcha/tree/hcaptcha"
+        "pip install python-anticaptcha or https://github.com/ad-m/python-anticaptcha/"
     )
 
 from . import reCaptcha
@@ -48,7 +52,16 @@ class captchaSolver(reCaptcha):
             )
 
         job = client.createTaskSmee(task)
-        return job.get_solution_response()
+
+        try:
+            job.join(maximum_time=180)
+        except (AnticaptchaException) as e:
+            raise reCaptchaTimeout('{}'.format(getattr(e, 'message', e)))
+
+        if 'solution' in job._last_result:
+            return job.get_solution_response()
+        else:
+            raise reCaptchaAPIError('Job did not return `solution` key in payload.')
 
 
 # ------------------------------------------------------------------------------- #
