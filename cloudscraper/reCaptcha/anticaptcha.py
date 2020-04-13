@@ -1,5 +1,4 @@
 from __future__ import absolute_import
-
 from ..exceptions import (
     reCaptchaParameter,
     reCaptchaTimeout,
@@ -19,12 +18,19 @@ except ImportError:
         "pip install python-anticaptcha or https://github.com/ad-m/python-anticaptcha/"
     )
 
+import sys
+
 from . import reCaptcha
 
 
 class captchaSolver(reCaptcha):
 
     def __init__(self):
+        if sys.modules['python_anticaptcha'].__version__ < 0.6:
+            raise ImportError(
+                "Please upgrade the python module 'python_anticaptcha' via "
+                "pip install -U python-anticaptcha or https://github.com/ad-m/python-anticaptcha/"
+            )
         super(captchaSolver, self).__init__('anticaptcha')
 
     # ------------------------------------------------------------------------------- #
@@ -51,7 +57,7 @@ class captchaSolver(reCaptcha):
                 "https://github.com/ad-m/python-anticaptcha/tree/hcaptcha"
             )
 
-        job = client.createTaskSmee(task)
+        job = client.createTaskSmee(task, timeout=180)
 
         try:
             job.join(maximum_time=180)
