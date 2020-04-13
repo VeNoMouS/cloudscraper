@@ -102,6 +102,7 @@ class CloudScraper(Session):
         self.debug = kwargs.pop('debug', False)
         self.delay = kwargs.pop('delay', None)
         self.cipherSuite = kwargs.pop('cipherSuite', None)
+        self.ssl_context = kwargs.pop('ssl_context', None)
         self.interpreter = kwargs.pop('interpreter', 'native')
         self.recaptcha = kwargs.pop('recaptcha', {})
         self.allow_brotli = kwargs.pop(
@@ -134,7 +135,8 @@ class CloudScraper(Session):
         self.mount(
             'https://',
             CipherSuiteAdapter(
-                cipherSuite=self.cipherSuite
+                cipherSuite=self.cipherSuite,
+                ssl_context=self.ssl_context
             )
         )
 
