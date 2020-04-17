@@ -2,6 +2,8 @@ import sys
 import logging
 import abc
 
+from ..exceptions import CloudflareSolveError
+
 if sys.version_info >= (3, 4):
     ABC = abc.ABC  # noqa
 else:
@@ -10,7 +12,6 @@ else:
 # ------------------------------------------------------------------------------- #
 
 interpreters = {}
-BUG_REPORT = 'Cloudflare may have changed their technique, or there may be a bug in the script.'
 
 # ------------------------------------------------------------------------------- #
 
@@ -50,5 +51,6 @@ class JavaScriptInterpreter(ABC):
         try:
             return float(self.eval(body, domain))
         except Exception:
-            logging.error('Error executing Cloudflare IUAM Javascript. {}'.format(BUG_REPORT))
-            raise
+            raise CloudflareSolveError(
+                'Error trying to solve Cloudflare IUAM Javascript, they may have changed their technique.'
+            )
