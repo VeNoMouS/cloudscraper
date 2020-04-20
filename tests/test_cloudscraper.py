@@ -3,6 +3,7 @@
 import pytest
 import requests
 import cloudscraper
+import cloudscraper.help as helper
 
 from collections import OrderedDict
 
@@ -189,3 +190,9 @@ class TestCloudScraper:
                     }
                 )
                 scraper.get(url)
+
+    # ------------------------------------------------------------------------------- #
+
+    def test_helper(self, **kwargs):
+        payload = helper.systemInfo()
+        assert payload
