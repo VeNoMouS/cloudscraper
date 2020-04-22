@@ -28,6 +28,7 @@ from .exceptions import (
     CloudflareLoopProtection,
     CloudflareCode1020,
     CloudflareIUAMError,
+    CloudflareChallengeError,
     CloudflareReCaptchaError,
     CloudflareReCaptchaProvider
 )
@@ -266,6 +267,27 @@ class CloudScraper(Session):
         return False
 
     # ------------------------------------------------------------------------------- #
+    # check if the response contains new Cloudflare challenge
+    # ------------------------------------------------------------------------------- #
+
+    @staticmethod
+    def is_New_IUAM_Challenge(resp):
+        try:
+            return (
+                resp.headers.get('Server', '').startswith('cloudflare')
+                and resp.status_code in [429, 503]
+                and re.search(
+                    r'cpo.src="/cdn-cgi/challenge-platform/orchestrate/jsch/v1"',
+                    resp.text,
+                    re.M | re.DOTALL
+                )
+            )
+        except AttributeError:
+            pass
+
+        return False
+
+    # ------------------------------------------------------------------------------- #
     # check if the response contains a valid Cloudflare reCaptcha challenge
     # ------------------------------------------------------------------------------- #
 
@@ -316,6 +338,12 @@ class CloudScraper(Session):
             self.simpleException(
                 CloudflareCode1020,
                 'Cloudflare has blocked this request (Code 1020 Detected).'
+            )
+
+        if self.is_New_IUAM_Challenge(resp):
+            self.simpleException(
+                CloudflareChallengeError,
+                'Detected the new Cloudflare challenge.'
             )
 
         if self.is_reCaptcha_Challenge(resp) or self.is_IUAM_Challenge(resp):
