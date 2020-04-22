@@ -630,6 +630,10 @@ class CloudScraper(Session):
         try:
             resp = scraper.get(url, **kwargs)
             resp.raise_for_status()
+        except requests.exceptions.HTTPError as error:
+            if error.response.status_code != 503:
+                logging.error('"{}" returned an error. Could not collect tokens.'.format(url))
+                raise
         except Exception:
             logging.error('"{}" returned an error. Could not collect tokens.'.format(url))
             raise
