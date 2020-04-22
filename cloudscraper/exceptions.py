@@ -36,6 +36,12 @@ class CloudflareIUAMError(CloudflareException):
     """
 
 
+class CloudflareChallengeError(CloudflareException):
+    """
+    Raise an error when detected new Cloudflare challenge
+    """
+
+
 class CloudflareSolveError(CloudflareException):
     """
     Raise an error when issue with solving Cloudflare challenge
