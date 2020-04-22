@@ -36,7 +36,7 @@ class CloudflareIUAMError(CloudflareException):
     """
 
 
-class CloudflareSolveError:
+class CloudflareSolveError(CloudflareException):
     """
     Raise an error when issue with solving Cloudflare challenge
     """

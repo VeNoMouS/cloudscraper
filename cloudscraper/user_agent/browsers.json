@@ -17,9 +17,13 @@
             "ECDHE-RSA-AES256-GCM-SHA384",
             "ECDHE-ECDSA-CHACHA20-POLY1305",
             "ECDHE-RSA-CHACHA20-POLY1305",
+            "ECDHE-RSA-AES128-SHA",
+            "ECDHE-RSA-AES256-SHA",
             "AES128-GCM-SHA256",
             "AES256-GCM-SHA384",
-            "AES128-SHA"
+            "AES128-SHA",
+            "AES256-SHA",
+            "DES-CBC3-SHA"
         ],
         "releases": {
             "Chrome/50.0.0.0": {
@@ -12822,9 +12826,13 @@
             "ECDHE-RSA-AES256-GCM-SHA384",
             "ECDHE-ECDSA-AES256-SHA",
             "ECDHE-ECDSA-AES128-SHA",
+            "ECDHE-RSA-AES128-SHA",
+            "ECDHE-RSA-AES256-SHA",
             "DHE-RSA-AES128-SHA",
             "DHE-RSA-AES256-SHA",
-            "AES128-SHA"
+            "AES128-SHA",
+            "AES256-SHA",
+            "DES-CBC3-SHA"
         ],
         "releases": {
             "Firefox/50.0": {

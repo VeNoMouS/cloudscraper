@@ -255,7 +255,7 @@ class CloudScraper(Session):
                 resp.headers.get('Server', '').startswith('cloudflare')
                 and resp.status_code in [429, 503]
                 and re.search(
-                    r'action="/.*?__cf_chl_jschl_tk__=\S+".*?name="jschl_vc"\svalue=.*?',
+                    r'<form id="challenge-form" action="/.*?__cf_chl_jschl_tk__=\S+"',
                     resp.text,
                     re.M | re.DOTALL
                 )
@@ -342,12 +342,11 @@ class CloudScraper(Session):
                     "Cloudflare IUAM detected, unfortunately we can't extract the parameters correctly."
                 )
 
-            payload = OrderedDict(
-                re.findall(
-                    r'name="(r|jschl_vc|pass)"\svalue="(.*?)"',
-                    formPayload['form']
-                )
-            )
+            payload = OrderedDict()
+            for challengeParam in re.findall(r'<input\s(.*?)>', formPayload['form']):
+                inputPayload = dict(re.findall(r'(\S+)="(\S+)"', challengeParam))
+                if inputPayload.get('name') in ['r', 'jschl_vc', 'pass']:
+                    payload.update({inputPayload['name']: inputPayload['value']})
 
         except AttributeError:
             self.simpleException(
