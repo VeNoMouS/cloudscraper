@@ -26,7 +26,7 @@ from . import reCaptcha
 class captchaSolver(reCaptcha):
 
     def __init__(self):
-        if sys.modules['python_anticaptcha'].__version__ < 0.6:
+        if sys.modules['python_anticaptcha'].__version__ < '0.6':
             raise ImportError(
                 "Please upgrade the python module 'python_anticaptcha' via "
                 "pip install -U python-anticaptcha or https://github.com/ad-m/python-anticaptcha/"
