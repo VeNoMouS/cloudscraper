@@ -3,6 +3,7 @@ from __future__ import absolute_import
 import re
 import operator as op
 
+from ..exceptions import CloudflareSolveError
 from . import JavaScriptInterpreter
 
 # ------------------------------------------------------------------------------- #
@@ -62,13 +63,16 @@ class ChallengeInterpreter(JavaScriptInterpreter):
         def challengeSolve(body, domain):
             jschl_answer = 0
 
-            jsfuckChallenge = re.search(
-                r"setTimeout\(function\(\){\s+var.*?f,\s*(?P<variable>\w+).*?:(?P<init>\S+)};"
-                r".*?\('challenge-form'\);\s+;(?P<challenge>.*?a\.value)"
-                r"(?:.*id=\"cf-dn-.*?>(?P<k>\S+)<)?",
-                body,
-                re.DOTALL | re.MULTILINE
-            ).groupdict()
+            try:
+                jsfuckChallenge = re.search(
+                    r"setTimeout\(function\(\){\s+var.*?f,\s*(?P<variable>\w+).*?:(?P<init>\S+)};"
+                    r".*?\('challenge-form'\);\s+;(?P<challenge>.*?a\.value)"
+                    r"(?:.*id=\"cf-dn-.*?>(?P<k>\S+)<)?",
+                    body,
+                    re.DOTALL | re.MULTILINE
+                ).groupdict()
+            except AttributeError:
+                raise CloudflareSolveError('There was an issue extracting the Cloudflare challenge.')
 
             jsfuckChallenge['challenge'] = re.finditer(
                 r'{}.*?([+\-*/])=(.*?);(?=a\.value|{})'.format(
