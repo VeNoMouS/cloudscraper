@@ -9,14 +9,12 @@ def template(body, domain):
 
     try:
         js = re.search(
-            r'setTimeout\(function\(\){\s+(var s,t,o,p,b,r,e,a,k,i,n,g,f.+?\r?\n[\s\S]+?a\.value =.+?)\r?\n',
-            body
+            r'setTimeout\(function\(\){\s+(.*?a\.value = \S+)',
+            body,
+            re.M | re.S
         ).group(1)
     except Exception:
         raise ValueError('Unable to identify Cloudflare IUAM Javascript on website. {}'.format(BUG_REPORT))
-
-    js = re.sub(r'\s{2,}', ' ', js, flags=re.MULTILINE | re.DOTALL).replace('\'; 121\'', '')
-    js += '\na.value;'
 
     jsEnv = '''
         String.prototype.italics=function(str) {{return "<i>" + this + "</i>";}};
