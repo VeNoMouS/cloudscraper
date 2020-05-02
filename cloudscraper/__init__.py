@@ -256,7 +256,7 @@ class CloudScraper(Session):
                 resp.headers.get('Server', '').startswith('cloudflare')
                 and resp.status_code in [429, 503]
                 and re.search(
-                    r'<form id="challenge-form" action="/.*?__cf_chl_jschl_tk__=\S+"',
+                    r'<form .*?="challenge-form" action="/.*?__cf_chl_jschl_tk__=\S+"',
                     resp.text,
                     re.M | re.DOTALL
                 )
@@ -347,6 +347,8 @@ class CloudScraper(Session):
             )
 
         if self.is_reCaptcha_Challenge(resp) or self.is_IUAM_Challenge(resp):
+            if self.debug:
+                print('Detected Challenge.')
             return True
 
         return False
@@ -358,7 +360,7 @@ class CloudScraper(Session):
     def IUAM_Challenge_Response(self, body, url, interpreter):
         try:
             formPayload = re.search(
-                r'<form (?P<form>.*?"challenge-form" '
+                r'<form (?P<form>.*?="challenge-form" '
                 r'action="(?P<challengeUUID>.*?'
                 r'__cf_chl_jschl_tk__=\S+)"(.*?)</form>)',
                 body,
@@ -376,7 +378,7 @@ class CloudScraper(Session):
                 inputPayload = dict(re.findall(r'(\S+)="(\S+)"', challengeParam))
                 if inputPayload.get('name') in ['r', 'jschl_vc', 'pass']:
                     payload.update({inputPayload['name']: inputPayload['value']})
-
+            
         except AttributeError:
             self.simpleException(
                 CloudflareIUAMError,
@@ -413,7 +415,7 @@ class CloudScraper(Session):
     def reCaptcha_Challenge_Response(self, provider, provider_params, body, url):
         try:
             formPayload = re.search(
-                r'<form class="challenge-form" (?P<form>id="challenge-form" '
+                r'<form (?P<form>.*?="challenge-form" '
                 r'action="(?P<challengeUUID>.*?__cf_chl_captcha_tk__=\S+)"(.*?)</form>)',
                 body,
                 re.M | re.DOTALL
