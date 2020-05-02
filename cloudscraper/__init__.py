@@ -358,7 +358,8 @@ class CloudScraper(Session):
     def IUAM_Challenge_Response(self, body, url, interpreter):
         try:
             formPayload = re.search(
-                r'<form (?P<form>id="challenge-form" action="(?P<challengeUUID>.*?'
+                r'<form (?P<form>.*?"challenge-form" '
+                r'action="(?P<challengeUUID>.*?'
                 r'__cf_chl_jschl_tk__=\S+)"(.*?)</form>)',
                 body,
                 re.M | re.DOTALL
