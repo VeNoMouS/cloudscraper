@@ -78,6 +78,7 @@ class CipherSuiteAdapter(HTTPAdapter):
         if not self.ssl_context:
             self.ssl_context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
             self.ssl_context.set_ciphers(self.cipherSuite)
+            self.ssl_context.set_ecdh_curve('prime256v1')
             self.ssl_context.options |= (ssl.OP_NO_SSLv2 | ssl.OP_NO_SSLv3 | ssl.OP_NO_TLSv1 | ssl.OP_NO_TLSv1_1)
 
         super(CipherSuiteAdapter, self).__init__(**kwargs)
@@ -378,7 +379,7 @@ class CloudScraper(Session):
                 inputPayload = dict(re.findall(r'(\S+)="(\S+)"', challengeParam))
                 if inputPayload.get('name') in ['r', 'jschl_vc', 'pass']:
                     payload.update({inputPayload['name']: inputPayload['value']})
-            
+
         except AttributeError:
             self.simpleException(
                 CloudflareIUAMError,
