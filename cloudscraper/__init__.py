@@ -280,7 +280,7 @@ class CloudScraper(Session):
                     r'cpo.src="/cdn-cgi/challenge-platform/orchestrate/jsch/v1"',
                     resp.text,
                     re.M | re.DOTALL
-                )
+                ) is not None
             )
         except AttributeError:
             pass
