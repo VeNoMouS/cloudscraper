@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 import hashlib
-import responses
-
-from os import path
 from io import open
+from os import path
+
+import responses
 
 try:
     from urlparse import parse_qsl
@@ -19,6 +19,7 @@ cloudscraper_kwargs = dict(delay=0.01, debug=False)
 # Cloudflare challenge fixtures are only read from the FS once
 cache = {}
 
+
 # ------------------------------------------------------------------------------- #
 
 
@@ -33,6 +34,7 @@ def fixtures(filename):
         with open(path.join(path.dirname(__file__), 'fixtures', filename), 'r') as fp:
             cache[filename] = fp.read()
     return cache[filename]
+
 
 # ------------------------------------------------------------------------------- #
 
@@ -59,7 +61,8 @@ def mockCloudflare(fixture, payload):
                     200,
                     [
                         (
-                            'Set-Cookie', '__cfduid=d5927a7cbaa96ec536939f93648e3c08a1576098703; Domain=.evildomain.com; path=/'
+                            'Set-Cookie',
+                            '__cfduid=d5927a7cbaa96ec536939f93648e3c08a1576098703; Domain=.evildomain.com; path=/'
                         ),
                         (
                             'Set-Cookie',
