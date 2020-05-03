@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
+from unittest import mock
 
 import pytest
 import requests
+from requests.structures import CaseInsensitiveDict
+
 import cloudscraper
 import cloudscraper.help as helper
 
@@ -51,8 +54,8 @@ class TestCloudScraper:
     def test_bad_interpreter_js_challenge_11_12_2019(self, **kwargs):
         # test bad interpreter
         with pytest.raises(
-            CloudflareIUAMError,
-            match=r"Unable to parse Cloudflare anti-bots page: No module named*?"
+                CloudflareIUAMError,
+                match=r"Unable to parse Cloudflare anti-bots page: No module named*?"
         ):
             scraper = cloudscraper.create_scraper(interpreter='badInterpreter', **kwargs)
             scraper.get(url)
@@ -71,8 +74,8 @@ class TestCloudScraper:
     def test_bad_solve_js_challenge_11_12_2019(self, **kwargs):
         # test bad solve loop protection.
         with pytest.raises(
-            CloudflareLoopProtection,
-            match=r".*?Loop Protection.*?"
+                CloudflareLoopProtection,
+                match=r".*?Loop Protection.*?"
         ):
             scraper = cloudscraper.create_scraper(**kwargs)
             scraper.get(url)
@@ -82,15 +85,15 @@ class TestCloudScraper:
     def test_bad_js_challenge_12_12_2019(self, **kwargs):
         # test bad reCaptcha extraction.
         with pytest.raises(
-            CloudflareIUAMError,
-            match=r".*?we can't extract the parameters correctly.*?"
+                CloudflareIUAMError,
+                match=r".*?we can't extract the parameters correctly.*?"
         ):
             scraper = cloudscraper.create_scraper(**kwargs)
             scraper.IUAM_Challenge_Response('', '', '')
 
         with pytest.raises(
-            CloudflareIUAMError,
-            match=r"Cloudflare IUAM detected, unfortunately we can't extract the parameters correctly."
+                CloudflareIUAMError,
+                match=r"Cloudflare IUAM detected, unfortunately we can't extract the parameters correctly."
         ):
             scraper = cloudscraper.create_scraper(**kwargs)
             scraper.IUAM_Challenge_Response(
@@ -105,8 +108,8 @@ class TestCloudScraper:
     def test_reCaptcha_challenge_12_12_2019(self, **kwargs):
         # test bad reCaptcha detection.
         with pytest.raises(
-            CloudflareReCaptchaProvider,
-            match=r".*?reCaptcha detected*?"
+                CloudflareReCaptchaProvider,
+                match=r".*?reCaptcha detected*?"
         ):
             scraper = cloudscraper.create_scraper(**kwargs)
             scraper.get(url)
@@ -119,8 +122,8 @@ class TestCloudScraper:
     def test_bad_reCaptcha_challenge_12_12_2019(self, **kwargs):
         # test bad reCaptcha extraction.
         with pytest.raises(
-            CloudflareReCaptchaError,
-            match=r".*?we can't extract the parameters correctly.*?"
+                CloudflareReCaptchaError,
+                match=r".*?we can't extract the parameters correctly.*?"
         ):
             scraper = cloudscraper.create_scraper(**kwargs)
             scraper.reCaptcha_Challenge_Response(None, None, '', '')
@@ -153,8 +156,8 @@ class TestCloudScraper:
 
         # Check mobile and desktop disabled
         with pytest.raises(
-            RuntimeError,
-            match=r"Sorry you can't have mobile and desktop disabled at the same time\."
+                RuntimeError,
+                match=r"Sorry you can't have mobile and desktop disabled at the same time\."
         ):
             scraper = cloudscraper.create_scraper(browser={'browser': 'chrome', 'desktop': False, 'mobile': False})
 
@@ -181,8 +184,8 @@ class TestCloudScraper:
     def test_reCaptcha_providers(self, **kwargs):
         for provider in ['9kw', '2captcha', 'anticaptcha', 'deathbycaptcha']:
             with pytest.raises(
-                (reCaptchaParameter, ImportError, CloudflareReCaptchaError),
-                match=r".*?: Missing .*? parameter\.|Please install.*?|Cloudflare reCaptcha detected.*?"
+                    (reCaptchaParameter, ImportError, CloudflareReCaptchaError),
+                    match=r".*?: Missing .*? parameter\.|Please install.*?|Cloudflare reCaptcha detected.*?"
             ):
                 scraper = cloudscraper.create_scraper(
                     recaptcha={
@@ -196,3 +199,34 @@ class TestCloudScraper:
     def test_helper(self, **kwargs):
         payload = helper.systemInfo()
         assert payload
+
+    def test_is_iuam_challenge(self):
+        resp = requests.Response()
+        dic = CaseInsensitiveDict()
+        dic['Server'] = 'cloudflare'
+        resp.headers = dic
+        resp.status_code = 503
+        with open('tests/fixtures/js_challenge_05-03-2020.html') as file:
+            type(resp).text = mock.PropertyMock(return_value=file.read())
+
+        assert cloudscraper.CloudScraper.is_IUAM_Challenge(resp)
+
+        with open('tests/fixtures/js_challenge_11_12_2019.html') as file:
+            type(resp).text = mock.PropertyMock(return_value=file.read())
+
+        assert cloudscraper.CloudScraper.is_IUAM_Challenge(resp)
+
+        resp.status_code = 429
+        assert cloudscraper.CloudScraper.is_IUAM_Challenge(resp)
+
+        resp.status_code = 404
+        assert not cloudscraper.CloudScraper.is_IUAM_Challenge(resp)
+
+        resp.status_code = 200
+        assert not cloudscraper.CloudScraper.is_IUAM_Challenge(resp)
+
+        resp.status_code = 503
+        dic['Server'] = ''
+        assert not cloudscraper.CloudScraper.is_IUAM_Challenge(resp)
+
+
