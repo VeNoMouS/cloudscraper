@@ -1,10 +1,83 @@
 from __future__ import absolute_import
 
+import ast
 import re
 import operator as op
+import pyparsing
 
 from ..exceptions import CloudflareSolveError
 from . import JavaScriptInterpreter
+
+# ------------------------------------------------------------------------------- #
+
+_OP_MAP = {
+    ast.Add: op.add,
+    ast.Sub: op.sub,
+    ast.Mult: op.mul,
+    ast.Div: op.truediv,
+    ast.Invert: op.neg,
+}
+
+# ------------------------------------------------------------------------------- #
+
+
+class Calc(ast.NodeVisitor):
+
+    def visit_BinOp(self, node):
+        return _OP_MAP[type(node.op)](self.visit(node.left), self.visit(node.right))
+
+    # ------------------------------------------------------------------------------- #
+
+    def visit_Num(self, node):
+        return node.n
+
+    # ------------------------------------------------------------------------------- #
+
+    def visit_Expr(self, node):
+        return self.visit(node.value)
+
+    # ------------------------------------------------------------------------------- #
+
+    @classmethod
+    def doMath(cls, expression):
+        tree = ast.parse(expression)
+        calc = cls()
+        return calc.visit(tree.body[0])
+
+# ------------------------------------------------------------------------------- #
+
+
+class Parentheses(object):
+
+    def fix(self, s):
+        res = []
+        self.visited = set([s])
+        self.dfs(s, self.invalid(s), res)
+        return res
+
+    # ------------------------------------------------------------------------------- #
+
+    def dfs(self, s, n, res):
+        if n == 0:
+            res.append(s)
+            return
+        for i in range(len(s)):
+            if s[i] in ['(', ')']:
+                s_new = s[:i] + s[i + 1:]
+                if s_new not in self.visited and self.invalid(s_new) < n:
+                    self.visited.add(s_new)
+                    self.dfs(s_new, self.invalid(s_new), res)
+
+    # ------------------------------------------------------------------------------- #
+
+    def invalid(self, s):
+        plus = minus = 0
+        memo = {"(": 1, ")": -1}
+        for c in s:
+            plus += memo.get(c, 0)
+            minus += 1 if plus < 0 else 0
+            plus = max(0, plus)
+        return plus + minus
 
 # ------------------------------------------------------------------------------- #
 
@@ -14,8 +87,9 @@ class ChallengeInterpreter(JavaScriptInterpreter):
     def __init__(self):
         super(ChallengeInterpreter, self).__init__('native')
 
+    # ------------------------------------------------------------------------------- #
+
     def eval(self, body, domain):
-        # ------------------------------------------------------------------------------- #
 
         operators = {
             '+': op.add,
@@ -26,18 +100,29 @@ class ChallengeInterpreter(JavaScriptInterpreter):
 
         # ------------------------------------------------------------------------------- #
 
+        def flatten(l):
+            return sum(map(flatten, l), []) if isinstance(l, list) else [l]
+
+        # ------------------------------------------------------------------------------- #
+
         def jsfuckToNumber(jsFuck):
-            t = ''
+            # "Clean Up" JSFuck
+            jsFuck = jsFuck.replace('!+[]', '1').replace('!![]', '1').replace('[]', '0')
+            jsFuck = jsFuck.lstrip('+').replace('(+', '(').replace(' ', '')
+            jsFuck = Parentheses().fix(jsFuck)[0]
 
-            split_numbers = re.compile(r'-?\d+').findall
+            # Hackery Parser for Math
+            stack = []
+            bstack = []
+            for i in flatten(pyparsing.nestedExpr().parseString(jsFuck).asList()):
+                if i == '+':
+                    stack.append(bstack)
+                    bstack = []
+                    continue
+                bstack.append(i)
+            stack.append(bstack)
 
-            for i in re.findall(
-                r'\((?:\d|\+|\-)*\)',
-                jsFuck.replace('!+[]', '1').replace('!![]', '1').replace('[]', '0').lstrip('+').replace('(+', '(')
-            ):
-                t = '{}{}'.format(t, sum(int(x) for x in split_numbers(i)))
-
-            return int(t)
+            return int(''.join([str(Calc.doMath(''.join(i))) for i in stack]))
 
         # ------------------------------------------------------------------------------- #
 
@@ -45,6 +130,7 @@ class ChallengeInterpreter(JavaScriptInterpreter):
             jsfuckMath = payload.split('/')
             if needle in jsfuckMath[1]:
                 expression = re.findall(r"^(.*?)(.)\(function", jsfuckMath[1])[0]
+
                 expression_value = operators[expression[1]](
                     float(jsfuckToNumber(expression[0])),
                     float(ord(domain[jsfuckToNumber(jsfuckMath[1][
@@ -118,7 +204,7 @@ class ChallengeInterpreter(JavaScriptInterpreter):
 
         return challengeSolve(body, domain)
 
-
 # ------------------------------------------------------------------------------- #
+
 
 ChallengeInterpreter()
