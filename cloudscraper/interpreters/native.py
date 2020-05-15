@@ -166,15 +166,15 @@ class ChallengeInterpreter(JavaScriptInterpreter):
                         r';\s*k.=(\S+);',
                         jsfuckChallenge['challenge'],
                         re.S | re.M
-                    )[1]
+                    ).group(1)
                 )
 
-                kID = re.search(r"\s*k\s*=\s*'(\S+)';", body)[1]
+                kID = re.search(r"\s*k\s*=\s*'(\S+)';", body).group(1)
 
                 r = re.compile(r'<div id="{}(?P<id>\d+)">\s*(?P<jsfuck>[^<>]*)</div>'.format(kID))
                 kValues = {}
                 for m in r.finditer(body):
-                    kValues[int(m['id'])] = m['jsfuck']
+                    kValues[int(m.group('id'))] = m['jsfuck']
 
                 jsfuckChallenge['k'] = kValues[kJSFUCK]
 
