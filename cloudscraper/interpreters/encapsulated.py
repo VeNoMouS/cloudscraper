@@ -16,25 +16,26 @@ def template(body, domain):
     except Exception:
         raise ValueError('Unable to identify Cloudflare IUAM Javascript on website. {}'.format(BUG_REPORT))
 
-    jsEnv = '''
-        String.prototype.italics=function(str) {{return "<i>" + this + "</i>";}};
+    jsEnv = '''String.prototype.italics=function(str) {{return "<i>" + this + "</i>";}};
+        var subVars= {{{subVars}}};
         var document = {{
             createElement: function () {{
                 return {{ firstChild: {{ href: "https://{domain}/" }} }}
             }},
-            getElementById: function () {{
-                return {{"innerHTML": "{innerHTML}"}};
+            getElementById: function (str) {{
+                return {{"innerHTML": subVars[str]}};
             }}
         }};
     '''
 
     try:
-        innerHTML = re.search(
-            r'<div(?: [^<>]*)? id="([^<>]*?)">([^<>]*?)</div>',
-            body,
-            re.MULTILINE | re.DOTALL
-        )
-        innerHTML = innerHTML.group(2) if innerHTML else ''
+        k = re.search(r" k\s*=\s*'(\S+)';", body)[1]
+        r = re.compile(r'<div id="{}(?P<id>\d+)">\s*(?P<jsfuck>[^<>]*)</div>'.format(k))
+        subVars = ''
+        for m in r.finditer(body):
+            subVars = '{}\n\t\t{}{}: {},\n'.format(subVars, k, m['id'], m['jsfuck'])
+
+        subVars = subVars[:-2]
 
     except:  # noqa
         logging.error('Error extracting Cloudflare IUAM Javascript. {}'.format(BUG_REPORT))
@@ -46,7 +47,7 @@ def template(body, domain):
             ' ',
             jsEnv.format(
                 domain=domain,
-                innerHTML=innerHTML
+                subVars=subVars
             ),
             re.MULTILINE | re.DOTALL
         ),
