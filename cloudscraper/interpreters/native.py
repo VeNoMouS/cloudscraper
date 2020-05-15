@@ -160,31 +160,28 @@ class ChallengeInterpreter(JavaScriptInterpreter):
             except AttributeError:
                 raise CloudflareSolveError('There was an issue extracting "jsfuckChallenge" from the Cloudflare challenge.')
 
-            try:
-                kJSFUCK = jsfuckToNumber(
-                    re.search(r'(;|)\s*k.=(?P<kJSFUCK>\S+);',
-                        jsfuckChallenge['challenge'],
-                        re.S | re.M
-                    ).group('kJSFUCK')
-                )
-            except AttributeError:
-                raise CloudflareSolveError('There was an issue extracting "kJSFUCK" from the Cloudflare challenge.')
+            kJSFUCK = re.search(r'(;|)\s*k.=(?P<kJSFUCK>\S+);', jsfuckChallenge['challenge'], re.S | re.M)
+            if kJSFUCK:
+                try:
+                    kJSFUCK = jsfuckToNumber(kJSFUCK.group('kJSFUCK'))
+                except IndexError:
+                    raise CloudflareSolveError('There was an issue extracting "kJSFUCK" from the Cloudflare challenge.')
 
-            try:
-                kID = re.search(r"\s*k\s*=\s*'(?P<kID>\S+)';", body).group('kID')
-            except AttributeError:
-                raise CloudflareSolveError('There was an issue extracting "kID" from the Cloudflare challenge.')
+                try:
+                    kID = re.search(r"\s*k\s*=\s*'(?P<kID>\S+)';", body).group('kID')
+                except IndexError:
+                    raise CloudflareSolveError('There was an issue extracting "kID" from the Cloudflare challenge.')
 
-            try:
-                r = re.compile(r'<div id="{}(?P<id>\d+)">\s*(?P<jsfuck>[^<>]*)</div>'.format(kID))
+                try:
+                    r = re.compile(r'<div id="{}(?P<id>\d+)">\s*(?P<jsfuck>[^<>]*)</div>'.format(kID))
 
-                kValues = {}
-                for m in r.finditer(body):
-                    kValues[int(m.group('id'))] = m.group('jsfuck')
+                    kValues = {}
+                    for m in r.finditer(body):
+                        kValues[int(m.group('id'))] = m.group('jsfuck')
 
-                jsfuckChallenge['k'] = kValues[kJSFUCK]
-            except AttributeError:
-                raise CloudflareSolveError('There was an issue extracting "kValues" from the Cloudflare challenge.')
+                    jsfuckChallenge['k'] = kValues[kJSFUCK]
+                except (AttributeError, IndexError):
+                    raise CloudflareSolveError('There was an issue extracting "kValues" from the Cloudflare challenge.')
 
             jsfuckChallenge['challenge'] = re.finditer(
                 r'{}.*?([+\-*/])=(.*?);(?=a\.value|{})'.format(
