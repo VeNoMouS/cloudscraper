@@ -259,7 +259,7 @@ class CloudScraper(Session):
                 and re.search(
                     r'<form .*?="challenge-form" action="/.*?__cf_chl_jschl_tk__=\S+"',
                     resp.text,
-                    re.M | re.DOTALL
+                    re.M | re.S
                 )
             )
         except AttributeError:
@@ -278,9 +278,9 @@ class CloudScraper(Session):
                 resp.headers.get('Server', '').startswith('cloudflare')
                 and resp.status_code in [429, 503]
                 and re.search(
-                    r'cpo.src="/cdn-cgi/challenge-platform/orchestrate/jsch/v1"',
+                    r'cpo.src(\s+|)=(\s+|)"/cdn-cgi/challenge-platform/orchestrate/jsch/v1"',
                     resp.text,
-                    re.M | re.DOTALL
+                    re.M | re.S
                 )
             )
         except AttributeError:
@@ -375,7 +375,7 @@ class CloudScraper(Session):
                 )
 
             payload = OrderedDict()
-            for challengeParam in re.findall(r'<input\s(.*?)>', formPayload['form']):
+            for challengeParam in re.findall(r'^\s+<input\s(.*?)/>', formPayload['form'], re.M | re.S):
                 inputPayload = dict(re.findall(r'(\S+)="(\S+)"', challengeParam))
                 if inputPayload.get('name') in ['r', 'jschl_vc', 'pass']:
                     payload.update({inputPayload['name']: inputPayload['value']})
