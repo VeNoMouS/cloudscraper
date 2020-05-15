@@ -158,28 +158,33 @@ class ChallengeInterpreter(JavaScriptInterpreter):
                     re.DOTALL | re.MULTILINE
                 ).groupdict()
             except AttributeError:
-                raise CloudflareSolveError('There was an issue extracting the Cloudflare challenge.')
+                raise CloudflareSolveError('There was an issue extracting "jsfuckChallenge" from the Cloudflare challenge.')
 
             try:
                 kJSFUCK = jsfuckToNumber(
-                    re.search(
-                        r';\s*k.=(\S+);',
+                    re.search(r'(;|)\s*k.=(?P<kJSFUCK>\S+);',
                         jsfuckChallenge['challenge'],
                         re.S | re.M
-                    ).group(1)
+                    ).group('kJSFUCK')
                 )
+            except AttributeError:
+                raise CloudflareSolveError('There was an issue extracting "kJSFUCK" from the Cloudflare challenge.')
 
-                kID = re.search(r"\s*k\s*=\s*'(\S+)';", body).group(1)
+            try:
+                kID = re.search(r"\s*k\s*=\s*'(?P<kID>\S+)';", body).group('kID')
+            except AttributeError:
+                raise CloudflareSolveError('There was an issue extracting "kID" from the Cloudflare challenge.')
 
+            try:
                 r = re.compile(r'<div id="{}(?P<id>\d+)">\s*(?P<jsfuck>[^<>]*)</div>'.format(kID))
+
                 kValues = {}
                 for m in r.finditer(body):
-                    kValues[int(m.group('id'))] = m['jsfuck']
+                    kValues[int(m.group('id'))] = m.group('jsfuck')
 
                 jsfuckChallenge['k'] = kValues[kJSFUCK]
-
             except AttributeError:
-                raise CloudflareSolveError('There was an issue extracting "k" from the Cloudflare challenge.')
+                raise CloudflareSolveError('There was an issue extracting "kValues" from the Cloudflare challenge.')
 
             jsfuckChallenge['challenge'] = re.finditer(
                 r'{}.*?([+\-*/])=(.*?);(?=a\.value|{})'.format(
