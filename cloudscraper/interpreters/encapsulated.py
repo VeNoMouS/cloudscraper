@@ -31,10 +31,10 @@ def template(body, domain):
     try:
         k = re.search(r" k\s*=\s*'(\S+)';", body)[1]
         r = re.compile(r'<div id="{}(?P<id>\d+)">\s*(?P<jsfuck>[^<>]*)</div>'.format(k))
+
         subVars = ''
         for m in r.finditer(body):
             subVars = '{}\n\t\t{}{}: {},\n'.format(subVars, k, m['id'], m['jsfuck'])
-
         subVars = subVars[:-2]
 
     except:  # noqa

@@ -100,8 +100,8 @@ class ChallengeInterpreter(JavaScriptInterpreter):
 
         # ------------------------------------------------------------------------------- #
 
-        def flatten(l):
-            return sum(map(flatten, l), []) if isinstance(l, list) else [l]
+        def flatten(lists):
+            return sum(map(flatten, lists), []) if isinstance(lists, list) else [lists]
 
         # ------------------------------------------------------------------------------- #
 
@@ -114,6 +114,7 @@ class ChallengeInterpreter(JavaScriptInterpreter):
             # Hackery Parser for Math
             stack = []
             bstack = []
+
             for i in flatten(pyparsing.nestedExpr().parseString(jsFuck).asList()):
                 if i == '+':
                     stack.append(bstack)
@@ -152,13 +153,33 @@ class ChallengeInterpreter(JavaScriptInterpreter):
             try:
                 jsfuckChallenge = re.search(
                     r"setTimeout\(function\(\){\s+var.*?f,\s*(?P<variable>\w+).*?:(?P<init>\S+)};"
-                    r".*?\('challenge-form'\);\s+;(?P<challenge>.*?a\.value)"
-                    r"(?:.*id=\"cf-dn-.*?>(?P<k>\S+)<)?",
+                    r".*?\('challenge-form'\);\s+;(?P<challenge>.*?a\.value)\s*=",
                     body,
                     re.DOTALL | re.MULTILINE
                 ).groupdict()
             except AttributeError:
                 raise CloudflareSolveError('There was an issue extracting the Cloudflare challenge.')
+
+            try:
+                kJSFUCK = jsfuckToNumber(
+                    re.search(
+                        r';\s*k.=(\S+);',
+                        jsfuckChallenge['challenge'],
+                        re.S | re.M
+                    )[1]
+                )
+
+                kID = re.search(r"\s*k\s*=\s*'(\S+)';", body)[1]
+
+                r = re.compile(r'<div id="{}(?P<id>\d+)">\s*(?P<jsfuck>[^<>]*)</div>'.format(kID))
+                kValues = {}
+                for m in r.finditer(body):
+                    kValues[int(m['id'])] = m['jsfuck']
+
+                jsfuckChallenge['k'] = kValues[kJSFUCK]
+
+            except AttributeError:
+                raise CloudflareSolveError('There was an issue extracting "k" from the Cloudflare challenge.')
 
             jsfuckChallenge['challenge'] = re.finditer(
                 r'{}.*?([+\-*/])=(.*?);(?=a\.value|{})'.format(
@@ -193,8 +214,8 @@ class ChallengeInterpreter(JavaScriptInterpreter):
 
             # ------------------------------------------------------------------------------- #
 
-            if not jsfuckChallenge['k'] and '+ t.length' in body:
-                jschl_answer += len(domain)
+            # if not jsfuckChallenge['k'] and '+ t.length' in body:
+            #    jschl_answer += len(domain)
 
             # ------------------------------------------------------------------------------- #
 
