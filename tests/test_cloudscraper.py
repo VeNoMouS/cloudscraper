@@ -23,15 +23,15 @@ class TestCloudScraper:
     # ------------------------------------------------------------------------------- #
 
     @mockCloudflare(
-        fixture='js_challenge_11_12_2019.html',
+        fixture='js_challenge1_16_05_2020.html',
         payload=OrderedDict([
-            ('jschl_answer', '3.5249426769'),
-            ('pass', '1576018743.336-JjFrWpzMgq'),
-            ('jschl_vc', '5770311b6edeca3c2fd42ad6921191bd'),
-            ('r', '6a32cc8d8c61dc231ff47c3bcc8f24cbf7f7059d68ebcff4283ff3e15d73cca3')
+            ('jschl_answer', '-7.5155218172'),
+            ('pass', '1589555973.262-n4Tt3w2mXt'),
+            ('jschl_vc', 'df9d3a159bbde53c214e7abfcb005e0c'),
+            ('r', 'f111bf7fe2d4d39d47dd837590808eeacb6e208a7503587f14a95c9ab0fc2d70')
         ])
     )
-    def test_js_challenge_11_12_2019(self, **kwargs):
+    def test_js_challenge1_16_05_2020(self, **kwargs):
         # test interpreters
         for interpreter in ['native', 'js2py', 'nodejs']:
             scraper = cloudscraper.create_scraper(interpreter=interpreter, **kwargs)
@@ -39,7 +39,24 @@ class TestCloudScraper:
 
     # ------------------------------------------------------------------------------- #
 
-    def test_create_scraper_js_challenge_11_12_2019(self, **kwargs):
+    @mockCloudflare(
+        fixture='js_challenge2_16_05_2020.html',
+        payload=OrderedDict([
+            ('jschl_answer', '58.4019148791'),
+            ('pass', '1589581670.18-mkcsKJpz0a'),
+            ('jschl_vc', 'ebec58fc1df89e2e403fa249469e50eb'),
+            ('r', 'af028b8967c508037f3888dfaf85d403df9532f4ad851fea76c2ece4f4d9853b')
+        ])
+    )
+    def test_js_challenge2_16_05_2020(self, **kwargs):
+        # test interpreters
+        for interpreter in ['native', 'js2py', 'nodejs']:
+            scraper = cloudscraper.create_scraper(interpreter=interpreter, **kwargs)
+            scraper.get(url)
+
+    # ------------------------------------------------------------------------------- #
+
+    def test_create_scraper_js_challenge1_16_05_2020(self, **kwargs):
         # test
         session = requests.session()
         session.auth = ('user', 'test')
@@ -47,8 +64,8 @@ class TestCloudScraper:
 
     # ------------------------------------------------------------------------------- #
 
-    @mockCloudflare(fixture='js_challenge_11_12_2019.html', payload={})
-    def test_bad_interpreter_js_challenge_11_12_2019(self, **kwargs):
+    @mockCloudflare(fixture='js_challenge1_16_05_2020.html', payload={})
+    def test_bad_interpreter_js_challenge1_16_05_2020(self, **kwargs):
         # test bad interpreter
         with pytest.raises(
             CloudflareIUAMError,
@@ -60,15 +77,15 @@ class TestCloudScraper:
     # ------------------------------------------------------------------------------- #
 
     @mockCloudflare(
-        fixture='js_challenge_11_12_2019.html',
+        fixture='js_challenge1_16_05_2020.html',
         payload=OrderedDict([
             ('jschl_answer', 'NOPE'),
-            ('pass', '1576018743.336-JjFrWpzMgq'),
-            ('jschl_vc', '5770311b6edeca3c2fd42ad6921191bd'),
-            ('r', '6a32cc8d8c61dc231ff47c3bcc8f24cbf7f7059d68ebcff4283ff3e15d73cca3')
+            ('pass', '1589555973.262-n4Tt3w2mXt'),
+            ('jschl_vc', 'df9d3a159bbde53c214e7abfcb005e0c'),
+            ('r', 'f111bf7fe2d4d39d47dd837590808eeacb6e208a7503587f14a95c9ab0fc2d70')
         ])
     )
-    def test_bad_solve_js_challenge_11_12_2019(self, **kwargs):
+    def test_bad_solve_js_challenge1_16_05_2020(self, **kwargs):
         # test bad solve loop protection.
         with pytest.raises(
             CloudflareLoopProtection,
@@ -79,7 +96,7 @@ class TestCloudScraper:
 
     # ------------------------------------------------------------------------------- #
 
-    def test_bad_js_challenge_12_12_2019(self, **kwargs):
+    def test_bad_js_challenge1_16_05_2020(self, **kwargs):
         # test bad reCaptcha extraction.
         with pytest.raises(
             CloudflareIUAMError,
@@ -128,50 +145,50 @@ class TestCloudScraper:
     # ------------------------------------------------------------------------------- #
 
     @mockCloudflare(
-        fixture='js_challenge_11_12_2019.html',
+        fixture='js_challenge1_16_05_2020.html',
         payload=OrderedDict([
-            ('jschl_answer', '3.5249426769'),
-            ('pass', '1576018743.336-JjFrWpzMgq'),
-            ('jschl_vc', '5770311b6edeca3c2fd42ad6921191bd'),
-            ('r', '6a32cc8d8c61dc231ff47c3bcc8f24cbf7f7059d68ebcff4283ff3e15d73cca3')
+            ('jschl_answer', '-7.5155218172'),
+            ('pass', '1589555973.262-n4Tt3w2mXt'),
+            ('jschl_vc', 'df9d3a159bbde53c214e7abfcb005e0c'),
+            ('r', 'f111bf7fe2d4d39d47dd837590808eeacb6e208a7503587f14a95c9ab0fc2d70')
         ])
     )
-    def test_getCookieString_challenge_11_12_2019(self, **kwargs):
-        scraper = cloudscraper.create_scraper(delay=0)
+    def test_getCookieString_challenge_js_challenge1_16_05_2020(self, **kwargs):
+        scraper = cloudscraper.create_scraper(delay=0.1)
         assert '__cfduid' in scraper.get_cookie_string(url)[0]
 
     # ------------------------------------------------------------------------------- #
 
     def test_user_agent(self, **kwargs):
         for browser in ['chrome', 'firefox']:
-            scraper = cloudscraper.create_scraper(browser=browser)
+            scraper = cloudscraper.create_scraper(browser=browser, delay=0.1)
             assert browser in scraper.headers['User-Agent'].lower()
 
         # Check it can't find browsers.json
         with pytest.raises(RuntimeError, match=r".*?User-Agent was not found\."):
-            scraper = cloudscraper.create_scraper(browser='bad_match')
+            scraper = cloudscraper.create_scraper(browser='bad_match', delay=0.1)
 
         # Check mobile and desktop disabled
         with pytest.raises(
             RuntimeError,
             match=r"Sorry you can't have mobile and desktop disabled at the same time\."
         ):
-            scraper = cloudscraper.create_scraper(browser={'browser': 'chrome', 'desktop': False, 'mobile': False})
+            scraper = cloudscraper.create_scraper(browser={'browser': 'chrome', 'desktop': False, 'mobile': False}, delay=0.1)
 
         # check brotli
-        scraper = cloudscraper.create_scraper(browser='chrome', allow_brotli=False)
+        scraper = cloudscraper.create_scraper(browser='chrome', allow_brotli=False, delay=0.1)
         assert 'br' not in scraper.headers['Accept-Encoding']
 
         # test custom  User-Agent
-        scraper = cloudscraper.create_scraper(browser={'custom': 'test'})
+        scraper = cloudscraper.create_scraper(browser={'custom': 'test'}, delay=0.1)
         assert scraper.headers['User-Agent'] == 'test'
 
         # check its matched chrome and loaded correct cipherSuite
-        scraper = cloudscraper.create_scraper(browser={'custom': '50.0.9370.394', 'tryMatchCustom': True})
+        scraper = cloudscraper.create_scraper(browser={'custom': '50.0.9370.394', 'tryMatchCustom': True}, delay=0.1)
         assert any('!' not in _ for _ in scraper.user_agent.cipherSuite)
 
         # check it didn't match anything and loaded custom cipherSuite
-        scraper = cloudscraper.create_scraper(browser={'custom': 'aa50.0.9370.394', 'tryMatchCustom': True})
+        scraper = cloudscraper.create_scraper(browser={'custom': 'aa50.0.9370.394', 'tryMatchCustom': True}, delay=0.1)
         assert any('!' in _ for _ in scraper.user_agent.cipherSuite)
 
     # ------------------------------------------------------------------------------- #
@@ -187,7 +204,8 @@ class TestCloudScraper:
                 scraper = cloudscraper.create_scraper(
                     recaptcha={
                         'provider': provider
-                    }
+                    },
+                    delay=0.1
                 )
                 scraper.get(url)
 
