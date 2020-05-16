@@ -278,7 +278,7 @@ class CloudScraper(Session):
                 resp.headers.get('Server', '').startswith('cloudflare')
                 and resp.status_code in [429, 503]
                 and re.search(
-                    r'cpo.src(\s+|)=(\s+|)"/cdn-cgi/challenge-platform/orchestrate/jsch/v1"',
+                    r'cpo.src\s*=\s*"/cdn-cgi/challenge-platform/orchestrate/jsch/v1"',
                     resp.text,
                     re.M | re.S
                 )
