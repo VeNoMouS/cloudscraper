@@ -107,6 +107,9 @@ class CloudScraper(Session):
         self.ssl_context = kwargs.pop('ssl_context', None)
         self.interpreter = kwargs.pop('interpreter', 'native')
         self.recaptcha = kwargs.pop('recaptcha', {})
+        self.requestPreHook = kwargs.pop('requestPreHook', None)
+        self.requestPostHook = kwargs.pop('requestPostHook', None)
+
         self.allow_brotli = kwargs.pop(
             'allow_brotli',
             True if 'brotli' in sys.modules.keys() else False
@@ -213,19 +216,40 @@ class CloudScraper(Session):
         if kwargs.get('proxies') and kwargs.get('proxies') != self.proxies:
             self.proxies = kwargs.get('proxies')
 
-        resp = self.decodeBrotli(
+        # ------------------------------------------------------------------------------- #
+        # Pre-Hook the request via user defined function.
+        # ------------------------------------------------------------------------------- #
+
+        if self.requestPreHook:
+            (method, url, kwargs) = self.requestPreHook(self, method, url, kwargs)
+
+        # ------------------------------------------------------------------------------- #
+        # Make the request via requests.
+        # ------------------------------------------------------------------------------- #
+
+        response = self.decodeBrotli(
             super(CloudScraper, self).request(method, url, *args, **kwargs)
         )
 
         # ------------------------------------------------------------------------------- #
-        # Debug request
+        # Debug the request via the Response object.
         # ------------------------------------------------------------------------------- #
 
         if self.debug:
-            self.debugRequest(resp)
+            self.debugRequest(response)
+
+        # ------------------------------------------------------------------------------- #
+        # Post-Hook the request aka Post-Hook the response via user defined function.
+        # ------------------------------------------------------------------------------- #
+
+        if self.requestPostHook:
+            response = self.requestPostHook(self, response)
+
+            if self.debug:
+                self.debugRequest(response)
 
         # Check if Cloudflare anti-bot is on
-        if self.is_Challenge_Request(resp):
+        if self.is_Challenge_Request(response):
             # ------------------------------------------------------------------------------- #
             # Try to solve the challenge and send it back
             # ------------------------------------------------------------------------------- #
@@ -239,12 +263,12 @@ class CloudScraper(Session):
 
             self._solveDepthCnt += 1
 
-            resp = self.Challenge_Response(resp, **kwargs)
+            response = self.Challenge_Response(response, **kwargs)
         else:
-            if not resp.is_redirect and resp.status_code not in [429, 503]:
+            if not response.is_redirect and response.status_code not in [429, 503]:
                 self._solveDepthCnt = 0
 
-        return resp
+        return response
 
     # ------------------------------------------------------------------------------- #
     # check if the response contains a valid Cloudflare challenge
