@@ -49,7 +49,7 @@ class JavaScriptInterpreter(ABC):
 
     def solveChallenge(self, body, domain):
         try:
-            return float(self.eval(body, domain))
+            return '{0:.10f}'.format(float(self.eval(body, domain)))
         except Exception:
             raise CloudflareSolveError(
                 'Error trying to solve Cloudflare IUAM Javascript, they may have changed their technique.'
