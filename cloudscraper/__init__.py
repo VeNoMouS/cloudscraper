@@ -1,8 +1,26 @@
+# ------------------------------------------------------------------------------- #
+
 import logging
 import re
+import requests
 import sys
 import ssl
-import requests
+
+from collections import OrderedDict
+from copy import deepcopy
+
+from requests.adapters import HTTPAdapter
+from requests.sessions import Session
+from requests_toolbelt.utils import dump
+
+from time import sleep
+
+# ------------------------------------------------------------------------------- #
+
+try:
+    import brotli
+except ImportError:
+    pass
 
 try:
     import copyreg
@@ -17,13 +35,12 @@ except ImportError:
     else:
         from html.parser import HTMLParser
 
-from copy import deepcopy
-from time import sleep
-from collections import OrderedDict
+try:
+    from urlparse import urlparse, urljoin
+except ImportError:
+    from urllib.parse import urlparse, urljoin
 
-from requests.sessions import Session
-from requests.adapters import HTTPAdapter
-from requests_toolbelt.utils import dump
+# ------------------------------------------------------------------------------- #
 
 from .exceptions import (
     CloudflareLoopProtection,
@@ -37,17 +54,6 @@ from .exceptions import (
 from .interpreters import JavaScriptInterpreter
 from .reCaptcha import reCaptcha
 from .user_agent import User_Agent
-
-try:
-    import brotli
-except ImportError:
-    pass
-
-try:
-    from urlparse import urlparse, urljoin
-except ImportError:
-    from urllib.parse import urlparse, urljoin
-
 
 # ------------------------------------------------------------------------------- #
 
