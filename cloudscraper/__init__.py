@@ -221,7 +221,13 @@ class CloudScraper(Session):
         # ------------------------------------------------------------------------------- #
 
         if self.requestPreHook:
-            (method, url, kwargs) = self.requestPreHook(self, method, url, kwargs)
+            (method, url, args, kwargs) = self.requestPreHook(
+                self,
+                method,
+                url,
+                *args,
+                **kwargs
+            )
 
         # ------------------------------------------------------------------------------- #
         # Make the request via requests.
