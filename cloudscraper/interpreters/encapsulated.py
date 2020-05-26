@@ -9,7 +9,7 @@ def template(body, domain):
 
     try:
         js = re.search(
-            r'setTimeout\(function\(\){\s+(.*?a\.value = \S+toFixed\(10\);)',
+            r'setTimeout\(function\(\){\s+(.*?a\.value\s*=\s*\S+toFixed\(10\);)',
             body,
             re.M | re.S
         ).group(1)
