@@ -405,7 +405,7 @@ class CloudScraper(Session):
                 )
 
             payload = OrderedDict()
-            for challengeParam in re.findall(r'^\s+<input\s(.*?)/>', formPayload['form'], re.M | re.S):
+            for challengeParam in re.findall(r'^\s*<input\s(.*?)/>', formPayload['form'], re.M | re.S):
                 inputPayload = dict(re.findall(r'(\S+)="(\S+)"', challengeParam))
                 if inputPayload.get('name') in ['r', 'jschl_vc', 'pass']:
                     payload.update({inputPayload['name']: inputPayload['value']})

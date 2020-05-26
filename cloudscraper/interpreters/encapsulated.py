@@ -9,7 +9,7 @@ def template(body, domain):
 
     try:
         js = re.search(
-            r'setTimeout\(function\(\){\s+(.*?a\.value = \S+)',
+            r'setTimeout\(function\(\){\s+(.*?a\.value = \S+toFixed\(10\);)',
             body,
             re.M | re.S
         ).group(1)
@@ -29,6 +29,11 @@ def template(body, domain):
     '''
 
     try:
+        js = js.replace(
+            r"(setInterval(function(){}, 100),t.match(/https?:\/\//)[0]);",
+            r"t.match(/https?:\/\//)[0];"
+        )
+
         k = re.search(r" k\s*=\s*'(?P<k>\S+)';", body).group('k')
         r = re.compile(r'<div id="{}(?P<id>\d+)">\s*(?P<jsfuck>[^<>]*)</div>'.format(k))
 

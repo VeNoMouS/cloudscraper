@@ -23,6 +23,24 @@ class TestCloudScraper:
     # ------------------------------------------------------------------------------- #
 
     @mockCloudflare(
+        fixture='js_challenge-27-05-2020.html',
+        payload=OrderedDict([
+            ('jschl_answer', '102.7365930923'),
+            ('pass', '1590526864.279-GCnY0hKdNH'),
+            ('jschl_vc', '706241acd6cb287b270835d26b275f50'),
+            ('r', 'b7f071b2f22b5dfecd144198317929d3f7c8d3d271c169e7676a42042c3581ed')
+        ])
+    )
+    def test_js_challenge_27_05_2020(self, **kwargs):
+        # test interpreters
+        for interpreter in ['native', 'nodejs', 'js2py']:
+            print('Testing {}'.format(interpreter))
+            scraper = cloudscraper.create_scraper(interpreter=interpreter, **kwargs)
+            scraper.get(url)
+
+    # ------------------------------------------------------------------------------- #
+
+    @mockCloudflare(
         fixture='js_challenge1_16_05_2020.html',
         payload=OrderedDict([
             ('jschl_answer', '-7.5155218172'),

@@ -153,7 +153,7 @@ class ChallengeInterpreter(JavaScriptInterpreter):
             try:
                 jsfuckChallenge = re.search(
                     r"setTimeout\(function\(\){\s+var.*?f,\s*(?P<variable>\w+).*?:(?P<init>\S+)};"
-                    r".*?\('challenge-form'\);\s+;(?P<challenge>.*?a\.value)\s*=",
+                    r".*?\('challenge-form'\);.*?;(?P<challenge>.*?a\.value)\s*=\s*\S+\.toFixed\(10\);",
                     body,
                     re.DOTALL | re.MULTILINE
                 ).groupdict()
