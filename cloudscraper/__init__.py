@@ -23,6 +23,7 @@ from collections import OrderedDict
 
 from requests.sessions import Session
 from requests.adapters import HTTPAdapter
+from requests_toolbelt.utils import dump
 
 from .exceptions import (
     CloudflareLoopProtection,
@@ -36,11 +37,6 @@ from .exceptions import (
 from .interpreters import JavaScriptInterpreter
 from .reCaptcha import reCaptcha
 from .user_agent import User_Agent
-
-try:
-    from requests_toolbelt.utils import dump
-except ImportError:
-    pass
 
 try:
     import brotli
