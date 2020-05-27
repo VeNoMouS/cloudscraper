@@ -3,7 +3,7 @@ from __future__ import absolute_import
 import ast
 import re
 import operator as op
-import pyparsing
+from ..import pyparsing
 
 from ..exceptions import CloudflareSolveError
 from . import JavaScriptInterpreter
