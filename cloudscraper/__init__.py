@@ -157,13 +157,11 @@ class CloudScraper(Session):
     def __getstate__(self):
         return self.__dict__
 
-
     # ------------------------------------------------------------------------------- #
     # Allow replacing actual web request call via subclassing
     # ------------------------------------------------------------------------------- #
 
     def perform_request(self, method, url, *args, **kwargs):
-
         return super(CloudScraper, self).request(method, url, *args, **kwargs)
 
     # ------------------------------------------------------------------------------- #
