@@ -158,6 +158,13 @@ class CloudScraper(Session):
         return self.__dict__
 
     # ------------------------------------------------------------------------------- #
+    # Allow replacing actual web request call via subclassing
+    # ------------------------------------------------------------------------------- #
+
+    def perform_request(self, method, url, *args, **kwargs):
+        return super(CloudScraper, self).request(method, url, *args, **kwargs)
+
+    # ------------------------------------------------------------------------------- #
     # Raise an Exception with no stacktrace and reset depth counter.
     # ------------------------------------------------------------------------------- #
 
@@ -236,7 +243,7 @@ class CloudScraper(Session):
         # ------------------------------------------------------------------------------- #
 
         response = self.decodeBrotli(
-            super(CloudScraper, self).request(method, url, *args, **kwargs)
+            self.perform_request(method, url, *args, **kwargs)
         )
 
         # ------------------------------------------------------------------------------- #
@@ -517,7 +524,7 @@ class CloudScraper(Session):
             # ------------------------------------------------------------------------------- #
 
             resp = self.decodeBrotli(
-                super(CloudScraper, self).request(resp.request.method, resp.url, **kwargs)
+                self.perform_request(resp.request.method, resp.url, **kwargs)
             )
 
             if not self.is_reCaptcha_Challenge(resp):
