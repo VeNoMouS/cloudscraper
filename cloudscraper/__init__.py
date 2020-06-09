@@ -693,7 +693,9 @@ class CloudScraper(Session):
                     'debug',
                     'delay',
                     'interpreter',
-                    'recaptcha'
+                    'recaptcha',
+                    'requestPreHook',
+                    'requestPostHook'
                 ] if field in kwargs
             }
         )
