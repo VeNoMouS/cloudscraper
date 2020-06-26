@@ -46,6 +46,7 @@ from .exceptions import (
     CloudflareLoopProtection,
     CloudflareCode1020,
     CloudflareIUAMError,
+    CloudflareSolveError,
     CloudflareChallengeError,
     CloudflareReCaptchaError,
     CloudflareReCaptchaProvider
@@ -639,6 +640,12 @@ class CloudScraper(Session):
                 submit_url['url'],
                 **cloudflare_kwargs
             )
+
+            if challengeSubmitResponse.status_code == 400:
+                self.simpleException(
+                    CloudflareSolveError,
+                    'Invalid challenge answer detected, Cloudflare broken?'
+                )
 
             # ------------------------------------------------------------------------------- #
             # Return response if Cloudflare is doing content pass through instead of 3xx
