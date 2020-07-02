@@ -337,6 +337,7 @@ class CloudScraper(Session):
                     resp.text,
                     re.M | re.S
                 )
+                and re.search(r'window._cf_chl_enter\(', resp.text, re.M | re.S)
             )
         except AttributeError:
             pass
@@ -354,7 +355,7 @@ class CloudScraper(Session):
                 resp.headers.get('Server', '').startswith('cloudflare')
                 and resp.status_code == 403
                 and re.search(
-                    r'action="/.*?__cf_chl_captcha_tk__=\S+".*?data\-sitekey=.*?',
+                    r'action="/\S+__cf_chl_captcha_tk__=\S+',
                     resp.text,
                     re.M | re.DOTALL
                 )
