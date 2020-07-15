@@ -48,64 +48,64 @@ class CloudflareSolveError(CloudflareException):
     """
 
 
-class CloudflareReCaptchaError(CloudflareException):
+class CloudflareCaptchaError(CloudflareException):
     """
-    Raise an error for problem extracting reCaptcha paramters
+    Raise an error for problem extracting Captcha paramters
     from Cloudflare payload
     """
 
 
-class CloudflareReCaptchaProvider(CloudflareException):
+class CloudflareCaptchaProvider(CloudflareException):
     """
-    Raise an exception for no reCaptcha provider loaded for Cloudflare.
+    Raise an exception for no Captcha provider loaded for Cloudflare.
     """
 
 # ------------------------------------------------------------------------------- #
 
 
-class reCaptchaException(Exception):
+class CaptchaException(Exception):
     """
-    Base exception class for cloudscraper reCaptcha Providers
+    Base exception class for cloudscraper captcha Providers
     """
 
 
-class reCaptchaServiceUnavailable(reCaptchaException):
+class CaptchaServiceUnavailable(CaptchaException):
     """
     Raise an exception for external services that cannot be reached
     """
 
 
-class reCaptchaAPIError(reCaptchaException):
+class CaptchaAPIError(CaptchaException):
     """
     Raise an error for error from API response.
     """
 
 
-class reCaptchaAccountError(reCaptchaException):
+class CaptchaAccountError(CaptchaException):
     """
-    Raise an error for reCaptcha provider account problem.
-    """
-
-
-class reCaptchaTimeout(reCaptchaException):
-    """
-    Raise an exception for reCaptcha provider taking too long.
+    Raise an error for captcha provider account problem.
     """
 
 
-class reCaptchaParameter(reCaptchaException):
+class CaptchaTimeout(CaptchaException):
+    """
+    Raise an exception for captcha provider taking too long.
+    """
+
+
+class CaptchaParameter(CaptchaException):
     """
     Raise an exception for bad or missing Parameter.
     """
 
 
-class reCaptchaBadJobID(reCaptchaException):
+class CaptchaBadJobID(CaptchaException):
     """
     Raise an exception for invalid job id.
     """
 
 
-class reCaptchaReportError(reCaptchaException):
+class CaptchaReportError(CaptchaException):
     """
-    Raise an error for reCaptcha provider unable to report bad solve.
+    Raise an error for captcha provider unable to report bad solve.
     """

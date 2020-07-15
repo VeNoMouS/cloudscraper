@@ -14,7 +14,7 @@ captchaSolvers = {}
 # ------------------------------------------------------------------------------- #
 
 
-class reCaptcha(ABC):
+class Captcha(ABC):
     @abc.abstractmethod
     def __init__(self, name):
         captchaSolvers[name] = self
@@ -26,10 +26,10 @@ class reCaptcha(ABC):
         if name not in captchaSolvers:
             try:
                 __import__('{}.{}'.format(cls.__module__, name))
-                if not isinstance(captchaSolvers.get(name), reCaptcha):
-                    raise ImportError('The anti reCaptcha provider was not initialized.')
+                if not isinstance(captchaSolvers.get(name), Captcha):
+                    raise ImportError('The anti captcha provider was not initialized.')
             except ImportError:
-                logging.error("Unable to load {} anti reCaptcha provider".format(name))
+                logging.error("Unable to load {} anti captcha provider".format(name))
                 raise
 
         return captchaSolvers[name]
@@ -37,10 +37,10 @@ class reCaptcha(ABC):
     # ------------------------------------------------------------------------------- #
 
     @abc.abstractmethod
-    def getCaptchaAnswer(self, captchaType, url, siteKey, reCaptchaParams):
+    def getCaptchaAnswer(self, captchaType, url, siteKey, captchaParams):
         pass
 
     # ------------------------------------------------------------------------------- #
 
-    def solveCaptcha(self, captchaType, url, siteKey, reCaptchaParams):
-        return self.getCaptchaAnswer(captchaType, url, siteKey, reCaptchaParams)
+    def solveCaptcha(self, captchaType, url, siteKey, captchaParams):
+        return self.getCaptchaAnswer(captchaType, url, siteKey, captchaParams)
