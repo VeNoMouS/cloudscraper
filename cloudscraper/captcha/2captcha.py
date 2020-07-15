@@ -1,14 +1,19 @@
 from __future__ import absolute_import
 
+from pprint import pprint
 import requests
+try:
+    from urlparse import urlparse
+except ImportError:
+    from urllib.parse import urlparse
 
 from ..exceptions import (
-    reCaptchaServiceUnavailable,
-    reCaptchaAPIError,
-    reCaptchaTimeout,
-    reCaptchaParameter,
-    reCaptchaBadJobID,
-    reCaptchaReportError
+    CaptchaServiceUnavailable,
+    CaptchaAPIError,
+    CaptchaTimeout,
+    CaptchaParameter,
+    CaptchaBadJobID,
+    CaptchaReportError
 )
 
 try:
@@ -19,10 +24,10 @@ except ImportError:
         "https://github.com/justiniso/polling/"
     )
 
-from . import reCaptcha
+from . import Captcha
 
 
-class captchaSolver(reCaptcha):
+class captchaSolver(Captcha):
 
     def __init__(self):
         super(captchaSolver, self).__init__('2captcha')
@@ -34,7 +39,7 @@ class captchaSolver(reCaptcha):
     @staticmethod
     def checkErrorStatus(response, request_type):
         if response.status_code in [500, 502]:
-            raise reCaptchaServiceUnavailable('2Captcha: Server Side Error {}'.format(response.status_code))
+            raise CaptchaServiceUnavailable('2Captcha: Server Side Error {}'.format(response.status_code))
 
         errors = {
             'in.php': {
@@ -81,7 +86,7 @@ class captchaSolver(reCaptcha):
         }
 
         if response.json().get('status') == 0 and response.json().get('request') in errors.get(request_type):
-            raise reCaptchaAPIError(
+            raise CaptchaAPIError(
                 '{} {}'.format(
                     response.json().get('request'),
                     errors.get(request_type).get(response.json().get('request'))
@@ -92,8 +97,8 @@ class captchaSolver(reCaptcha):
 
     def reportJob(self, jobID):
         if not jobID:
-            raise reCaptchaBadJobID(
-                "2Captcha: Error bad job id to request reCaptcha."
+            raise CaptchaBadJobID(
+                "2Captcha: Error bad job id to request Captcha."
             )
 
         def _checkRequest(response):
@@ -123,17 +128,18 @@ class captchaSolver(reCaptcha):
         if response:
             return True
         else:
-            raise reCaptchaReportError(
-                "2Captcha: Error - Failed to report bad reCaptcha solve."
+            raise CaptchaReportError(
+                "2Captcha: Error - Failed to report bad Captcha solve."
             )
 
     # ------------------------------------------------------------------------------- #
 
     def requestJob(self, jobID):
         if not jobID:
-            raise reCaptchaBadJobID("2Captcha: Error bad job id to request reCaptcha.")
+            raise CaptchaBadJobID("2Captcha: Error bad job id to request Captcha.")
 
         def _checkRequest(response):
+            pprint(response.text)
             if response.ok and response.json().get('status') == 1:
                 return response
 
@@ -160,14 +166,15 @@ class captchaSolver(reCaptcha):
         if response:
             return response.json().get('request')
         else:
-            raise reCaptchaTimeout(
-                "2Captcha: Error failed to solve reCaptcha."
+            raise CaptchaTimeout(
+                "2Captcha: Error failed to solve Captcha."
             )
 
     # ------------------------------------------------------------------------------- #
 
     def requestSolve(self, captchaType, url, siteKey):
         def _checkRequest(response):
+            pprint(response.text)
             if response.ok and response.json().get("status") == 1 and response.json().get('request'):
                 return response
 
@@ -179,7 +186,9 @@ class captchaSolver(reCaptcha):
             'key': self.api_key,
             'pageurl': url,
             'json': 1,
-            'soft_id': 5507698
+            'soft_id': 5507698,
+            'proxy': self.proxy,
+            'proxytype': self.proxyType
         }
 
         data.update(
@@ -191,6 +200,7 @@ class captchaSolver(reCaptcha):
                 'sitekey': siteKey
             }
         )
+        pprint(data)
 
         response = polling.poll(
             lambda: self.session.post(
@@ -207,24 +217,38 @@ class captchaSolver(reCaptcha):
         if response:
             return response.json().get('request')
         else:
-            raise reCaptchaBadJobID(
+            raise CaptchaBadJobID(
                 '2Captcha: Error no job id was returned.'
             )
 
     # ------------------------------------------------------------------------------- #
 
-    def getCaptchaAnswer(self, captchaType, url, siteKey, reCaptchaParams):
+    def getCaptchaAnswer(self, captchaType, url, siteKey, captchaParams):
         jobID = None
 
-        if not reCaptchaParams.get('api_key'):
-            raise reCaptchaParameter(
+        if not captchaParams.get('api_key'):
+            raise CaptchaParameter(
                 "2Captcha: Missing api_key parameter."
             )
 
-        self.api_key = reCaptchaParams.get('api_key')
+        self.api_key = captchaParams.get('api_key')
 
-        if reCaptchaParams.get('proxy'):
-            self.session.proxies = reCaptchaParams.get('proxies')
+        if captchaParams.get('proxy'):
+            hostParsed = urlparse(captchaParams.get('proxy', {}).get('https'))
+
+            if not hostParsed.scheme:
+                raise CaptchaParameter('Cannot parse proxy correctly, bad scheme')
+
+            if not hostParsed.netloc:
+                raise CaptchaParameter('Cannot parse proxy correctly, bad netloc')
+
+            self.proxyType = hostParsed.scheme
+            self.proxy = hostParsed.netloc
+        else:
+            if captchaType == 'hCaptcha':
+                raise CaptchaParameter(
+                    "2Captcha: Cannot find set proxy to pass through to provider."
+                )
 
         try:
             jobID = self.requestSolve(captchaType, url, siteKey)
@@ -234,12 +258,12 @@ class captchaSolver(reCaptcha):
                 if jobID:
                     self.reportJob(jobID)
             except polling.TimeoutException:
-                raise reCaptchaTimeout(
-                    "2Captcha: reCaptcha solve took to long and also failed reporting the job the job id {}.".format(jobID)
+                raise CaptchaTimeout(
+                    "2Captcha: Captcha solve took to long and also failed reporting the job the job id {}.".format(jobID)
                 )
 
-            raise reCaptchaTimeout(
-                "2Captcha: reCaptcha solve took to long to execute job id {}, aborting.".format(jobID)
+            raise CaptchaTimeout(
+                "2Captcha: Captcha solve took to long to execute job id {}, aborting.".format(jobID)
             )
 
 

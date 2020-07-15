@@ -294,10 +294,10 @@ scraper = cloudscraper.create_scraper(interpreter='nodejs')
 
 ------
 
-### 3rd Party reCaptcha Solvers
+### 3rd Party Captcha Solvers
 
 #### Description
-`cloudscraper` currently supports the following 3rd party reCaptcha solvers, should you require them.
+`cloudscraper` currently supports the following 3rd party Captcha solvers, should you require them.
 
 - **[anticaptcha](https://www.anti-captcha.com/)**
 - **[deathbycaptcha](https://www.deathbycaptcha.com/)**
@@ -309,34 +309,31 @@ scraper = cloudscraper.create_scraper(interpreter='nodejs')
 
 I am working on adding more 3rd party solvers, if you wish to have a service added that is not currently supported, please raise a support ticket on github.
 
-To use a proxy to solve reCaptcha via the 3rd party, pass `'proxy': True` in your `recaptcha` dictionary, it will use the scrapers proxy you defined.
-
 ##### Required Parameters
 
 Can be set as an attribute via your `cloudscraper` object or passed as an argument to `create_scraper()`, `get_tokens()`, `get_cookie_string()`.
 
 |Parameter|Value|Default|
 |-------------|:-------------:|:-----:|
-|recaptcha|(dict)|None|
+|captcha|(dict)|None|
 
 ------
 
 #### anticaptcha
 
-##### Required `recaptcha` Parameters
+##### Required `captcha` Parameters
 
 |Parameter|Value|Required|Default|
 |-------------|:-------------:|:-----:|:-----:|
 |provider|(string) `anticaptcha`|yes||
 |api_key|(string)|yes||
-|proxy|(boolean)|no|False|
 
 ##### Example
 
 ```python
 scraper = cloudscraper.create_scraper(
   interpreter='nodejs',
-  recaptcha={
+  captcha={
     'provider': 'anticaptcha',
     'api_key': 'your_anticaptcha_api_key'
   }
@@ -347,21 +344,22 @@ scraper = cloudscraper.create_scraper(
 
 #### deathbycaptcha
 
-##### Required `recaptcha` Parameters
+deathbycaptcha **does not support** hCaptcha
+
+##### Required `captcha` Parameters
 
 |Parameter|Value|Required|Default|
 |-------------|:-------------:|:-----:|:-----:|
 |provider|(string) `deathbycaptcha`|yes||
 |username|(string)|yes||
 |password|(string)|yes||
-|proxy|(boolean)|no|False|
 
 ##### Example
 
 ```python
 scraper = cloudscraper.create_scraper(
   interpreter='nodejs',
-  recaptcha={
+  captcha={
     'provider': 'deathbycaptcha',
     'username': 'your_deathbycaptcha_username',
     'password': 'your_deathbycaptcha_password',
@@ -373,20 +371,19 @@ scraper = cloudscraper.create_scraper(
 
 #### 2captcha
 
-##### Required `recaptcha` Parameters
+##### Required `captcha` Parameters
 
 |Parameter|Value|Required|Default|
 |-------------|:-------------:|:-----:|:-----:|
 |provider|(string) `2captcha`| yes||
 |api_key|(string)| yes||
-|proxy| (boolean)| no| False|
 
 ##### Example
 
 ```python
 scraper = cloudscraper.create_scraper(
   interpreter='nodejs',
-  recaptcha={
+  captcha={
     'provider': '2captcha',
     'api_key': 'your_2captcha_api_key'
   }
@@ -397,13 +394,12 @@ scraper = cloudscraper.create_scraper(
 
 #### 9kw
 
-##### Required `recaptcha` Parameters
+##### Required `captcha` Parameters
 
 |Parameter|Value|Required|Default|
 |-------------|:-------------:|:-----:|:-----:|
 |provider|(string) `9kw`|yes||
 |api_key|(string)|yes||
-|proxy|(boolean)|no|False|
 |maxtimeout|(int)|no|180|
 
 ##### Example
@@ -411,7 +407,7 @@ scraper = cloudscraper.create_scraper(
 ```python
 scraper = cloudscraper.create_scraper(
   interpreter='nodejs',
-  recaptcha={
+  captcha={
     'provider': '9kw',
     'api_key': 'your_9kw_api_key',
     'maxtimeout': 300
@@ -423,9 +419,9 @@ scraper = cloudscraper.create_scraper(
 
 #### return_response
 
-Use this if you want the requests response payload without solving the reCaptcha.
+Use this if you want the requests response payload without solving the Captcha.
 
-##### Required `recaptcha` Parameters
+##### Required `captcha` Parameters
 
 |Parameter|Value|Required|Default|
 |-------------|:-------------:|:-----:|:-----:|
@@ -435,7 +431,7 @@ Use this if you want the requests response payload without solving the reCaptcha
 ```python
 scraper = cloudscraper.create_scraper(
   interpreter='nodejs',
-  recaptcha={'provider': 'return_response'}
+  captcha={'provider': 'return_response'}
 )
 ```
 
