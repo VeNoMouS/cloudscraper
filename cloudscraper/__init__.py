@@ -519,7 +519,7 @@ class CloudScraper(Session):
                 CloudflareCaptchaError,
                 "Cloudflare Captcha detected, unfortunately we can't extract the parameters correctly."
             )
-
+        provider_params['user_agent'] = self.headers['User-Agent']
         captchaResponse = Captcha.dynamicImport(
             provider.lower()
         ).solveCaptcha(
