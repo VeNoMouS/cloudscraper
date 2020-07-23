@@ -10,7 +10,6 @@ try:
 except ImportError:
     from urllib.parse import urlparse
 
-from pprint import pprint
 try:
     from python_anticaptcha import (
         AnticaptchaClient,
@@ -62,7 +61,7 @@ class captchaSolver(Captcha):
             raise CaptchaParameter("anticaptcha: Missing api_key parameter.")
 
         client = AnticaptchaClient(captchaParams.get('api_key'))
-        pprint(captchaParams)
+
         if captchaParams.get('proxy'):
             captchaMap = {
                 'reCaptcha': NoCaptchaTask,
@@ -74,7 +73,6 @@ class captchaSolver(Captcha):
                 captchaParams.get('User-Agent', '')
             )
 
-            pprint(proxy)
             task = captchaMap[captchaType](
                 url,
                 siteKey,
