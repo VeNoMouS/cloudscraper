@@ -45,6 +45,7 @@ class captchaSolver(Captcha):
 
     def parseProxy(self, url, user_agent):
         parsed = urlparse(url)
+
         return dict(
             proxy_type=parsed.scheme,
             proxy_address=parsed.hostname,
@@ -67,9 +68,10 @@ class captchaSolver(Captcha):
                 'reCaptcha': NoCaptchaTask,
                 'hCaptcha': HCaptchaTask
             }
+
             proxy = self.parseProxy(
                 captchaParams.get('proxy', {}).get('https'),
-                captchaParams.get('user_agent', '')
+                captchaParams.get('User-Agent', '')
             )
 
             pprint(proxy)

@@ -519,7 +519,24 @@ class CloudScraper(Session):
                 CloudflareCaptchaError,
                 "Cloudflare Captcha detected, unfortunately we can't extract the parameters correctly."
             )
-        provider_params['user_agent'] = self.headers['User-Agent']
+
+        # ------------------------------------------------------------------------------- #
+        # Pass proxy parameter to provider to solve captcha.
+        # ------------------------------------------------------------------------------- #
+
+        if self.proxies and self.proxies != self.captcha.get('proxy'):
+            self.captcha['proxy'] = self.proxies
+
+        # ------------------------------------------------------------------------------- #
+        # Pass User-Agent if provider supports it to solve captcha.
+        # ------------------------------------------------------------------------------- #
+
+        self.captcha['User-Agent'] = self.headers['User-Agent']
+
+        # ------------------------------------------------------------------------------- #
+        # Submit job to provider to request captcha solve.
+        # ------------------------------------------------------------------------------- #
+
         captchaResponse = Captcha.dynamicImport(
             provider.lower()
         ).solveCaptcha(
@@ -528,6 +545,10 @@ class CloudScraper(Session):
             payload['data-sitekey'],
             provider_params
         )
+
+        # ------------------------------------------------------------------------------- #
+        # Parse and handle the response of solved captcha.
+        # ------------------------------------------------------------------------------- #
 
         dataPayload = OrderedDict([
             ('r', payload.get('name="r" value', '')),
@@ -586,8 +607,9 @@ class CloudScraper(Session):
             if self.captcha.get('provider') == 'return_response':
                 return resp
 
-            if self.proxies and self.proxies != self.captcha.get('proxy'):
-                self.captcha['proxy'] = self.proxies
+            # ------------------------------------------------------------------------------- #
+            # Submit request to parser wrapper to solve captcha
+            # ------------------------------------------------------------------------------- #
 
             submit_url = self.captcha_Challenge_Response(
                 self.captcha.get('provider'),
