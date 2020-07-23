@@ -586,7 +586,7 @@ class CloudScraper(Session):
             if self.captcha.get('provider') == 'return_response':
                 return resp
 
-            if not self.captcha.get('proxy'):
+            if self.proxies and self.proxies != self.captcha.get('proxy'):
                 self.captcha['proxy'] = self.proxies
 
             submit_url = self.captcha_Challenge_Response(
