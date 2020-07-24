@@ -1,6 +1,5 @@
 from __future__ import absolute_import
 
-from pprint import pprint
 import requests
 try:
     from urlparse import urlparse
@@ -139,7 +138,6 @@ class captchaSolver(Captcha):
             raise CaptchaBadJobID("2Captcha: Error bad job id to request Captcha.")
 
         def _checkRequest(response):
-            pprint(response.text)
             if response.ok and response.json().get('status') == 1:
                 return response
 
@@ -174,7 +172,6 @@ class captchaSolver(Captcha):
 
     def requestSolve(self, captchaType, url, siteKey):
         def _checkRequest(response):
-            pprint(response.text)
             if response.ok and response.json().get("status") == 1 and response.json().get('request'):
                 return response
 
@@ -186,9 +183,7 @@ class captchaSolver(Captcha):
             'key': self.api_key,
             'pageurl': url,
             'json': 1,
-            'soft_id': 5507698,
-            'proxy': self.proxy,
-            'proxytype': self.proxyType
+            'soft_id': 5507698
         }
 
         data.update(
@@ -200,7 +195,14 @@ class captchaSolver(Captcha):
                 'sitekey': siteKey
             }
         )
-        pprint(data)
+
+        if self.proxy:
+            data.update(
+                {
+                    'proxy': self.proxy,
+                    'proxytype': self.proxyType
+                }
+            )
 
         response = polling.poll(
             lambda: self.session.post(
@@ -245,10 +247,7 @@ class captchaSolver(Captcha):
             self.proxyType = hostParsed.scheme
             self.proxy = hostParsed.netloc
         else:
-            if captchaType == 'hCaptcha':
-                raise CaptchaParameter(
-                    "2Captcha: Cannot find set proxy to pass through to provider."
-                )
+            self.proxy = None
 
         try:
             jobID = self.requestSolve(captchaType, url, siteKey)
