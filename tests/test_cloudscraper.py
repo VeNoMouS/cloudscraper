@@ -179,11 +179,11 @@ class TestCloudScraper:
 
     def test_user_agent(self, **kwargs):
         for browser in ['chrome', 'firefox']:
-            scraper = cloudscraper.create_scraper(browser=browser, delay=0.1)
+            scraper = cloudscraper.create_scraper(browser={'browser': browser, 'platform': 'windows'}, delay=0.1)
             assert browser in scraper.headers['User-Agent'].lower()
 
         # Check it can't find browsers.json
-        with pytest.raises(RuntimeError, match=r".*?User-Agent was not found\."):
+        with pytest.raises(RuntimeError, match=r"Sorry \"bad_match\" browser is not valid.*?"):
             scraper = cloudscraper.create_scraper(browser='bad_match', delay=0.1)
 
         # Check mobile and desktop disabled
