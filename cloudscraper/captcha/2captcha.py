@@ -235,7 +235,7 @@ class captchaSolver(Captcha):
 
         self.api_key = captchaParams.get('api_key')
 
-        if captchaParams.get('proxy'):
+        if captchaParams.get('proxy') and not captchaParams.get('no_proxy'):
             hostParsed = urlparse(captchaParams.get('proxy', {}).get('https'))
 
             if not hostParsed.scheme:

@@ -62,7 +62,7 @@ class captchaSolver(Captcha):
 
         client = AnticaptchaClient(captchaParams.get('api_key'))
 
-        if captchaParams.get('proxy'):
+        if captchaParams.get('proxy') and not captchaParams.get('no_proxy'):
             captchaMap = {
                 'reCaptcha': NoCaptchaTask,
                 'hCaptcha': HCaptchaTask
