@@ -21,37 +21,29 @@ class User_Agent():
 
     # ------------------------------------------------------------------------------- #
 
-    def loadHeaders(self, user_agents, user_agent_version):
-        if user_agents.get(self.browser).get('releases').get(user_agent_version).get('headers'):
-            self.headers = user_agents.get(self.browser).get('releases').get(user_agent_version).get('headers')
-        else:
-            self.headers = user_agents.get(self.browser).get('default_headers')
-
-    # ------------------------------------------------------------------------------- #
-
-    def filterAgents(self, releases):
+    def filterAgents(self, user_agents):
         filtered = {}
 
-        for release in releases:
-            if self.mobile and releases[release]['User-Agent']['mobile']:
-                filtered[release] = filtered.get(release, []) + releases[release]['User-Agent']['mobile']
+        if self.mobile:
+            if self.platform in user_agents['mobile'] and user_agents['mobile'][self.platform]:
+                filtered.update(user_agents['mobile'][self.platform])
 
-            if self.desktop and releases[release]['User-Agent']['desktop']:
-                filtered[release] = filtered.get(release, []) + releases[release]['User-Agent']['desktop']
+        if self.desktop:
+            if self.platform in user_agents['desktop'] and user_agents['desktop'][self.platform]:
+                filtered.update(user_agents['desktop'][self.platform])
 
         return filtered
 
     # ------------------------------------------------------------------------------- #
 
     def tryMatchCustom(self, user_agents):
-        for browser in user_agents:
-            for release in user_agents[browser]['releases']:
-                for platform in ['mobile', 'desktop']:
-                    if re.search(re.escape(self.custom), ' '.join(user_agents[browser]['releases'][release]['User-Agent'][platform])):
-                        self.browser = browser
-                        self.loadHeaders(user_agents, release)
+        for device_type in user_agents['user_agents']:
+            for platform in user_agents['user_agents'][device_type]:
+                for browser in user_agents['user_agents'][device_type][platform]:
+                    if re.search(re.escape(self.custom), ' '.join(user_agents['user_agents'][device_type][platform][browser])):
+                        self.headers = user_agents['headers'][browser]
                         self.headers['User-Agent'] = self.custom
-                        self.cipherSuite = user_agents[self.browser].get('cipherSuite', [])
+                        self.cipherSuite = user_agents['cipherSuite'][browser]
                         return True
         return False
 
@@ -60,13 +52,18 @@ class User_Agent():
     def loadUserAgent(self, *args, **kwargs):
         self.browser = kwargs.pop('browser', None)
 
+        self.platforms = ['linux', 'windows', 'darwin', 'android', 'ios']
+        self.browsers = ['chrome', 'firefox']
+
         if isinstance(self.browser, dict):
             self.custom = self.browser.get('custom', None)
+            self.platform = self.browser.get('platform', None)
             self.desktop = self.browser.get('desktop', True)
             self.mobile = self.browser.get('mobile', True)
             self.browser = self.browser.get('browser', None)
         else:
             self.custom = kwargs.pop('custom', None)
+            self.platform = kwargs.pop('platform', None)
             self.desktop = kwargs.pop('desktop', True)
             self.mobile = kwargs.pop('mobile', True)
 
@@ -94,22 +91,32 @@ class User_Agent():
                     ('Accept-Encoding', 'gzip, deflate, br')
                 ])
         else:
-            if self.browser and not user_agents.get(self.browser):
+            if self.browser and self.browser not in self.browsers:
                 sys.tracebacklimit = 0
-                raise RuntimeError('Sorry "{}" browser User-Agent was not found.'.format(self.browser))
+                raise RuntimeError('Sorry "{}" browser is not valid, valid browsers are [{}].'.format(self.browser, ', '.join(self.browsers)))
+
+            if not self.platform:
+                self.platform = random.SystemRandom().choice(self.platforms)
+
+            if self.platform not in self.platforms:
+                sys.tracebacklimit = 0
+                raise RuntimeError('Sorry the platform "{}" is not valid, valid platforms are [{}]'.format(self.platform, ', '.join(self.platforms)))
+
+            filteredAgents = self.filterAgents(user_agents['user_agents'])
 
             if not self.browser:
-                self.browser = random.SystemRandom().choice(list(user_agents))
+                # has to be at least one in there...
+                while not filteredAgents.get(self.browser):
+                    self.browser = random.SystemRandom().choice(list(filteredAgents.keys()))
 
-            self.cipherSuite = user_agents.get(self.browser).get('cipherSuite', [])
+            if not filteredAgents[self.browser]:
+                sys.tracebacklimit = 0
+                raise RuntimeError('Sorry "{}" browser was not found with a platform of "{}".'.format(self.browser, self.platform))
 
-            filteredAgents = self.filterAgents(user_agents.get(self.browser).get('releases'))
+            self.cipherSuite = user_agents['cipherSuite'][self.browser]
+            self.headers = user_agents['headers'][self.browser]
 
-            user_agent_version = random.SystemRandom().choice(list(filteredAgents))
-
-            self.loadHeaders(user_agents, user_agent_version)
-
-            self.headers['User-Agent'] = random.SystemRandom().choice(filteredAgents[user_agent_version])
+            self.headers['User-Agent'] = random.SystemRandom().choice(filteredAgents[self.browser])
 
         if not kwargs.get('allow_brotli', False) and 'br' in self.headers['Accept-Encoding']:
             self.headers['Accept-Encoding'] = ','.join([

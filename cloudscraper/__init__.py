@@ -126,6 +126,7 @@ class CloudScraper(Session):
         self.requestPreHook = kwargs.pop('requestPreHook', None)
         self.requestPostHook = kwargs.pop('requestPostHook', None)
         self.source_address = kwargs.pop('source_address', None)
+        self.doubleDown = kwargs.pop('doubleDown', True)
 
         self.allow_brotli = kwargs.pop(
             'allow_brotli',
@@ -418,10 +419,16 @@ class CloudScraper(Session):
                 'Cloudflare has blocked this request (Code 1020 Detected).'
             )
 
-        if self.is_New_Captcha_Challenge(resp) or self.is_New_IUAM_Challenge(resp):
+        if self.is_New_Captcha_Challenge(resp):
             self.simpleException(
                 CloudflareChallengeError,
-                'Detected a Cloudflare version 2 challenge, Paid version required to solve.'
+                'Detected a Cloudflare version 2 challenge, This feature is not available in the opensource (free) version.'
+            )
+
+        if self.is_New_IUAM_Challenge(resp):
+            self.simpleException(
+                CloudflareChallengeError,
+                'Detected a Cloudflare version 2 Captcha challenge, This feature is not available in the opensource (free) version.'
             )
 
         if self.is_Captcha_Challenge(resp) or self.is_IUAM_Challenge(resp):
@@ -582,9 +589,10 @@ class CloudScraper(Session):
             # if cfuid is populated before issuing Captcha.
             # ------------------------------------------------------------------------------- #
 
-            resp = self.decodeBrotli(
-                self.perform_request(resp.request.method, resp.url, **kwargs)
-            )
+            if self.doubleDown:
+                resp = self.decodeBrotli(
+                    self.perform_request(resp.request.method, resp.url, **kwargs)
+                )
 
             if not self.is_Captcha_Challenge(resp):
                 return resp
