@@ -768,11 +768,12 @@ class CloudScraper(Session):
                     'browser',
                     'debug',
                     'delay',
-                    'interpreter',
+                    'doubleDown',
                     'captcha',
-                    'requestPreHook',
-                    'requestPostHook',
+                    'interpreter',
                     'source_address'
+                    'requestPreHook',
+                    'requestPostHook'
                 ] if field in kwargs
             }
         )
