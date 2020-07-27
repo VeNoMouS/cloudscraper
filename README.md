@@ -148,6 +148,7 @@ Or
 |browser|(string) `chrome` or `firefox`|None|
 |mobile|(boolean)|True|
 |desktop|(boolean)|True|
+|platform|(string) `'linux', 'windows', 'darwin', 'android', 'ios'`|None|
 |custom|(string)|None|
 #### Example
 
@@ -158,18 +159,20 @@ scraper = cloudscraper.create_scraper(browser='chrome')
 or
 
 ```python
-# will give you only mobile chrome User-Agents
+# will give you only mobile chrome User-Agents on Android
 scraper = cloudscraper.create_scraper(
     browser={
         'browser': 'chrome',
+        'platform': 'android',
         'desktop': False
     }
 )
 
-# will give you only desktop firefox User-Agents
+# will give you only desktop firefox User-Agents on Windows
 scraper = cloudscraper.create_scraper(
     browser={
         'browser': 'firefox',
+        'platform': 'windows',
         'mobile': False
     }
 )
@@ -327,6 +330,11 @@ Can be set as an attribute via your `cloudscraper` object or passed as an argume
 |-------------|:-------------:|:-----:|:-----:|
 |provider|(string) `anticaptcha`|yes||
 |api_key|(string)|yes||
+|no_proxy|(boolean)|no|False|
+
+##### Note
+
+if proxies are set you can disable sending the proxies to anticaptcha by setting `no_proxy` to `True`
 
 ##### Example
 
@@ -377,6 +385,11 @@ scraper = cloudscraper.create_scraper(
 |-------------|:-------------:|:-----:|:-----:|
 |provider|(string) `2captcha`| yes||
 |api_key|(string)| yes||
+|no_proxy|(boolean)|no|False|
+
+##### Note
+
+if proxies are set you can disable sending the proxies to 2captcha by setting `no_proxy` to `True`
 
 ##### Example
 
