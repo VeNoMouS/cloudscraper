@@ -422,13 +422,13 @@ class CloudScraper(Session):
         if self.is_New_Captcha_Challenge(resp):
             self.simpleException(
                 CloudflareChallengeError,
-                'Detected a Cloudflare version 2 challenge, This feature is not available in the opensource (free) version.'
+                'Detected a Cloudflare version 2 Captcha challenge, This feature is not available in the opensource (free) version.'
             )
 
         if self.is_New_IUAM_Challenge(resp):
             self.simpleException(
                 CloudflareChallengeError,
-                'Detected a Cloudflare version 2 Captcha challenge, This feature is not available in the opensource (free) version.'
+                'Detected a Cloudflare version 2 challenge, This feature is not available in the opensource (free) version.'
             )
 
         if self.is_Captcha_Challenge(resp) or self.is_IUAM_Challenge(resp):
