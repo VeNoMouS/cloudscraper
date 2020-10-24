@@ -748,7 +748,7 @@ class CloudScraper(Session):
         scraper = cls(**kwargs)
 
         if sess:
-            for attr in ['auth', 'cert', 'cookies', 'headers', 'hooks', 'params', 'proxies', 'data']:
+            for attr in ['auth', 'cert', 'cookies', 'headers', 'hooks', 'params', 'proxies', 'data', 'verify']:
                 val = getattr(sess, attr, None)
                 if val:
                     setattr(scraper, attr, val)
