@@ -16,12 +16,9 @@ from ..exceptions import (
 )
 
 try:
-    import polling
+    import polling2
 except ImportError:
-    raise ImportError(
-        "Please install the python module 'polling' via pip or download it from "
-        "https://github.com/justiniso/polling/"
-    )
+    raise ImportError("Please install the python module 'polling2' via pip")
 
 from . import Captcha
 
@@ -84,11 +81,12 @@ class captchaSolver(Captcha):
             }
         }
 
-        if response.json().get('status') == 0 and response.json().get('request') in errors.get(request_type):
+        rPayload = response.json()
+        if rPayload.get('status') == 0 and rPayload.get('request') in errors.get(request_type):
             raise CaptchaAPIError(
                 '{} {}'.format(
-                    response.json().get('request'),
-                    errors.get(request_type).get(response.json().get('request'))
+                    rPayload['request'],
+                    errors.get(request_type).get(rPayload['request'])
                 )
             )
 
@@ -101,14 +99,12 @@ class captchaSolver(Captcha):
             )
 
         def _checkRequest(response):
+            self.checkErrorStatus(response, 'res.php')
             if response.ok and response.json().get('status') == 1:
                 return response
-
-            self.checkErrorStatus(response, 'res.php')
-
             return None
 
-        response = polling.poll(
+        response = polling2.poll(
             lambda: self.session.get(
                 '{}/res.php'.format(self.host),
                 params={
@@ -138,14 +134,12 @@ class captchaSolver(Captcha):
             raise CaptchaBadJobID("2Captcha: Error bad job id to request Captcha.")
 
         def _checkRequest(response):
+            self.checkErrorStatus(response, 'res.php')
             if response.ok and response.json().get('status') == 1:
                 return response
-
-            self.checkErrorStatus(response, 'res.php')
-
             return None
 
-        response = polling.poll(
+        response = polling2.poll(
             lambda: self.session.get(
                 '{}/res.php'.format(self.host),
                 params={
@@ -172,18 +166,16 @@ class captchaSolver(Captcha):
 
     def requestSolve(self, captchaType, url, siteKey):
         def _checkRequest(response):
+            self.checkErrorStatus(response, 'in.php')
             if response.ok and response.json().get("status") == 1 and response.json().get('request'):
                 return response
-
-            self.checkErrorStatus(response, 'in.php')
-
             return None
 
         data = {
             'key': self.api_key,
             'pageurl': url,
             'json': 1,
-            'soft_id': 5507698
+            'soft_id': 2905
         }
 
         data.update(
@@ -204,7 +196,7 @@ class captchaSolver(Captcha):
                 }
             )
 
-        response = polling.poll(
+        response = polling2.poll(
             lambda: self.session.post(
                 '{}/in.php'.format(self.host),
                 data=data,
@@ -252,11 +244,11 @@ class captchaSolver(Captcha):
         try:
             jobID = self.requestSolve(captchaType, url, siteKey)
             return self.requestJob(jobID)
-        except polling.TimeoutException:
+        except polling2.TimeoutException:
             try:
                 if jobID:
                     self.reportJob(jobID)
-            except polling.TimeoutException:
+            except polling2.TimeoutException:
                 raise CaptchaTimeout(
                     "2Captcha: Captcha solve took to long and also failed reporting the job the job id {}.".format(jobID)
                 )
