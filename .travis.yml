@@ -5,14 +5,15 @@ sudo: false
 
 matrix:
     include:
-        - python: '3.5'
         - python: '3.6'
         - python: '3.7'
+        - python: '3.8'
+        - python: '3.9'
 
 install:
-  - pip install -r requirements.txt
-  - pip install -r dev_requirements.txt
-  - pip install python-coveralls
+    - pip install -r requirements.txt
+    - pip install -r dev_requirements.txt
+    - pip install python-coveralls
 
 script:
     - make lint && make ci
