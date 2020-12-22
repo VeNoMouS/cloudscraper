@@ -2,29 +2,28 @@ from __future__ import absolute_import
 
 import json
 import requests
+try:
+    from urlparse import urlparse
+except ImportError:
+    from urllib.parse import urlparse
 
 try:
-    import polling
+    import polling2
 except ImportError:
-    raise ImportError(
-        "Please install the python module 'polling' via pip or download it from "
-        "https://github.com/justiniso/polling/"
-    )
+    raise ImportError("Please install the python module 'polling2' via pip")
 
 from ..exceptions import (
-    reCaptchaException,
-    reCaptchaServiceUnavailable,
-    reCaptchaAccountError,
-    reCaptchaTimeout,
-    reCaptchaParameter,
-    reCaptchaBadJobID,
-    reCaptchaReportError
+    CaptchaServiceUnavailable,
+    CaptchaTimeout,
+    CaptchaParameter,
+    CaptchaBadJobID,
+    CaptchaReportError
 )
 
-from . import reCaptcha
+from . import Captcha
 
 
-class captchaSolver(reCaptcha):
+class captchaSolver(Captcha):
 
     def __init__(self):
         super(captchaSolver, self).__init__('deathbycaptcha')
@@ -45,7 +44,7 @@ class captchaSolver(reCaptcha):
         )
 
         if response.status_code in errors:
-            raise reCaptchaServiceUnavailable(errors.get(response.status_code))
+            raise CaptchaServiceUnavailable(errors.get(response.status_code))
 
     # ------------------------------------------------------------------------------- #
 
@@ -56,10 +55,10 @@ class captchaSolver(reCaptcha):
         def _checkRequest(response):
             if response.ok:
                 if response.json().get('is_banned'):
-                    raise reCaptchaAccountError('DeathByCaptcha: Your account is banned.')
+                    raise CaptchaServiceUnavailable('DeathByCaptcha: Your account is banned.')
 
                 if response.json().get('balanace') == 0:
-                    raise reCaptchaAccountError('DeathByCaptcha: insufficient credits.')
+                    raise CaptchaServiceUnavailable('DeathByCaptcha: insufficient credits.')
 
                 return response
 
@@ -67,7 +66,7 @@ class captchaSolver(reCaptcha):
 
             return None
 
-        response = polling.poll(
+        response = polling2.poll(
             lambda: self.session.post(
                 '{}/user'.format(self.host),
                 headers={'Accept': 'application/json'},
@@ -87,7 +86,7 @@ class captchaSolver(reCaptcha):
 
     def reportJob(self, jobID):
         if not jobID:
-            raise reCaptchaBadJobID(
+            raise CaptchaBadJobID(
                 "DeathByCaptcha: Error bad job id to report failed reCaptcha."
             )
 
@@ -99,7 +98,7 @@ class captchaSolver(reCaptcha):
 
             return None
 
-        response = polling.poll(
+        response = polling2.poll(
             lambda: self.session.post(
                 '{}/captcha/{}/report'.format(self.host, jobID),
                 headers={'Accept': 'application/json'},
@@ -116,7 +115,7 @@ class captchaSolver(reCaptcha):
         if response:
             return True
         else:
-            raise reCaptchaReportError(
+            raise CaptchaReportError(
                 "DeathByCaptcha: Error report failed reCaptcha."
             )
 
@@ -124,7 +123,7 @@ class captchaSolver(reCaptcha):
 
     def requestJob(self, jobID):
         if not jobID:
-            raise reCaptchaBadJobID(
+            raise CaptchaBadJobID(
                 "DeathByCaptcha: Error bad job id to request reCaptcha."
             )
 
@@ -136,7 +135,7 @@ class captchaSolver(reCaptcha):
 
             return None
 
-        response = polling.poll(
+        response = polling2.poll(
             lambda: self.session.get(
                 '{}/captcha/{}'.format(self.host, jobID),
                 headers={'Accept': 'application/json'}
@@ -149,13 +148,13 @@ class captchaSolver(reCaptcha):
         if response:
             return response.json().get('text')
         else:
-            raise reCaptchaTimeout(
+            raise CaptchaTimeout(
                 "DeathByCaptcha: Error failed to solve reCaptcha."
             )
 
     # ------------------------------------------------------------------------------- #
 
-    def requestSolve(self, url, siteKey):
+    def requestSolve(self, captchaType, url, siteKey):
         def _checkRequest(response):
             if response.ok and response.json().get("is_correct") and response.json().get('captcha'):
                 return response
@@ -164,19 +163,40 @@ class captchaSolver(reCaptcha):
 
             return None
 
-        response = polling.poll(
+        data = {
+            'username': self.username,
+            'password': self.password,
+        }
+
+        data.update(
+            {
+                'type': '4',
+                'token_params': json.dumps({
+                    'googlekey': siteKey,
+                    'pageurl': url
+                })
+            } if captchaType == 'reCaptcha' else {
+                'type': '7',
+                'hcaptcha_params': json.dumps({
+                    'sitekey': siteKey,
+                    'pageurl': url
+                })
+            }
+        )
+
+        if self.proxy:
+            data.update(
+                {
+                    'proxy': self.proxy,
+                    'proxytype': self.proxyType
+                }
+            )
+
+        response = polling2.poll(
             lambda: self.session.post(
                 '{}/captcha'.format(self.host),
                 headers={'Accept': 'application/json'},
-                data={
-                    'username': self.username,
-                    'password': self.password,
-                    'type': '4',
-                    'token_params': json.dumps({
-                        'googlekey': siteKey,
-                        'pageurl': url
-                    })
-                },
+                data=data,
                 allow_redirects=False
             ),
             check_success=_checkRequest,
@@ -187,44 +207,50 @@ class captchaSolver(reCaptcha):
         if response:
             return response.json().get('captcha')
         else:
-            raise reCaptchaBadJobID(
+            raise CaptchaBadJobID(
                 'DeathByCaptcha: Error no job id was returned.'
             )
 
     # ------------------------------------------------------------------------------- #
 
-    def getCaptchaAnswer(self, captchaType, url, siteKey, reCaptchaParams):
+    def getCaptchaAnswer(self, captchaType, url, siteKey, captchaParams):
         jobID = None
 
         for param in ['username', 'password']:
-            if not reCaptchaParams.get(param):
-                raise reCaptchaParameter(
+            if not captchaParams.get(param):
+                raise CaptchaParameter(
                     "DeathByCaptcha: Missing '{}' parameter.".format(param)
                 )
-            setattr(self, param, reCaptchaParams.get(param))
+            setattr(self, param, captchaParams.get(param))
 
-        if captchaType == 'hCaptcha':
-            raise reCaptchaException(
-                'Provider does not support hCaptcha.'
-            )
+        if captchaParams.get('proxy') and not captchaParams.get('no_proxy'):
+            hostParsed = urlparse(captchaParams.get('proxy', {}).get('https'))
 
-        if reCaptchaParams.get('proxy'):
-            self.session.proxies = reCaptchaParams.get('proxies')
+            if not hostParsed.scheme:
+                raise CaptchaParameter('Cannot parse proxy correctly, bad scheme')
+
+            if not hostParsed.netloc:
+                raise CaptchaParameter('Cannot parse proxy correctly, bad netloc')
+
+            self.proxyType = hostParsed.scheme.upper()
+            self.proxy = captchaParams.get('proxy', {}).get('https')
+        else:
+            self.proxy = None
 
         try:
-            jobID = self.requestSolve(url, siteKey)
+            jobID = self.requestSolve(captchaType, url, siteKey)
             return self.requestJob(jobID)
-        except polling.TimeoutException:
+        except polling2.TimeoutException:
             try:
                 if jobID:
                     self.reportJob(jobID)
-            except polling.TimeoutException:
-                raise reCaptchaTimeout(
-                    "DeathByCaptcha: reCaptcha solve took to long and also failed reporting the job id {}.".format(jobID)
+            except polling2.TimeoutException:
+                raise CaptchaTimeout(
+                    "DeathByCaptcha: Captcha solve took to long and also failed reporting the job id {}.".format(jobID)
                 )
 
-            raise reCaptchaTimeout(
-                "DeathByCaptcha: reCaptcha solve took to long to execute job id {}, aborting.".format(jobID)
+            raise CaptchaTimeout(
+                "DeathByCaptcha: Captcha solve took to long to execute job id {}, aborting.".format(jobID)
             )
 
 
