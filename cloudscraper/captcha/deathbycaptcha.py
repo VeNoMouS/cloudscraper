@@ -168,29 +168,38 @@ class captchaSolver(Captcha):
             'password': self.password,
         }
 
-        data.update(
-            {
-                'type': '4',
-                'token_params': json.dumps({
-                    'googlekey': siteKey,
-                    'pageurl': url
-                })
-            } if captchaType == 'reCaptcha' else {
-                'type': '7',
-                'hcaptcha_params': json.dumps({
-                    'sitekey': siteKey,
-                    'pageurl': url
-                })
+        if captchaType == 'reCaptcha':
+            jPayload = {
+                'googlekey': siteKey,
+                'pageurl': url
             }
-        )
 
-        if self.proxy:
-            data.update(
-                {
+            if self.proxy:
+                jPayload.update({
                     'proxy': self.proxy,
                     'proxytype': self.proxyType
-                }
-            )
+                })
+
+            data.update({
+                'type': '4',
+                'token_params': json.dumps(jPayload)
+            })
+        else:
+            jPayload = {
+                'sitekey': siteKey,
+                'pageurl': url
+            }
+
+            if self.proxy:
+                jPayload.update({
+                    'proxy': self.proxy,
+                    'proxytype': self.proxyType
+                })
+
+            data.update({
+                'type': '7',
+                'hcaptcha_params': json.dumps(jPayload)
+            })
 
         response = polling2.poll(
             lambda: self.session.post(

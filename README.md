@@ -409,8 +409,6 @@ scraper = cloudscraper.create_scraper(
 
 #### deathbycaptcha
 
-deathbycaptcha **does not support** hCaptcha
-
 ##### Required `captcha` Parameters
 
 |Parameter|Value|Required|Default|
