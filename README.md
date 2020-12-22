@@ -88,7 +88,7 @@ import cloudscraper
 
 scraper = cloudscraper.create_scraper()  # returns a CloudScraper instance
 # Or: scraper = cloudscraper.CloudScraper()  # CloudScraper inherits from requests.Session
-print scraper.get("http://somesite.com").text  # => "<!DOCTYPE html><html><head>..."
+print(scraper.get("http://somesite.com").text)  # => "<!DOCTYPE html><html><head>..."
 ```
 
 That's it...
@@ -257,7 +257,7 @@ Unfortunately, not all of Requests session attributes are easily transferable, s
 
 You should replace your initial session initialization call
 
-From: 
+From:
 ```python
 sess = requests.session()
 ```
@@ -302,9 +302,10 @@ scraper = cloudscraper.create_scraper(interpreter='nodejs')
 #### Description
 `cloudscraper` currently supports the following 3rd party Captcha solvers, should you require them.
 
-- **[anticaptcha](https://www.anti-captcha.com/)**
-- **[deathbycaptcha](https://www.deathbycaptcha.com/)**
 - **[2captcha](https://www.2captcha.com/)**
+- **[anticaptcha](https://www.anti-captcha.com/)**
+- **[CapMonster Cloud](https://capmonster.cloud/)**
+- **[deathbycaptcha](https://www.deathbycaptcha.com/)**
 - **[9kw](https://www.9kw.eu/)**
 - **__return_response__**
 
@@ -319,6 +320,34 @@ Can be set as an attribute via your `cloudscraper` object or passed as an argume
 |Parameter|Value|Default|
 |-------------|:-------------:|:-----:|
 |captcha|(dict)|None|
+
+------
+
+#### 2captcha
+
+##### Required `captcha` Parameters
+
+|Parameter|Value|Required|Default|
+|-------------|:-------------:|:-----:|:-----:|
+|provider|(string) `2captcha`| yes||
+|api_key|(string)| yes||
+|no_proxy|(boolean)|no|False|
+
+##### Note
+
+if proxies are set you can disable sending the proxies to 2captcha by setting `no_proxy` to `True`
+
+##### Example
+
+```python
+scraper = cloudscraper.create_scraper(
+  interpreter='nodejs',
+  captcha={
+    'provider': '2captcha',
+    'api_key': 'your_2captcha_api_key'
+  }
+)
+```
 
 ------
 
@@ -350,6 +379,34 @@ scraper = cloudscraper.create_scraper(
 
 ------
 
+#### CapMonster Cloud
+
+##### Required `captcha` Parameters
+
+|Parameter|Value|Required|Default|
+|-------------|:-------------:|:-----:|:-----:|
+|provider|(string) `capmonster`| yes||
+|clientKey|(string)| yes||
+|no_proxy|(boolean)|no|False|
+
+##### Note
+
+if proxies are set you can disable sending the proxies to CapMonster by setting `no_proxy` to `True`
+
+##### Example
+
+```python
+scraper = cloudscraper.create_scraper(
+  interpreter='nodejs',
+  captcha={
+    'provider': 'capmonster',
+    'clientKey': 'your_capmonster_clientKey'
+  }
+)
+```
+
+------
+
 #### deathbycaptcha
 
 deathbycaptcha **does not support** hCaptcha
@@ -371,34 +428,6 @@ scraper = cloudscraper.create_scraper(
     'provider': 'deathbycaptcha',
     'username': 'your_deathbycaptcha_username',
     'password': 'your_deathbycaptcha_password',
-  }
-)
-```
-
-------
-
-#### 2captcha
-
-##### Required `captcha` Parameters
-
-|Parameter|Value|Required|Default|
-|-------------|:-------------:|:-----:|:-----:|
-|provider|(string) `2captcha`| yes||
-|api_key|(string)| yes||
-|no_proxy|(boolean)|no|False|
-
-##### Note
-
-if proxies are set you can disable sending the proxies to 2captcha by setting `no_proxy` to `True`
-
-##### Example
-
-```python
-scraper = cloudscraper.create_scraper(
-  interpreter='nodejs',
-  captcha={
-    'provider': '2captcha',
-    'api_key': 'your_2captcha_api_key'
   }
 )
 ```
