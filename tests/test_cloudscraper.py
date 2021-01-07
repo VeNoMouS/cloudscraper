@@ -228,6 +228,22 @@ class TestCloudScraper:
                 scraper.get(url)
 
     # ------------------------------------------------------------------------------- #
+    # test BFM detection
+
+    @mockCloudflare(fixture='bfm_07_01_2021.html', payload={})
+    def test_bfm_07_01_2021(self, **kwargs):
+        scraper = cloudscraper.create_scraper(delay=0.1)
+        assert scraper.is_BFM_Challenge(scraper.get(url))
+
+    # ------------------------------------------------------------------------------- #
+    # test no BFM detection
+
+    @mockCloudflare(fixture='js_challenge-27-05-2020.html', payload={})
+    def test_not_bfm_07_01_2021(self, **kwargs):
+        scraper = cloudscraper.create_scraper(delay=0.1)
+        assert not scraper.is_BFM_Challenge(scraper.get(url))
+
+    # ------------------------------------------------------------------------------- #
 
     def test_helper(self, **kwargs):
         payload = helper.systemInfo()
