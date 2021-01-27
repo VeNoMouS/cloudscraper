@@ -175,13 +175,13 @@ class captchaSolver(Captcha):
                     self.reportJob(taskID)
             except polling2.TimeoutException:
                 raise CaptchaTimeout(
-                    f"CapMonster: Captcha solve took to long and also failed " \
-                    "reporting the task with task id {taskID}."
+                    "CapMonster: Captcha solve took to long and also failed "
+                    f"reporting the task with task id {taskID}."
                 )
 
             raise CaptchaTimeout(
-                f"CapMonster: Captcha solve took to long to execute " \
-                "task id {taskID}, aborting."
+                "CapMonster: Captcha solve took to long to execute "
+                f"task id {taskID}, aborting."
             )
 
 
