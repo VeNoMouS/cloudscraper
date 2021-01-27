@@ -25,11 +25,12 @@ class Captcha(ABC):
     def dynamicImport(cls, name):
         if name not in captchaSolvers:
             try:
-                __import__('{}.{}'.format(cls.__module__, name))
+                __import__(f'{cls.__module__}.{name}')
                 if not isinstance(captchaSolvers.get(name), Captcha):
                     raise ImportError('The anti captcha provider was not initialized.')
-            except ImportError:
-                logging.error("Unable to load {} anti captcha provider".format(name))
+            except ImportError as e:
+                sys.tracebacklimit = 0
+                logging.error(f'Unable to load {name} anti captcha provider -> {e}')
                 raise
 
         return captchaSolvers[name]

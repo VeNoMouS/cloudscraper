@@ -96,7 +96,7 @@ class captchaSolver(Captcha):
         try:
             job.join(maximum_time=180)
         except (AnticaptchaException) as e:
-            raise CaptchaTimeout('{}'.format(getattr(e, 'message', e)))
+            raise CaptchaTimeout(f"{getattr(e, 'message', e)}")
 
         if 'solution' in job._last_result:
             return job.get_solution_response()

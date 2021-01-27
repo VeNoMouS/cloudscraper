@@ -36,7 +36,7 @@ class captchaSolver(reCaptcha):
     def checkErrorStatus(response):
         if response.status_code in [500, 502]:
             raise reCaptchaServiceUnavailable(
-                '9kw: Server Side Error {}'.format(response.status_code)
+                f'9kw: Server Side Error {response.status_code}'
             )
 
         error_codes = {
@@ -203,7 +203,7 @@ class captchaSolver(reCaptcha):
             return self.requestJob(jobID)
         except polling.TimeoutException:
             raise reCaptchaTimeout(
-                "9kw: reCaptcha solve took to long to execute 'captchaid' {}, aborting.".format(jobID)
+                f"9kw: reCaptcha solve took to long to execute 'captchaid' {jobID}, aborting."
             )
 
 # ------------------------------------------------------------------------------- #

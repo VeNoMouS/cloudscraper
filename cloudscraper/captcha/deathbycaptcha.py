@@ -68,7 +68,7 @@ class captchaSolver(Captcha):
 
         response = polling2.poll(
             lambda: self.session.post(
-                '{}/user'.format(self.host),
+                f'{self.host}/user',
                 headers={'Accept': 'application/json'},
                 data={
                     'username': self.username,
@@ -100,7 +100,7 @@ class captchaSolver(Captcha):
 
         response = polling2.poll(
             lambda: self.session.post(
-                '{}/captcha/{}/report'.format(self.host, jobID),
+                f'{self.host}/captcha/{jobID}/report',
                 headers={'Accept': 'application/json'},
                 data={
                     'username': self.username,
@@ -137,7 +137,7 @@ class captchaSolver(Captcha):
 
         response = polling2.poll(
             lambda: self.session.get(
-                '{}/captcha/{}'.format(self.host, jobID),
+                f'{self.host}/captcha/{jobID}',
                 headers={'Accept': 'application/json'}
             ),
             check_success=_checkRequest,
@@ -203,7 +203,7 @@ class captchaSolver(Captcha):
 
         response = polling2.poll(
             lambda: self.session.post(
-                '{}/captcha'.format(self.host),
+                f'{self.host}/captcha',
                 headers={'Accept': 'application/json'},
                 data=data,
                 allow_redirects=False
@@ -228,7 +228,7 @@ class captchaSolver(Captcha):
         for param in ['username', 'password']:
             if not captchaParams.get(param):
                 raise CaptchaParameter(
-                    "DeathByCaptcha: Missing '{}' parameter.".format(param)
+                    f"DeathByCaptcha: Missing '{param}' parameter."
                 )
             setattr(self, param, captchaParams.get(param))
 
@@ -255,11 +255,11 @@ class captchaSolver(Captcha):
                     self.reportJob(jobID)
             except polling2.TimeoutException:
                 raise CaptchaTimeout(
-                    "DeathByCaptcha: Captcha solve took to long and also failed reporting the job id {}.".format(jobID)
+                    f"DeathByCaptcha: Captcha solve took to long and also failed reporting the job id {jobID}."
                 )
 
             raise CaptchaTimeout(
-                "DeathByCaptcha: Captcha solve took to long to execute job id {}, aborting.".format(jobID)
+                f"DeathByCaptcha: Captcha solve took to long to execute job id {jobID}, aborting."
             )
 
 
