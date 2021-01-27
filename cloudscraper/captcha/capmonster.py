@@ -36,9 +36,7 @@ class captchaSolver(Captcha):
     def checkErrorStatus(response):
         if response.status_code in [500, 502]:
             raise CaptchaServiceUnavailable(
-                'CapMonster: Server Side Error {}'.format(
-                    response.status_code
-                )
+                f'CapMonster: Server Side Error {response.status_code}'
             )
 
         payload = response.json()
@@ -68,7 +66,7 @@ class captchaSolver(Captcha):
 
         response = polling2.poll(
             lambda: self.session.post(
-                '{}/getTaskResult'.format(self.host),
+                f'{self.host}/getTaskResult',
                 json={
                     'clientKey': self.clientKey,
                     'taskId': taskID
@@ -111,11 +109,11 @@ class captchaSolver(Captcha):
         if self.proxy:
             data['task'].update(self.proxy)
         else:
-            data['task']['type'] = '{}Proxyless'.format(data['task']['type'])
+            data['task']['type'] = f"{data['task']['type']}Proxyless"
 
         response = polling2.poll(
             lambda: self.session.post(
-                '{}/createTask'.format(self.host),
+                f'{self.host}/createTask',
                 json=data,
                 allow_redirects=False,
                 timeout=30
@@ -177,13 +175,13 @@ class captchaSolver(Captcha):
                     self.reportJob(taskID)
             except polling2.TimeoutException:
                 raise CaptchaTimeout(
-                    "CapMonster: Captcha solve took to long and also failed "
-                    "reporting the task with task id {}.".format(taskID)
+                    f"CapMonster: Captcha solve took to long and also failed " \
+                    "reporting the task with task id {taskID}."
                 )
 
             raise CaptchaTimeout(
-                "CapMonster: Captcha solve took to long to execute "
-                "task id {}, aborting.".format(taskID)
+                f"CapMonster: Captcha solve took to long to execute " \
+                "task id {taskID}, aborting."
             )
 
 

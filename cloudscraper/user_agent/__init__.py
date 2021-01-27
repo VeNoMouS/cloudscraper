@@ -93,14 +93,14 @@ class User_Agent():
         else:
             if self.browser and self.browser not in self.browsers:
                 sys.tracebacklimit = 0
-                raise RuntimeError('Sorry "{}" browser is not valid, valid browsers are [{}].'.format(self.browser, ', '.join(self.browsers)))
+                raise RuntimeError(f'Sorry "{self.browser}" browser is not valid, valid browsers are [{", ".join(self.browsers)}].')
 
             if not self.platform:
                 self.platform = random.SystemRandom().choice(self.platforms)
 
             if self.platform not in self.platforms:
                 sys.tracebacklimit = 0
-                raise RuntimeError('Sorry the platform "{}" is not valid, valid platforms are [{}]'.format(self.platform, ', '.join(self.platforms)))
+                raise RuntimeError(f'Sorry the platform "{self.platform}" is not valid, valid platforms are [{", ".join(self.platforms)}]')
 
             filteredAgents = self.filterAgents(user_agents['user_agents'])
 
@@ -111,7 +111,7 @@ class User_Agent():
 
             if not filteredAgents[self.browser]:
                 sys.tracebacklimit = 0
-                raise RuntimeError('Sorry "{}" browser was not found with a platform of "{}".'.format(self.browser, self.platform))
+                raise RuntimeError(f'Sorry "{self.browser}" browser was not found with a platform of "{self.platform}".')
 
             self.cipherSuite = user_agents['cipherSuite'][self.browser]
             self.headers = user_agents['headers'][self.browser]
