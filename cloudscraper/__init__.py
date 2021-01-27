@@ -359,7 +359,7 @@ class CloudScraper(Session):
                     resp.text,
                     re.M | re.S
                 )
-                and re.search(r'window._cf_chl_enter\(', resp.text, re.M | re.S)
+                and re.search(r'window._cf_chl_enter\s*[\(=]', resp.text, re.M | re.S)
             )
         except AttributeError:
             pass
@@ -380,7 +380,7 @@ class CloudScraper(Session):
                     resp.text,
                     re.M | re.S
                 )
-                and re.search(r'window._cf_chl_enter\(', resp.text, re.M | re.S)
+                and re.search(r'window._cf_chl_enter\s*[\(=]', resp.text, re.M | re.S)
             )
         except AttributeError:
             pass
