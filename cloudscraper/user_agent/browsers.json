@@ -1716,15 +1716,6 @@
                     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3788.1 Safari/537.36"
                 ],
                 "firefox": [
-                    "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Dragon/52.15.25.665 Chrome/52.0.2743.82 Safari/537.36",
-                    "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Dragon/52.15.25.664 Chrome/52.0.2743.82 Safari/537.36",
-                    "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Dragon/52.15.25.665 Chrome/52.0.2743.82 Safari/537.36",
-                    "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Dragon/52.15.25.664 Chrome/52.0.2743.82 Safari/537.36",
-                    "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Dragon/55.0.2883.58 Chrome/55.0.2883.52 Safari/537.36",
-                    "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Dragon/57.0.2987.93 Chrome/57.0.2987.88 Safari/537.36",
-                    "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Dragon/57.0.2987.93 Chrome/57.0.2987.88 Safari/537.36",
-                    "Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Dragon/58.0.3029.113 Chrome/58.0.3029.110 Safari/537.36",
-                    "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Dragon/58.0.3029.113 Chrome/58.0.3029.110 Safari/537.36",
                     "Mozilla/5.0 (Windows NT 5.1; rv:50.0) Gecko/20100101 Firefox/50.0",
                     "Mozilla/5.0 (Windows NT 5.1; WOW64; rv:50.0) Gecko/20100101 Firefox/50.0",
                     "Mozilla/5.0 (Windows NT 6.0; rv:50.0) Gecko/20100101 Firefox/50.0",
