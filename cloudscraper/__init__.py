@@ -275,10 +275,13 @@ class CloudScraper(Session):
         # ------------------------------------------------------------------------------- #
 
         if self.requestPostHook:
-            response = self.requestPostHook(self, response)
+            newResponse = self.requestPostHook(self, response)
 
-            if self.debug:
-                self.debugRequest(response)
+            if response != newResponse: # Give me walrus in 3.7!!!
+                response = newResponse
+                if self.debug:
+                    print('==== requestPostHook Debug ====')
+                    self.debugRequest(response)
 
         # Check if Cloudflare anti-bot is on
         if self.is_Challenge_Request(response):
