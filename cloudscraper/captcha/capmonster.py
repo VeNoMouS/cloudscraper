@@ -101,9 +101,9 @@ class captchaSolver(Captcha):
             'task': {
                 'websiteURL': url,
                 'websiteKey': siteKey,
-                'softId': 37,
                 'type': 'NoCaptchaTask' if captchaType == 'reCaptcha' else 'HCaptchaTask'
-            }
+            },
+            'softId': 37
         }
 
         if self.proxy:
