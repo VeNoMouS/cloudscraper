@@ -277,7 +277,7 @@ class CloudScraper(Session):
         if self.requestPostHook:
             newResponse = self.requestPostHook(self, response)
 
-            if response != newResponse: # Give me walrus in 3.7!!!
+            if response != newResponse:  # Give me walrus in 3.7!!!
                 response = newResponse
                 if self.debug:
                     print('==== requestPostHook Debug ====')
