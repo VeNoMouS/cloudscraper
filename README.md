@@ -150,6 +150,7 @@ Or
 |desktop|(boolean)|True|
 |platform|(string) `'linux', 'windows', 'darwin', 'android', 'ios'`|None|
 |custom|(string)|None|
+|ecdhCurve|(string)|prime256v1|
 #### Example
 
 ```python
@@ -186,7 +187,7 @@ scraper = cloudscraper.create_scraper(
     }
 )
 
-# Some servers require the use of a more complex ecdh curve than the default "prime256v1", to change the encryption type use the ecdhCurve parameter
+# Some servers require the use of a more complex ecdh curve than the default "prime256v1"
 # It may can solve handshake failure
 scraper = cloudscraper.create_scraper(
     ecdhCurve='secp384r1'
