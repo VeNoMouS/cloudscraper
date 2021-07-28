@@ -185,6 +185,12 @@ scraper = cloudscraper.create_scraper(
         'custom': 'ScraperBot/1.0',
     }
 )
+
+# Some servers require the use of a more complex ecdh curve than the default "prime256v1", to change the encryption type use the ecdhCurve parameter
+# It may can solve handshake failure
+scraper = cloudscraper.create_scraper(
+    ecdhCurve='secp384r1'
+)
 ```
 ------
 
