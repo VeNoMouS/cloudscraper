@@ -150,7 +150,6 @@ Or
 |desktop|(boolean)|True|
 |platform|(string) `'linux', 'windows', 'darwin', 'android', 'ios'`|None|
 |custom|(string)|None|
-|ecdhCurve|(string)|prime256v1|
 #### Example
 
 ```python
@@ -185,12 +184,6 @@ scraper = cloudscraper.create_scraper(
     browser={
         'custom': 'ScraperBot/1.0',
     }
-)
-
-# Some servers require the use of a more complex ecdh curve than the default "prime256v1"
-# It may can solve handshake failure
-scraper = cloudscraper.create_scraper(
-    ecdhCurve='secp384r1'
 )
 ```
 ------
@@ -601,5 +594,29 @@ print(
         ),
         shell=True
     )
+)
+```
+
+### Cryptography
+
+#### Description
+
+Control communication between client and server
+
+#### Parameters
+
+Can be passed as an argument to `create_scraper()`.
+
+|Parameter|Value|Default|
+|-------------|:-------------:|:-----:|
+|cipherSuite|(string)|None|
+|ecdhCurve|(string)|prime256v1|
+#### Example
+
+```python
+# Some servers require the use of a more complex ecdh curve than the default "prime256v1"
+# It may can solve handshake failure
+scraper = cloudscraper.create_scraper(
+    ecdhCurve='secp384r1'
 )
 ```
