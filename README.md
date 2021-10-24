@@ -58,9 +58,9 @@ We support the following Javascript interpreters/engines.
 
 Cloudflare modifies their anti-bot protection page occasionally, So far it has changed maybe once per year on average.
 
-If you notice that the anti-bot page has changed, or if this module suddenly stops working, please create a GitHub issue so that I can update the code accordingly.
+If you notice that the anti-bot page has changed, or if this module suddenly stops working, please be aware that issue are disabled so you (at the current time) cannot file issues to this repository. Also note:
 
-- Many issues are a result of users not updating to the latest release of this project. Before filing an issue, please run the following command:
+- Many issues are a result of users not updating to the latest release of this project. Please ensure you run the following command:
 
 ```
 pip show cloudscraper
@@ -72,12 +72,7 @@ If the value of the version field is not the latest release, please run the foll
 pip install cloudscraper -U
 ```
 
-If you are still encountering a problem, open an issue and please include:
-
-- The full exception and stack trace.
-- The URL of the Cloudflare-protected page which the script does not work on.
-- A Pastebin or Gist containing the HTML source of the protected page.
-- The version number from `pip show cloudscraper`.
+If you are still encountering a problem, be aware that issues are disabled and you cannot file them at current time because {INSERT_REASON_HERE}. Thank you for your understanding.
 
 # Usage
 
