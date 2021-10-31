@@ -59,6 +59,7 @@ class CipherSuiteAdapter(HTTPAdapter):
         self.ssl_context = kwargs.pop('ssl_context', None)
         self.cipherSuite = kwargs.pop('cipherSuite', None)
         self.source_address = kwargs.pop('source_address', None)
+        self.server_hostname = kwargs.pop('server_hostname', None)
         self.ecdhCurve = kwargs.pop('ecdhCurve', 'prime256v1')
 
         if self.source_address:
@@ -72,11 +73,29 @@ class CipherSuiteAdapter(HTTPAdapter):
 
         if not self.ssl_context:
             self.ssl_context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
+
+            self.ssl_context.orig_wrap_socket = self.ssl_context.wrap_socket
+            self.ssl_context.wrap_socket = self.wrap_socket
+
+            if self.server_hostname:
+                self.ssl_context.server_hostname = self.server_hostname
+
             self.ssl_context.set_ciphers(self.cipherSuite)
             self.ssl_context.set_ecdh_curve(self.ecdhCurve)
             self.ssl_context.options |= (ssl.OP_NO_SSLv2 | ssl.OP_NO_SSLv3 | ssl.OP_NO_TLSv1 | ssl.OP_NO_TLSv1_1)
 
         super(CipherSuiteAdapter, self).__init__(**kwargs)
+
+    # ------------------------------------------------------------------------------- #
+
+    def wrap_socket(self, *args, **kwargs):
+        if hasattr(self.ssl_context, 'server_hostname') and self.ssl_context.server_hostname:
+            kwargs['server_hostname'] = self.ssl_context.server_hostname
+            self.ssl_context.check_hostname = False
+        else:
+            self.ssl_context.check_hostname = True
+
+        return self.ssl_context.orig_wrap_socket(*args, **kwargs)
 
     # ------------------------------------------------------------------------------- #
 
@@ -112,6 +131,7 @@ class CloudScraper(Session):
         self.cipherSuite = kwargs.pop('cipherSuite', None)
         self.ecdhCurve = kwargs.pop('ecdhCurve', 'prime256v1')
         self.source_address = kwargs.pop('source_address', None)
+        self.server_hostname = kwargs.pop('server_hostname', None)
         self.ssl_context = kwargs.pop('ssl_context', None)
 
         self.allow_brotli = kwargs.pop(
@@ -146,8 +166,9 @@ class CloudScraper(Session):
             CipherSuiteAdapter(
                 cipherSuite=self.cipherSuite,
                 ecdhCurve=self.ecdhCurve,
-                ssl_context=self.ssl_context,
-                source_address=self.source_address
+                server_hostname=self.server_hostname,
+                source_address=self.source_address,
+                ssl_context=self.ssl_context
             )
         )
 
