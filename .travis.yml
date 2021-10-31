@@ -11,9 +11,9 @@ matrix:
         - python: '3.9'
 
 install:
-    - pip install -r requirements.txt
-    - pip install -r dev_requirements.txt
-    - pip install python-coveralls
+    - pip install -r requirements.txt --use-deprecated=legacy-resolver
+    - pip install -r dev_requirements.txt --use-deprecated=legacy-resolver
+    - pip install python-coveralls --use-deprecated=legacy-resolver
 
 script:
     - make lint && make ci

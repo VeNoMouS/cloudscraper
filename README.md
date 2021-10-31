@@ -54,31 +54,6 @@ We support the following Javascript interpreters/engines.
 - **[Node.js](https://nodejs.org/)**
 - **[V8](https://github.com/sony/v8eval/):** We use Sony's [v8eval](https://v8.dev)() python module.
 
-# Updates
-
-Cloudflare modifies their anti-bot protection page occasionally, So far it has changed maybe once per year on average.
-
-If you notice that the anti-bot page has changed, or if this module suddenly stops working, please create a GitHub issue so that I can update the code accordingly.
-
-- Many issues are a result of users not updating to the latest release of this project. Before filing an issue, please run the following command:
-
-```
-pip show cloudscraper
-```
-
-If the value of the version field is not the latest release, please run the following to update your package:
-
-```
-pip install cloudscraper -U
-```
-
-If you are still encountering a problem, open an issue and please include:
-
-- The full exception and stack trace.
-- The URL of the Cloudflare-protected page which the script does not work on.
-- A Pastebin or Gist containing the HTML source of the protected page.
-- The version number from `pip show cloudscraper`.
-
 # Usage
 
 The simplest way to use cloudscraper is by calling `create_scraper()`.
@@ -100,6 +75,26 @@ You use cloudscraper exactly the same way you use Requests. `cloudScraper` works
 Consult [Requests' documentation](http://docs.python-requests.org/en/latest/user/quickstart/) for more information.
 
 ## Options
+
+### Disable Cloudflare V1
+#### Description
+
+If you don't want to even attempt Cloudflare v1 (Deprecated) solving..
+
+#### Parameters
+
+
+|Parameter|Value|Default|
+|-------------|:-------------:|:-----:|
+|disableCloudflareV1|(boolean)|False|
+
+#### Example
+
+```python
+scraper = cloudscraper.create_scraper(disableCloudflareV1=True)
+```
+
+------
 
 ### Brotli
 

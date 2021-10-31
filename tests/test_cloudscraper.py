@@ -121,14 +121,14 @@ class TestCloudScraper:
             match=r".*?we can't extract the parameters correctly.*?"
         ):
             scraper = cloudscraper.create_scraper(**kwargs)
-            scraper.IUAM_Challenge_Response('', '', '')
+            cloudscraper.Cloudflare(scraper).IUAM_Challenge_Response('', '', '')
 
         with pytest.raises(
             CloudflareIUAMError,
             match=r"Cloudflare IUAM detected, unfortunately we can't extract the parameters correctly."
         ):
             scraper = cloudscraper.create_scraper(**kwargs)
-            scraper.IUAM_Challenge_Response(
+            cloudscraper.Cloudflare(scraper).IUAM_Challenge_Response(
                 'id="challenge-form" action="blaaaaah" r value="" jschl_vc value="" pass value=""',
                 url,
                 'native'
@@ -158,22 +158,7 @@ class TestCloudScraper:
             match=r".*?we can't extract the parameters correctly.*?"
         ):
             scraper = cloudscraper.create_scraper(**kwargs)
-            scraper.captcha_Challenge_Response(None, None, '', '')
-
-    # ------------------------------------------------------------------------------- #
-
-    @mockCloudflare(
-        fixture='js_challenge1_16_05_2020.html',
-        payload=OrderedDict([
-            ('jschl_answer', '-7.5155218172'),
-            ('pass', '1589555973.262-n4Tt3w2mXt'),
-            ('jschl_vc', 'df9d3a159bbde53c214e7abfcb005e0c'),
-            ('r', 'f111bf7fe2d4d39d47dd837590808eeacb6e208a7503587f14a95c9ab0fc2d70')
-        ])
-    )
-    def test_getCookieString_challenge_js_challenge1_16_05_2020(self, **kwargs):
-        scraper = cloudscraper.create_scraper(delay=0.1)
-        assert '__cfduid' in scraper.get_cookie_string(url)[0]
+            cloudscraper.Cloudflare(scraper).captcha_Challenge_Response(None, None, '', '')
 
     # ------------------------------------------------------------------------------- #
 
@@ -226,22 +211,6 @@ class TestCloudScraper:
                     delay=0.1
                 )
                 scraper.get(url)
-
-    # ------------------------------------------------------------------------------- #
-    # test BFM detection
-
-    @mockCloudflare(fixture='bfm_07_01_2021.html', payload={})
-    def test_bfm_07_01_2021(self, **kwargs):
-        scraper = cloudscraper.create_scraper(delay=0.1)
-        assert scraper.is_BFM_Challenge(scraper.get(url))
-
-    # ------------------------------------------------------------------------------- #
-    # test no BFM detection
-
-    @mockCloudflare(fixture='js_challenge-27-05-2020.html', payload={})
-    def test_not_bfm_07_01_2021(self, **kwargs):
-        scraper = cloudscraper.create_scraper(delay=0.1)
-        assert not scraper.is_BFM_Challenge(scraper.get(url))
 
     # ------------------------------------------------------------------------------- #
 
