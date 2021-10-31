@@ -606,12 +606,21 @@ Can be passed as an argument to `create_scraper()`.
 |-------------|:-------------:|:-----:|
 |cipherSuite|(string)|None|
 |ecdhCurve|(string)|prime256v1|
+|server_hostname|(string)|None|
+
 #### Example
 
 ```python
 # Some servers require the use of a more complex ecdh curve than the default "prime256v1"
 # It may can solve handshake failure
-scraper = cloudscraper.create_scraper(
-    ecdhCurve='secp384r1'
+scraper = cloudscraper.create_scraper(ecdhCurve='secp384r1')
+```
+
+```python
+# Manipulate server_hostname
+scraper = cloudscraper.create_scraper(server_hostname='www.somesite.com')
+scraper.get(
+    'https://backend.hosting.com/',
+    headers={'Host': 'www.somesite.com'}
 )
 ```
