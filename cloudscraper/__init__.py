@@ -398,7 +398,7 @@ class CloudScraper(Session):
                 resp.headers.get('Server', '').startswith('cloudflare')
                 and resp.status_code == 403
                 and re.search(
-                    r'action="/\S+__cf_chl_captcha_tk__=\S+',
+                    r'action="/\S+__cf_chl_(?:captcha|managed)_tk__=\S+',
                     resp.text,
                     re.M | re.DOTALL
                 )
