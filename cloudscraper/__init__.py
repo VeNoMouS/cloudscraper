@@ -319,7 +319,7 @@ class CloudScraper(Session):
         if sess:
             for attr in ['auth', 'cert', 'cookies', 'headers', 'hooks', 'params', 'proxies', 'data']:
                 val = getattr(sess, attr, None)
-                if val:
+                if val is not None:
                     setattr(scraper, attr, val)
 
         return scraper
