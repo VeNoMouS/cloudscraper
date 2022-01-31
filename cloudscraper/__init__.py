@@ -340,7 +340,7 @@ class CloudScraper(Session):
                     'doubleDown',
                     'captcha',
                     'interpreter',
-                    'source_address'
+                    'source_address',
                     'requestPreHook',
                     'requestPostHook'
                 ] if field in kwargs
