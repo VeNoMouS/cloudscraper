@@ -1,3 +1,6 @@
+#!/bin/env python
+# -*- coding:utf-8 -*-
+
 MAPPING = {
     'a': '(false+"")[1]',
     'b': '([]["entries"]()+"")[2]',
@@ -25,6 +28,7 @@ MAPPING = {
     'x': '(+(101))["to"+String["name"]](34)[1]',
     'y': '(NaN+[Infinity])[10]',
     'z': '(+(35))["to"+String["name"]](36)',
+    
     'A': '(+[]+Array)[10]',
     'B': '(+[]+Boolean)[10]',
     'C': 'Function("return escape")()(("")["italics"]())[2]',
@@ -32,20 +36,37 @@ MAPPING = {
     'E': '(RegExp+"")[12]',
     'F': '(+[]+Function)[10]',
     'G': '(false+Function("return Date")()())[30]',
+    'H': null,
     'I': '(Infinity+"")[0]',
+    'J': null,
+    'K': null,
+    'L': null,
     'M': '(true+Function("return Date")()())[30]',
     'N': '(NaN+"")[0]',
     'O': '(NaN+Function("return{}")())[11]',
+    'P': null,
+    'Q': null,
     'R': '(+[]+RegExp)[10]',
     'S': '(+[]+String)[10]',
     'T': '(NaN+Function("return Date")()())[30]',
     'U': '(NaN+Function("return{}")()["to"+String["name"]]["call"]())[11]',
+    'V': null,
+    'W': null,
+    'X': null,
+    'Y': null,
+    'Z': null,
+    
     ' ': '(NaN+[]["fill"])[11]',
+    '!': null,
     '"': '("")["fontcolor"]()[12]',
+    '#': null,
+    '$': null,
     '%': 'Function("return escape")()([]["fill"])[21]',
     '&': '("")["link"](0+")[10]',
+    '\'': null,
     '(': '(undefined+[]["fill"])[22]',
     ')': '([0]+false+[]["fill"])[20]',
+    '*': null,
     '+': '(+(+!+[]+(!+[]+[])[!+[]+!+[]+!+[]]+[+!+[]]+[+[]]+[+[]])+[])[2]',
     ',': '([]["slice"]["call"](false+"")+"")[1]',
     '-': '(+(.+[0000000001])+"")[2]',
@@ -57,10 +78,17 @@ MAPPING = {
     '=': '("")["fontcolor"]()[11]',
     '>': '("")["italics"]()[2]',
     '?': '(RegExp()+"")[2]',
+    '@': null,
     '[': '([]["entries"]()+"")[0]',
+    '\\': null,
     ']': '([]["entries"]()+"")[22]',
+    '^': null,
+    '_': null,
+    '`': null,
     '{': '(true+[]["fill"])[20]',
-    '}': '([]["fill"]+"")["slice"]("-1")'
+    '|': null,
+    '}': '([]["fill"]+"")["slice"]("-1")',
+    '~': null
 }
 
 SIMPLE = {
@@ -80,6 +108,7 @@ CONSTRUCTORS = {
     'RegExp': 'Function("return/"+false+"/")()'
 }
 
+GLOBAL = 'Function("return this")()'
 
 def jsunfuck(jsfuckString):
     for key in sorted(MAPPING, key=lambda k: len(MAPPING[k]), reverse=True):
