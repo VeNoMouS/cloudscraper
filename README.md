@@ -52,7 +52,7 @@ We support the following Javascript interpreters/engines.
 - **[js2py](https://github.com/PiotrDabkowski/Js2Py):** >=0.67
 - **native**: Self made native python solver **(Default)**
 - **[Node.js](https://nodejs.org/)**
-- **[V8](https://github.com/sony/v8eval/):** We use Sony's [v8eval](https://v8.dev)() python module.
+- **[V8](https://v8.dev/):** We use Sony's [v8eval](https://github.com/sony/v8eval)() python module.
 
 # Usage
 
@@ -274,7 +274,7 @@ cloudscraper currently supports the following JavaScript Engines/Interpreters
 - **[js2py](https://github.com/PiotrDabkowski/Js2Py)**
 - **native**: Self made native python solver **(Default)**
 - **[Node.js](https://nodejs.org/)**
-- **[V8](https://github.com/sony/v8eval/)**
+- **[V8](https://v8.dev/)**
 
 
 #### Parameters
