@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 from io import open
 
 with open(os.path.join(os.path.dirname(__file__), "cloudscraper", "__init__.py")) as fp:
-    VERSION = re.match(r".*__version__ = \'(.*?)\'", fp.read(), re.S).group(1)
+    VERSION = re.match(r".*__version__ = \"(.*?)\"", fp.read(), re.S).group(1)
 
 with open("README.md", "r", encoding="utf-8") as fp:
     readme = fp.read()
