@@ -92,7 +92,7 @@ class Cloudflare():
                 resp.headers.get('Server', '').startswith('cloudflare')
                 and resp.status_code in [429, 503]
                 and re.search(
-                    r'cpo.src\s*=\s*"/cdn-cgi/challenge-platform/\S+orchestrate/jsch/v1',
+                    r'cpo.src\s*=\s*"/cdn-cgi/challenge-platform/\S+orchestrate/jsch/v1?ray=\S+',
                     resp.text,
                     re.M | re.S
                 )
@@ -134,7 +134,7 @@ class Cloudflare():
                 resp.headers.get('Server', '').startswith('cloudflare')
                 and resp.status_code == 403
                 and re.search(
-                    r'action="/\S+__cf_chl_captcha_tk__=\S+',
+                    r'action="/\S+__cf_chl_(?:captcha|managed)_tk__=\S+',
                     resp.text,
                     re.M | re.DOTALL
                 )
