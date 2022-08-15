@@ -11,7 +11,7 @@ except ImportError:
     from urllib.parse import parse_qsl
 
 # Fake URL, network requests are not allowed by default when using the decorator
-url = 'http://www.evildomain.com'
+url = "http://www.evildomain.com"
 
 # These kwargs will be passed to tests by the decorator
 cloudscraper_kwargs = dict(delay=0.01, debug=False)
@@ -29,10 +29,11 @@ def fixtures(filename):
     Returns: HTML (bytes): The HTML challenge fixture
     """
     if not cache.get(filename):
-        print('reading...')
-        with open(path.join(path.dirname(__file__), 'fixtures', filename), 'r') as fp:
+        print("reading...")
+        with open(path.join(path.dirname(__file__), "fixtures", filename), "r") as fp:
             cache[filename] = fp.read()
     return cache[filename]
+
 
 # ------------------------------------------------------------------------------- #
 
@@ -43,15 +44,13 @@ def mockCloudflare(fixture, payload):
         def wrapper(self):
             def post_callback(request):
                 postPayload = dict(parse_qsl(request.body))
-                postPayload['r'] = hashlib.sha256(postPayload.get('r', '').encode('ascii')).hexdigest()
+                postPayload["r"] = hashlib.sha256(
+                    postPayload.get("r", "").encode("ascii")
+                ).hexdigest()
 
                 for param in payload:
                     if param not in postPayload or postPayload[param] != payload[param]:
-                        return (
-                            503,
-                            {'Server': 'cloudflare'},
-                            fixtures(fixture)
-                        )
+                        return (503, {"Server": "cloudflare"}, fixtures(fixture))
 
                 # ------------------------------------------------------------------------------- #
 
@@ -59,15 +58,16 @@ def mockCloudflare(fixture, payload):
                     200,
                     [
                         (
-                            'Set-Cookie', '__cfduid=d5927a7cbaa96ec536939f93648e3c08a1576098703; Domain=.evildomain.com; path=/'
+                            "Set-Cookie",
+                            "__cfduid=d5927a7cbaa96ec536939f93648e3c08a1576098703; Domain=.evildomain.com; path=/",
                         ),
                         (
-                            'Set-Cookie',
-                            '__cfduid=d5927a7cbaa96ec536939f93648e3c08a1576098703; domain=.evildomain.com; path=/'
+                            "Set-Cookie",
+                            "__cfduid=d5927a7cbaa96ec536939f93648e3c08a1576098703; domain=.evildomain.com; path=/",
                         ),
-                        ('Server', 'cloudflare')
+                        ("Server", "cloudflare"),
                     ],
-                    'Solved OK'
+                    "Solved OK",
                 )
 
             # ------------------------------------------------------------------------------- #
@@ -75,18 +75,18 @@ def mockCloudflare(fixture, payload):
             def challengeCallback(request):
                 status_code = 503
 
-                if 'reCaptcha' in fixture or '1020' in fixture:
+                if "reCaptcha" in fixture or "1020" in fixture:
                     status_code = 403
                 return (
                     status_code,
                     [
                         (
-                            'Set-Cookie',
-                            '__cfduid=d5927a7cbaa96ec536939f93648e3c08a1576098703; Domain=.evildomain.com; path=/'
+                            "Set-Cookie",
+                            "__cfduid=d5927a7cbaa96ec536939f93648e3c08a1576098703; Domain=.evildomain.com; path=/",
                         ),
-                        ('Server', 'cloudflare')
+                        ("Server", "cloudflare"),
                     ],
-                    fixtures(fixture)
+                    fixtures(fixture),
                 )
 
             # ------------------------------------------------------------------------------- #
@@ -95,14 +95,14 @@ def mockCloudflare(fixture, payload):
                 responses.POST,
                 url,
                 callback=post_callback,
-                content_type='text/html',
+                content_type="text/html",
             )
 
             responses.add_callback(
                 responses.GET,
                 url,
                 callback=challengeCallback,
-                content_type='text/html',
+                content_type="text/html",
             )
 
             # ------------------------------------------------------------------------------- #

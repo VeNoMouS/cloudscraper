@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 import json
 import requests
+
 try:
     from urlparse import urlparse
 except ImportError:
@@ -17,17 +18,16 @@ from ..exceptions import (
     CaptchaTimeout,
     CaptchaParameter,
     CaptchaBadJobID,
-    CaptchaReportError
+    CaptchaReportError,
 )
 
 from . import Captcha
 
 
 class captchaSolver(Captcha):
-
     def __init__(self):
-        super(captchaSolver, self).__init__('deathbycaptcha')
-        self.host = 'http://api.dbcapi.me/api'
+        super(captchaSolver, self).__init__("deathbycaptcha")
+        self.host = "http://api.dbcapi.me/api"
         self.session = requests.Session()
 
     # ------------------------------------------------------------------------------- #
@@ -37,9 +37,12 @@ class captchaSolver(Captcha):
         errors = dict(
             [
                 (400, "DeathByCaptcha: 400 Bad Request"),
-                (403, "DeathByCaptcha: 403 Forbidden - Invalid credentails or insufficient credits."),
+                (
+                    403,
+                    "DeathByCaptcha: 403 Forbidden - Invalid credentails or insufficient credits.",
+                ),
                 # (500, "DeathByCaptcha: 500 Internal Server Error."),
-                (503, "DeathByCaptcha: 503 Service Temporarily Unavailable.")
+                (503, "DeathByCaptcha: 503 Service Temporarily Unavailable."),
             ]
         )
 
@@ -54,11 +57,15 @@ class captchaSolver(Captcha):
 
         def _checkRequest(response):
             if response.ok:
-                if response.json().get('is_banned'):
-                    raise CaptchaServiceUnavailable('DeathByCaptcha: Your account is banned.')
+                if response.json().get("is_banned"):
+                    raise CaptchaServiceUnavailable(
+                        "DeathByCaptcha: Your account is banned."
+                    )
 
-                if response.json().get('balanace') == 0:
-                    raise CaptchaServiceUnavailable('DeathByCaptcha: insufficient credits.')
+                if response.json().get("balanace") == 0:
+                    raise CaptchaServiceUnavailable(
+                        "DeathByCaptcha: insufficient credits."
+                    )
 
                 return response
 
@@ -68,16 +75,13 @@ class captchaSolver(Captcha):
 
         response = polling2.poll(
             lambda: self.session.post(
-                f'{self.host}/user',
-                headers={'Accept': 'application/json'},
-                data={
-                    'username': self.username,
-                    'password': self.password
-                }
+                f"{self.host}/user",
+                headers={"Accept": "application/json"},
+                data={"username": self.username, "password": self.password},
             ),
             check_success=_checkRequest,
             step=10,
-            timeout=120
+            timeout=120,
         )
 
         self.debugRequest(response)
@@ -100,24 +104,19 @@ class captchaSolver(Captcha):
 
         response = polling2.poll(
             lambda: self.session.post(
-                f'{self.host}/captcha/{jobID}/report',
-                headers={'Accept': 'application/json'},
-                data={
-                    'username': self.username,
-                    'password': self.password
-                }
+                f"{self.host}/captcha/{jobID}/report",
+                headers={"Accept": "application/json"},
+                data={"username": self.username, "password": self.password},
             ),
             check_success=_checkRequest,
             step=10,
-            timeout=180
+            timeout=180,
         )
 
         if response:
             return True
         else:
-            raise CaptchaReportError(
-                "DeathByCaptcha: Error report failed reCaptcha."
-            )
+            raise CaptchaReportError("DeathByCaptcha: Error report failed reCaptcha.")
 
     # ------------------------------------------------------------------------------- #
 
@@ -128,7 +127,7 @@ class captchaSolver(Captcha):
             )
 
         def _checkRequest(response):
-            if response.ok and response.json().get('text'):
+            if response.ok and response.json().get("text"):
                 return response
 
             self.checkErrorStatus(response)
@@ -137,26 +136,27 @@ class captchaSolver(Captcha):
 
         response = polling2.poll(
             lambda: self.session.get(
-                f'{self.host}/captcha/{jobID}',
-                headers={'Accept': 'application/json'}
+                f"{self.host}/captcha/{jobID}", headers={"Accept": "application/json"}
             ),
             check_success=_checkRequest,
             step=10,
-            timeout=180
+            timeout=180,
         )
 
         if response:
-            return response.json().get('text')
+            return response.json().get("text")
         else:
-            raise CaptchaTimeout(
-                "DeathByCaptcha: Error failed to solve reCaptcha."
-            )
+            raise CaptchaTimeout("DeathByCaptcha: Error failed to solve reCaptcha.")
 
     # ------------------------------------------------------------------------------- #
 
     def requestSolve(self, captchaType, url, siteKey):
         def _checkRequest(response):
-            if response.ok and response.json().get("is_correct") and response.json().get('captcha'):
+            if (
+                response.ok
+                and response.json().get("is_correct")
+                and response.json().get("captcha")
+            ):
                 return response
 
             self.checkErrorStatus(response)
@@ -164,85 +164,63 @@ class captchaSolver(Captcha):
             return None
 
         data = {
-            'username': self.username,
-            'password': self.password,
+            "username": self.username,
+            "password": self.password,
         }
 
-        if captchaType == 'reCaptcha':
-            jPayload = {
-                'googlekey': siteKey,
-                'pageurl': url
-            }
+        if captchaType == "reCaptcha":
+            jPayload = {"googlekey": siteKey, "pageurl": url}
 
             if self.proxy:
-                jPayload.update({
-                    'proxy': self.proxy,
-                    'proxytype': self.proxyType
-                })
+                jPayload.update({"proxy": self.proxy, "proxytype": self.proxyType})
 
-            data.update({
-                'type': '4',
-                'token_params': json.dumps(jPayload)
-            })
+            data.update({"type": "4", "token_params": json.dumps(jPayload)})
         else:
-            jPayload = {
-                'sitekey': siteKey,
-                'pageurl': url
-            }
+            jPayload = {"sitekey": siteKey, "pageurl": url}
 
             if self.proxy:
-                jPayload.update({
-                    'proxy': self.proxy,
-                    'proxytype': self.proxyType
-                })
+                jPayload.update({"proxy": self.proxy, "proxytype": self.proxyType})
 
-            data.update({
-                'type': '7',
-                'hcaptcha_params': json.dumps(jPayload)
-            })
+            data.update({"type": "7", "hcaptcha_params": json.dumps(jPayload)})
 
         response = polling2.poll(
             lambda: self.session.post(
-                f'{self.host}/captcha',
-                headers={'Accept': 'application/json'},
+                f"{self.host}/captcha",
+                headers={"Accept": "application/json"},
                 data=data,
-                allow_redirects=False
+                allow_redirects=False,
             ),
             check_success=_checkRequest,
             step=10,
-            timeout=180
+            timeout=180,
         )
 
         if response:
-            return response.json().get('captcha')
+            return response.json().get("captcha")
         else:
-            raise CaptchaBadJobID(
-                'DeathByCaptcha: Error no job id was returned.'
-            )
+            raise CaptchaBadJobID("DeathByCaptcha: Error no job id was returned.")
 
     # ------------------------------------------------------------------------------- #
 
     def getCaptchaAnswer(self, captchaType, url, siteKey, captchaParams):
         jobID = None
 
-        for param in ['username', 'password']:
+        for param in ["username", "password"]:
             if not captchaParams.get(param):
-                raise CaptchaParameter(
-                    f"DeathByCaptcha: Missing '{param}' parameter."
-                )
+                raise CaptchaParameter(f"DeathByCaptcha: Missing '{param}' parameter.")
             setattr(self, param, captchaParams.get(param))
 
-        if captchaParams.get('proxy') and not captchaParams.get('no_proxy'):
-            hostParsed = urlparse(captchaParams.get('proxy', {}).get('https'))
+        if captchaParams.get("proxy") and not captchaParams.get("no_proxy"):
+            hostParsed = urlparse(captchaParams.get("proxy", {}).get("https"))
 
             if not hostParsed.scheme:
-                raise CaptchaParameter('Cannot parse proxy correctly, bad scheme')
+                raise CaptchaParameter("Cannot parse proxy correctly, bad scheme")
 
             if not hostParsed.netloc:
-                raise CaptchaParameter('Cannot parse proxy correctly, bad netloc')
+                raise CaptchaParameter("Cannot parse proxy correctly, bad netloc")
 
             self.proxyType = hostParsed.scheme.upper()
-            self.proxy = captchaParams.get('proxy', {}).get('https')
+            self.proxy = captchaParams.get("proxy", {}).get("https")
         else:
             self.proxy = None
 

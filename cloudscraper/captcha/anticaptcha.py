@@ -1,9 +1,5 @@
 from __future__ import absolute_import
-from ..exceptions import (
-    CaptchaParameter,
-    CaptchaTimeout,
-    CaptchaAPIError
-)
+from ..exceptions import CaptchaParameter, CaptchaTimeout, CaptchaAPIError
 
 try:
     from urlparse import urlparse
@@ -17,7 +13,7 @@ try:
         HCaptchaTaskProxyless,
         NoCaptchaTask,
         HCaptchaTask,
-        AnticaptchaException
+        AnticaptchaException,
     )
 except ImportError:
     raise ImportError(
@@ -31,14 +27,13 @@ from . import Captcha
 
 
 class captchaSolver(Captcha):
-
     def __init__(self):
-        if sys.modules['python_anticaptcha'].__version__ < '0.6':
+        if sys.modules["python_anticaptcha"].__version__ < "0.6":
             raise ImportError(
                 "Please upgrade the python module 'python_anticaptcha' via "
                 "pip install -U python-anticaptcha or https://github.com/ad-m/python-anticaptcha/"
             )
-        super(captchaSolver, self).__init__('anticaptcha')
+        super(captchaSolver, self).__init__("anticaptcha")
 
     # ------------------------------------------------------------------------------- #
 
@@ -51,41 +46,34 @@ class captchaSolver(Captcha):
             proxy_port=parsed.port,
             proxy_login=parsed.username,
             proxy_password=parsed.password,
-            user_agent=user_agent
+            user_agent=user_agent,
         )
 
     # ------------------------------------------------------------------------------- #
 
     def getCaptchaAnswer(self, captchaType, url, siteKey, captchaParams):
-        if not captchaParams.get('api_key'):
+        if not captchaParams.get("api_key"):
             raise CaptchaParameter("anticaptcha: Missing api_key parameter.")
 
-        client = AnticaptchaClient(captchaParams.get('api_key'))
+        client = AnticaptchaClient(captchaParams.get("api_key"))
 
-        if captchaParams.get('proxy') and not captchaParams.get('no_proxy'):
-            captchaMap = {
-                'reCaptcha': NoCaptchaTask,
-                'hCaptcha': HCaptchaTask
-            }
+        if captchaParams.get("proxy") and not captchaParams.get("no_proxy"):
+            captchaMap = {"reCaptcha": NoCaptchaTask, "hCaptcha": HCaptchaTask}
 
             proxy = self.parseProxy(
-                captchaParams.get('proxy', {}).get('https'),
-                captchaParams.get('User-Agent', '')
+                captchaParams.get("proxy", {}).get("https"),
+                captchaParams.get("User-Agent", ""),
             )
 
-            task = captchaMap[captchaType](
-                url,
-                siteKey,
-                **proxy
-            )
+            task = captchaMap[captchaType](url, siteKey, **proxy)
         else:
             captchaMap = {
-                'reCaptcha': NoCaptchaTaskProxylessTask,
-                'hCaptcha': HCaptchaTaskProxyless
+                "reCaptcha": NoCaptchaTaskProxylessTask,
+                "hCaptcha": HCaptchaTaskProxyless,
             }
             task = captchaMap[captchaType](url, siteKey)
 
-        if not hasattr(client, 'createTaskSmee'):
+        if not hasattr(client, "createTaskSmee"):
             raise NotImplementedError(
                 "Please upgrade 'python_anticaptcha' via pip or download it from "
                 "https://github.com/ad-m/python-anticaptcha/tree/hcaptcha"
@@ -98,10 +86,10 @@ class captchaSolver(Captcha):
         except (AnticaptchaException) as e:
             raise CaptchaTimeout(f"{getattr(e, 'message', e)}")
 
-        if 'solution' in job._last_result:
+        if "solution" in job._last_result:
             return job.get_solution_response()
         else:
-            raise CaptchaAPIError('Job did not return `solution` key in payload.')
+            raise CaptchaAPIError("Job did not return `solution` key in payload.")
 
 
 # ------------------------------------------------------------------------------- #

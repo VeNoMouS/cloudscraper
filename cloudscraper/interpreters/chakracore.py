@@ -17,7 +17,7 @@ class ChallengeInterpreter(JavaScriptInterpreter):
     # ------------------------------------------------------------------------------- #
 
     def __init__(self):
-        super(ChallengeInterpreter, self).__init__('chakracore')
+        super(ChallengeInterpreter, self).__init__("chakracore")
 
     # ------------------------------------------------------------------------------- #
 
@@ -25,33 +25,41 @@ class ChallengeInterpreter(JavaScriptInterpreter):
         chakraCoreLibrary = None
 
         # check current working directory.
-        for _libraryFile in ['libChakraCore.so', 'libChakraCore.dylib', 'ChakraCore.dll']:
+        for _libraryFile in [
+            "libChakraCore.so",
+            "libChakraCore.dylib",
+            "ChakraCore.dll",
+        ]:
             if os.path.isfile(os.path.join(os.getcwd(), _libraryFile)):
                 chakraCoreLibrary = os.path.join(os.getcwd(), _libraryFile)
                 continue
 
         if not chakraCoreLibrary:
-            chakraCoreLibrary = ctypes.util.find_library('ChakraCore')
+            chakraCoreLibrary = ctypes.util.find_library("ChakraCore")
 
         if not chakraCoreLibrary:
             sys.tracebacklimit = 0
             raise RuntimeError(
-                'ChakraCore library not found in current path or any of your system library paths, '
-                'please download from https://www.github.com/VeNoMouS/cloudscraper/tree/ChakraCore/, '
-                'or https://github.com/Microsoft/ChakraCore/'
+                "ChakraCore library not found in current path or any of your system library paths, "
+                "please download from https://www.github.com/VeNoMouS/cloudscraper/tree/ChakraCore/, "
+                "or https://github.com/Microsoft/ChakraCore/"
             )
 
         try:
             chakraCore = CDLL(chakraCoreLibrary)
         except OSError:
             sys.tracebacklimit = 0
-            raise RuntimeError('There was an error loading the ChakraCore library {}'.format(chakraCoreLibrary))
+            raise RuntimeError(
+                "There was an error loading the ChakraCore library {}".format(
+                    chakraCoreLibrary
+                )
+            )
 
-        if sys.platform != 'win32':
+        if sys.platform != "win32":
             chakraCore.DllMain(0, 1, 0)
             chakraCore.DllMain(0, 2, 0)
 
-        script = create_string_buffer(template(body, domain).encode('utf-16'))
+        script = create_string_buffer(template(body, domain).encode("utf-16"))
 
         runtime = c_void_p()
         chakraCore.JsCreateRuntime(0, 0, byref(runtime))
@@ -62,18 +70,12 @@ class ChallengeInterpreter(JavaScriptInterpreter):
 
         fname = c_void_p()
         chakraCore.JsCreateString(
-            'iuam-challenge.js',
-            len('iuam-challenge.js'),
-            byref(fname)
+            "iuam-challenge.js", len("iuam-challenge.js"), byref(fname)
         )
 
         scriptSource = c_void_p()
         chakraCore.JsCreateExternalArrayBuffer(
-            script,
-            len(script),
-            0,
-            0,
-            byref(scriptSource)
+            script, len(script), 0, 0, byref(scriptSource)
         )
 
         jsResult = c_void_p()
@@ -87,10 +89,7 @@ class ChallengeInterpreter(JavaScriptInterpreter):
 
         resultSTR = create_string_buffer(stringLength.value + 1)
         chakraCore.JsCopyString(
-            resultJSString,
-            byref(resultSTR),
-            stringLength.value + 1,
-            0
+            resultJSString, byref(resultSTR), stringLength.value + 1, 0
         )
 
         chakraCore.JsDisposeRuntime(runtime)

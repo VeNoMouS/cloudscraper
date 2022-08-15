@@ -28,17 +28,14 @@ except ImportError:
 
 # ------------------------------------------------------------------------------- #
 
-from .exceptions import (
-    CloudflareLoopProtection,
-    CloudflareIUAMError
-)
+from .exceptions import CloudflareLoopProtection, CloudflareIUAMError
 
 from .cloudflare import Cloudflare
 from .user_agent import User_Agent
 
 # ------------------------------------------------------------------------------- #
 
-__version__ = '1.2.60'
+__version__ = "1.2.60"
 
 # ------------------------------------------------------------------------------- #
 
@@ -46,21 +43,21 @@ __version__ = '1.2.60'
 class CipherSuiteAdapter(HTTPAdapter):
 
     __attrs__ = [
-        'ssl_context',
-        'max_retries',
-        'config',
-        '_pool_connections',
-        '_pool_maxsize',
-        '_pool_block',
-        'source_address'
+        "ssl_context",
+        "max_retries",
+        "config",
+        "_pool_connections",
+        "_pool_maxsize",
+        "_pool_block",
+        "source_address",
     ]
 
     def __init__(self, *args, **kwargs):
-        self.ssl_context = kwargs.pop('ssl_context', None)
-        self.cipherSuite = kwargs.pop('cipherSuite', None)
-        self.source_address = kwargs.pop('source_address', None)
-        self.server_hostname = kwargs.pop('server_hostname', None)
-        self.ecdhCurve = kwargs.pop('ecdhCurve', 'prime256v1')
+        self.ssl_context = kwargs.pop("ssl_context", None)
+        self.cipherSuite = kwargs.pop("cipherSuite", None)
+        self.source_address = kwargs.pop("source_address", None)
+        self.server_hostname = kwargs.pop("server_hostname", None)
+        self.ecdhCurve = kwargs.pop("ecdhCurve", "prime256v1")
 
         if self.source_address:
             if isinstance(self.source_address, str):
@@ -82,15 +79,20 @@ class CipherSuiteAdapter(HTTPAdapter):
 
             self.ssl_context.set_ciphers(self.cipherSuite)
             self.ssl_context.set_ecdh_curve(self.ecdhCurve)
-            self.ssl_context.options |= (ssl.OP_NO_SSLv2 | ssl.OP_NO_SSLv3 | ssl.OP_NO_TLSv1 | ssl.OP_NO_TLSv1_1)
+            self.ssl_context.options |= (
+                ssl.OP_NO_SSLv2 | ssl.OP_NO_SSLv3 | ssl.OP_NO_TLSv1 | ssl.OP_NO_TLSv1_1
+            )
 
         super(CipherSuiteAdapter, self).__init__(**kwargs)
 
     # ------------------------------------------------------------------------------- #
 
     def wrap_socket(self, *args, **kwargs):
-        if hasattr(self.ssl_context, 'server_hostname') and self.ssl_context.server_hostname:
-            kwargs['server_hostname'] = self.ssl_context.server_hostname
+        if (
+            hasattr(self.ssl_context, "server_hostname")
+            and self.ssl_context.server_hostname
+        ):
+            kwargs["server_hostname"] = self.ssl_context.server_hostname
             self.ssl_context.check_hostname = False
         else:
             self.ssl_context.check_hostname = True
@@ -100,57 +102,55 @@ class CipherSuiteAdapter(HTTPAdapter):
     # ------------------------------------------------------------------------------- #
 
     def init_poolmanager(self, *args, **kwargs):
-        kwargs['ssl_context'] = self.ssl_context
-        kwargs['source_address'] = self.source_address
+        kwargs["ssl_context"] = self.ssl_context
+        kwargs["source_address"] = self.source_address
         return super(CipherSuiteAdapter, self).init_poolmanager(*args, **kwargs)
 
     # ------------------------------------------------------------------------------- #
 
     def proxy_manager_for(self, *args, **kwargs):
-        kwargs['ssl_context'] = self.ssl_context
-        kwargs['source_address'] = self.source_address
+        kwargs["ssl_context"] = self.ssl_context
+        kwargs["source_address"] = self.source_address
         return super(CipherSuiteAdapter, self).proxy_manager_for(*args, **kwargs)
+
 
 # ------------------------------------------------------------------------------- #
 
 
 class CloudScraper(Session):
-
     def __init__(self, *args, **kwargs):
-        self.debug = kwargs.pop('debug', False)
+        self.debug = kwargs.pop("debug", False)
 
-        self.disableCloudflareV1 = kwargs.pop('disableCloudflareV1', False)
-        self.delay = kwargs.pop('delay', None)
-        self.captcha = kwargs.pop('captcha', {})
-        self.doubleDown = kwargs.pop('doubleDown', True)
-        self.interpreter = kwargs.pop('interpreter', 'native')
+        self.disableCloudflareV1 = kwargs.pop("disableCloudflareV1", False)
+        self.delay = kwargs.pop("delay", None)
+        self.captcha = kwargs.pop("captcha", {})
+        self.doubleDown = kwargs.pop("doubleDown", True)
+        self.interpreter = kwargs.pop("interpreter", "native")
 
-        self.requestPreHook = kwargs.pop('requestPreHook', None)
-        self.requestPostHook = kwargs.pop('requestPostHook', None)
+        self.requestPreHook = kwargs.pop("requestPreHook", None)
+        self.requestPostHook = kwargs.pop("requestPostHook", None)
 
-        self.cipherSuite = kwargs.pop('cipherSuite', None)
-        self.ecdhCurve = kwargs.pop('ecdhCurve', 'prime256v1')
-        self.source_address = kwargs.pop('source_address', None)
-        self.server_hostname = kwargs.pop('server_hostname', None)
-        self.ssl_context = kwargs.pop('ssl_context', None)
+        self.cipherSuite = kwargs.pop("cipherSuite", None)
+        self.ecdhCurve = kwargs.pop("ecdhCurve", "prime256v1")
+        self.source_address = kwargs.pop("source_address", None)
+        self.server_hostname = kwargs.pop("server_hostname", None)
+        self.ssl_context = kwargs.pop("ssl_context", None)
 
         self.allow_brotli = kwargs.pop(
-            'allow_brotli',
-            True if 'brotli' in sys.modules.keys() else False
+            "allow_brotli", True if "brotli" in sys.modules.keys() else False
         )
 
         self.user_agent = User_Agent(
-            allow_brotli=self.allow_brotli,
-            browser=kwargs.pop('browser', None)
+            allow_brotli=self.allow_brotli, browser=kwargs.pop("browser", None)
         )
 
         self._solveDepthCnt = 0
-        self.solveDepth = kwargs.pop('solveDepth', 3)
+        self.solveDepth = kwargs.pop("solveDepth", 3)
 
         super(CloudScraper, self).__init__(*args, **kwargs)
 
         # pylint: disable=E0203
-        if 'requests' in self.headers['User-Agent']:
+        if "requests" in self.headers["User-Agent"]:
             # ------------------------------------------------------------------------------- #
             # Set a random User-Agent if no custom User-Agent has been set
             # ------------------------------------------------------------------------------- #
@@ -159,17 +159,17 @@ class CloudScraper(Session):
                 self.cipherSuite = self.user_agent.cipherSuite
 
         if isinstance(self.cipherSuite, list):
-            self.cipherSuite = ':'.join(self.cipherSuite)
+            self.cipherSuite = ":".join(self.cipherSuite)
 
         self.mount(
-            'https://',
+            "https://",
             CipherSuiteAdapter(
                 cipherSuite=self.cipherSuite,
                 ecdhCurve=self.ecdhCurve,
                 server_hostname=self.server_hostname,
                 source_address=self.source_address,
-                ssl_context=self.ssl_context
-            )
+                ssl_context=self.ssl_context,
+            ),
         )
 
         # purely to allow us to pickle dump
@@ -205,7 +205,7 @@ class CloudScraper(Session):
     @staticmethod
     def debugRequest(req):
         try:
-            print(dump.dump_all(req).decode('utf-8', errors='backslashreplace'))
+            print(dump.dump_all(req).decode("utf-8", errors="backslashreplace"))
         except ValueError as e:
             print(f"Debug Error: {getattr(e, 'message', e)}")
 
@@ -214,15 +214,18 @@ class CloudScraper(Session):
     # ------------------------------------------------------------------------------- #
 
     def decodeBrotli(self, resp):
-        if requests.packages.urllib3.__version__ < '1.25.1' and resp.headers.get('Content-Encoding') == 'br':
+        if (
+            requests.packages.urllib3.__version__ < "1.25.1"
+            and resp.headers.get("Content-Encoding") == "br"
+        ):
             if self.allow_brotli and resp._content:
                 resp._content = brotli.decompress(resp.content)
             else:
                 logging.warning(
-                    f'You\'re running urllib3 {requests.packages.urllib3.__version__}, Brotli content detected, '
-                    'Which requires manual decompression, '
-                    'But option allow_brotli is set to False, '
-                    'We will not continue to decompress.'
+                    f"You're running urllib3 {requests.packages.urllib3.__version__}, Brotli content detected, "
+                    "Which requires manual decompression, "
+                    "But option allow_brotli is set to False, "
+                    "We will not continue to decompress."
                 )
 
         return resp
@@ -233,8 +236,8 @@ class CloudScraper(Session):
 
     def request(self, method, url, *args, **kwargs):
         # pylint: disable=E0203
-        if kwargs.get('proxies') and kwargs.get('proxies') != self.proxies:
-            self.proxies = kwargs.get('proxies')
+        if kwargs.get("proxies") and kwargs.get("proxies") != self.proxies:
+            self.proxies = kwargs.get("proxies")
 
         # ------------------------------------------------------------------------------- #
         # Pre-Hook the request via user defined function.
@@ -242,20 +245,14 @@ class CloudScraper(Session):
 
         if self.requestPreHook:
             (method, url, args, kwargs) = self.requestPreHook(
-                self,
-                method,
-                url,
-                *args,
-                **kwargs
+                self, method, url, *args, **kwargs
             )
 
         # ------------------------------------------------------------------------------- #
         # Make the request via requests.
         # ------------------------------------------------------------------------------- #
 
-        response = self.decodeBrotli(
-            self.perform_request(method, url, *args, **kwargs)
-        )
+        response = self.decodeBrotli(self.perform_request(method, url, *args, **kwargs))
 
         # ------------------------------------------------------------------------------- #
         # Debug the request via the Response object.
@@ -274,7 +271,7 @@ class CloudScraper(Session):
             if response != newResponse:  # Give me walrus in 3.7!!!
                 response = newResponse
                 if self.debug:
-                    print('==== requestPostHook Debug ====')
+                    print("==== requestPostHook Debug ====")
                     self.debugRequest(response)
 
         # ------------------------------------------------------------------------------- #
@@ -295,7 +292,7 @@ class CloudScraper(Session):
                     _ = self._solveDepthCnt
                     self.simpleException(
                         CloudflareLoopProtection,
-                        f"!!Loop Protection!! We have tried to solve {_} time(s) in a row."
+                        f"!!Loop Protection!! We have tried to solve {_} time(s) in a row.",
                     )
 
                 self._solveDepthCnt += 1
@@ -317,7 +314,16 @@ class CloudScraper(Session):
         scraper = cls(**kwargs)
 
         if sess:
-            for attr in ['auth', 'cert', 'cookies', 'headers', 'hooks', 'params', 'proxies', 'data']:
+            for attr in [
+                "auth",
+                "cert",
+                "cookies",
+                "headers",
+                "hooks",
+                "params",
+                "proxies",
+                "data",
+            ]:
                 val = getattr(sess, attr, None)
                 if val is not None:
                     setattr(scraper, attr, val)
@@ -332,18 +338,20 @@ class CloudScraper(Session):
     def get_tokens(cls, url, **kwargs):
         scraper = cls.create_scraper(
             **{
-                field: kwargs.pop(field, None) for field in [
-                    'allow_brotli',
-                    'browser',
-                    'debug',
-                    'delay',
-                    'doubleDown',
-                    'captcha',
-                    'interpreter',
-                    'source_address',
-                    'requestPreHook',
-                    'requestPostHook'
-                ] if field in kwargs
+                field: kwargs.pop(field, None)
+                for field in [
+                    "allow_brotli",
+                    "browser",
+                    "debug",
+                    "delay",
+                    "doubleDown",
+                    "captcha",
+                    "interpreter",
+                    "source_address",
+                    "requestPreHook",
+                    "requestPostHook",
+                ]
+                if field in kwargs
             }
         )
 
@@ -359,7 +367,7 @@ class CloudScraper(Session):
         cookie_domain = None
 
         for d in scraper.cookies.list_domains():
-            if d.startswith('.') and d in (f'.{domain}'):
+            if d.startswith(".") and d in (f".{domain}"):
                 cookie_domain = d
                 break
         else:
@@ -367,14 +375,16 @@ class CloudScraper(Session):
                 cls,
                 CloudflareIUAMError,
                 "Unable to find Cloudflare cookies. Does the site actually "
-                "have Cloudflare IUAM (I'm Under Attack Mode) enabled?"
+                "have Cloudflare IUAM (I'm Under Attack Mode) enabled?",
             )
 
         return (
             {
-                'cf_clearance': scraper.cookies.get('cf_clearance', '', domain=cookie_domain)
+                "cf_clearance": scraper.cookies.get(
+                    "cf_clearance", "", domain=cookie_domain
+                )
             },
-            scraper.headers['User-Agent']
+            scraper.headers["User-Agent"],
         )
 
     # ------------------------------------------------------------------------------- #
@@ -385,7 +395,7 @@ class CloudScraper(Session):
         Convenience function for building a Cookie HTTP header value.
         """
         tokens, user_agent = cls.get_tokens(url, **kwargs)
-        return '; '.join('='.join(pair) for pair in tokens.items()), user_agent
+        return "; ".join("=".join(pair) for pair in tokens.items()), user_agent
 
 
 # ------------------------------------------------------------------------------- #

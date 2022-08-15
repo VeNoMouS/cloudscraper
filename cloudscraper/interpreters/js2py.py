@@ -17,7 +17,7 @@ class ChallengeInterpreter(JavaScriptInterpreter):
     # ------------------------------------------------------------------------------- #
 
     def __init__(self):
-        super(ChallengeInterpreter, self).__init__('js2py')
+        super(ChallengeInterpreter, self).__init__("js2py")
 
     # ------------------------------------------------------------------------------- #
 
@@ -25,15 +25,22 @@ class ChallengeInterpreter(JavaScriptInterpreter):
 
         jsPayload = template(body, domain)
 
-        if js2py.eval_js('(+(+!+[]+[+!+[]]+(!![]+[])[!+[]+!+[]+!+[]]+[!+[]+!+[]]+[+[]])+[])[+!+[]]') == '1':
-            logging.warning('WARNING - Please upgrade your js2py https://github.com/PiotrDabkowski/Js2Py, applying work around for the meantime.')
+        if (
+            js2py.eval_js(
+                "(+(+!+[]+[+!+[]]+(!![]+[])[!+[]+!+[]+!+[]]+[!+[]+!+[]]+[+[]])+[])[+!+[]]"
+            )
+            == "1"
+        ):
+            logging.warning(
+                "WARNING - Please upgrade your js2py https://github.com/PiotrDabkowski/Js2Py, applying work around for the meantime."
+            )
             jsPayload = jsunfuck(jsPayload)
 
         def atob(s):
-            return base64.b64decode('{}'.format(s)).decode('utf-8')
+            return base64.b64decode("{}".format(s)).decode("utf-8")
 
         js2py.disable_pyimport()
-        context = js2py.EvalJs({'atob': atob})
+        context = js2py.EvalJs({"atob": atob})
         result = context.eval(jsPayload)
 
         return result

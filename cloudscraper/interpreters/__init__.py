@@ -7,7 +7,7 @@ from ..exceptions import CloudflareSolveError
 if sys.version_info >= (3, 4):
     ABC = abc.ABC  # noqa
 else:
-    ABC = abc.ABCMeta('ABC', (), {})
+    ABC = abc.ABCMeta("ABC", (), {})
 
 # ------------------------------------------------------------------------------- #
 
@@ -30,11 +30,11 @@ class JavaScriptInterpreter(ABC):
     def dynamicImport(cls, name):
         if name not in interpreters:
             try:
-                __import__('{}.{}'.format(cls.__module__, name))
+                __import__("{}.{}".format(cls.__module__, name))
                 if not isinstance(interpreters.get(name), JavaScriptInterpreter):
-                    raise ImportError('The interpreter was not initialized.')
+                    raise ImportError("The interpreter was not initialized.")
             except ImportError:
-                logging.error('Unable to load {} interpreter'.format(name))
+                logging.error("Unable to load {} interpreter".format(name))
                 raise
 
         return interpreters[name]
@@ -49,8 +49,8 @@ class JavaScriptInterpreter(ABC):
 
     def solveChallenge(self, body, domain):
         try:
-            return '{0:.10f}'.format(float(self.eval(body, domain)))
+            return "{0:.10f}".format(float(self.eval(body, domain)))
         except Exception:
             raise CloudflareSolveError(
-                'Error trying to solve Cloudflare IUAM Javascript, they may have changed their technique.'
+                "Error trying to solve Cloudflare IUAM Javascript, they may have changed their technique."
             )
