@@ -362,16 +362,21 @@ class Cloudflare:
                 print(f"New: {is_new_captcha}\nOld: {is_old_captcha}")
 
             if self.cloudscraper.doubleDown:
+                if self.cloudscraper.debug:
+                    print("Doubling Down...")
                 resp = self.cloudscraper.decodeBrotli(
                     self.cloudscraper.perform_request(
                         resp.request.method, resp.url, **kwargs
                     )
                 )
+                is_new_captcha = self.is_New_Captcha_Challenge(resp)
+                is_old_captcha = self.is_Captcha_Challenge(resp)
+                if self.cloudscraper.debug:
+                    print("Double Down responses...")
+                    print(f"New: {is_new_captcha}\nOld: {is_old_captcha}")
 
-            if not self.is_New_Captcha_Challenge(
-                resp
-            ) and not self.is_Captcha_Challenge(resp):
-                return resp
+                if not is_new_captcha and not is_old_captcha:
+                    return resp
 
             # ------------------------------------------------------------------------------- #
             # if no captcha provider raise a runtime error.
