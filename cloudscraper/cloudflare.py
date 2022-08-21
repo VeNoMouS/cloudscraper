@@ -91,7 +91,7 @@ class Cloudflare:
                 resp.headers.get("Server", "").startswith("cloudflare")
                 and resp.status_code in [429, 503]
                 and re.search(
-                    r'cpo.src\s*(.*)/cdn-cgi/challenge-platform/\S+orchestrate/jsch/v1\?ray=\S+',
+                    r"cpo.src\s*(.*)/cdn-cgi/challenge-platform/\S+orchestrate/jsch/v1\?ray=\S+",
                     resp.text,
                     re.M | re.S,
                 )
@@ -111,11 +111,14 @@ class Cloudflare:
             return (
                 self.is_Captcha_Challenge(resp)
                 and re.search(
-                    r'cpo.src\s*(.*)/cdn-cgi/challenge-platform/\S+orchestrate/(captcha|managed)/v1\?ray=\S+',
+                    r"cpo.src\s*(.*)/cdn-cgi/challenge-platform/\S+orchestrate/(captcha|managed)/v1\?ray=\S+",
                     resp.text,
                     re.M | re.S,
                 )
-                and re.search(r'\s*id="trk_captcha_js"', resp.text, re.M | re.S)
+                and (
+                    re.search(r'\s*id="trk_captcha_js"', resp.text, re.M | re.S)
+                    or re.search(r'\s*id="trk_jschal_js"', resp.text, re.M | re.S)
+                )
             )
         except AttributeError:
             pass
@@ -183,12 +186,16 @@ class Cloudflare:
 
         if self.is_New_Captcha_Challenge(resp):
             if self.cloudscraper.debug:
-                print("Detected a Cloudflare version 2 Captcha challenge, This feature is not available in the opensource (free) version.")
+                print(
+                    "Detected a Cloudflare version 2 Captcha challenge, This feature is not available in the opensource (free) version."
+                )
             return True
 
         if self.is_New_IUAM_Challenge(resp):
             if self.cloudscraper.debug:
-                print("Detected a Cloudflare version 2 challenge, This feature is not available in the opensource (free) version.")
+                print(
+                    "Detected a Cloudflare version 2 challenge, This feature is not available in the opensource (free) version."
+                )
             return True
 
         if self.is_Captcha_Challenge(resp) or self.is_IUAM_Challenge(resp):
@@ -361,7 +368,9 @@ class Cloudflare:
                     )
                 )
 
-            if not self.is_New_Captcha_Challenge(resp) and not self.is_Captcha_Challenge(resp):
+            if not self.is_New_Captcha_Challenge(
+                resp
+            ) and not self.is_Captcha_Challenge(resp):
                 return resp
 
             # ------------------------------------------------------------------------------- #
