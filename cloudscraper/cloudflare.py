@@ -143,6 +143,7 @@ class Cloudflare:
                         resp.text,
                         re.M | re.DOTALL,
                     )
+                )
             )
         except AttributeError:
             pass
