@@ -341,11 +341,18 @@ class Cloudflare:
     # ------------------------------------------------------------------------------- #
 
     def Challenge_Response(self, resp, **kwargs):
-        if self.is_New_Captcha_Challenge(resp) or self.is_Captcha_Challenge(resp):
+
+        is_new_captcha = self.is_New_Captcha_Challenge(resp)
+        is_old_captcha = self.is_Captcha_Challenge(resp)
+
+        if is_new_captcha or is_old_captcha:
             # ------------------------------------------------------------------------------- #
             # double down on the request as some websites are only checking
             # if cfuid is populated before issuing Captcha.
             # ------------------------------------------------------------------------------- #
+            if self.cloudscraper.debug:
+                print("Response is captcha...")
+                print(f"New: {is_new_captcha}\nOld: {is_old_captcha}")
 
             if self.cloudscraper.doubleDown:
                 resp = self.cloudscraper.decodeBrotli(
@@ -354,7 +361,7 @@ class Cloudflare:
                     )
                 )
 
-            if not self.is_New_Captcha_Challenge(resp) or not self.is_Captcha_Challenge(resp):
+            if not self.is_New_Captcha_Challenge(resp) and not self.is_Captcha_Challenge(resp):
                 return resp
 
             # ------------------------------------------------------------------------------- #
@@ -377,6 +384,8 @@ class Cloudflare:
             # ------------------------------------------------------------------------------- #
 
             if self.cloudscraper.captcha.get("provider") == "return_response":
+                if self.cloudscraper.debug:
+                    print("Captcha return_response, returning...")
                 return resp
 
             # ------------------------------------------------------------------------------- #

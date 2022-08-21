@@ -287,6 +287,8 @@ class CloudScraper(Session):
                 # ------------------------------------------------------------------------------- #
                 # Try to solve the challenge and send it back
                 # ------------------------------------------------------------------------------- #
+                if self.debug:
+                    print("Attemping to solve challenge...")
 
                 if self._solveDepthCnt >= self.solveDepth:
                     _ = self._solveDepthCnt
