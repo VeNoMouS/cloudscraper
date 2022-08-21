@@ -91,7 +91,7 @@ class Cloudflare:
                 resp.headers.get("Server", "").startswith("cloudflare")
                 and resp.status_code in [429, 503]
                 and re.search(
-                    r'cpo.src\s*=\s*"/cdn-cgi/challenge-platform/\S+orchestrate/jsch/v1?ray=\S+',
+                    r'cpo.src\s*(.*)/cdn-cgi/challenge-platform/\S+orchestrate/jsch/v1\?ray=\S+',
                     resp.text,
                     re.M | re.S,
                 )
@@ -111,7 +111,7 @@ class Cloudflare:
             return (
                 self.is_Captcha_Challenge(resp)
                 and re.search(
-                    r'cpo.src\s*=\s*"/cdn-cgi/challenge-platform/\S+orchestrate/(captcha|managed)/v1',
+                    r'cpo.src\s*(.*)/cdn-cgi/challenge-platform/\S+orchestrate/(captcha|managed)/v1\?ray=\S+',
                     resp.text,
                     re.M | re.S,
                 )
@@ -132,11 +132,17 @@ class Cloudflare:
             return (
                 resp.headers.get("Server", "").startswith("cloudflare")
                 and resp.status_code == 403
-                and re.search(
-                    r'action="/\S+__cf_chl_(?:captcha|managed)_tk__=\S+',
-                    resp.text,
-                    re.M | re.DOTALL,
-                )
+                and (
+                    re.search(
+                        r'action="/\S+__cf_chl_(?:captcha|managed)_tk__=\S+',
+                        resp.text,
+                        re.M | re.DOTALL,
+                    )
+                    or re.search(
+                        r'action="/\S+__cf_chl_f_tk=\S+',
+                        resp.text,
+                        re.M | re.DOTALL,
+                    )
             )
         except AttributeError:
             pass
@@ -170,22 +176,19 @@ class Cloudflare:
 
     def is_Challenge_Request(self, resp):
         if self.is_Firewall_Blocked(resp):
-            self.cloudscraper.simpleException(
-                CloudflareCode1020,
-                "Cloudflare has blocked this request (Code 1020 Detected).",
-            )
+            if self.cloudscraper.debug:
+                print("Cloudflare has blocked this request (Code 1020 Detected).")
+            return True
 
         if self.is_New_Captcha_Challenge(resp):
-            self.cloudscraper.simpleException(
-                CloudflareChallengeError,
-                "Detected a Cloudflare version 2 Captcha challenge, This feature is not available in the opensource (free) version.",
-            )
+            if self.cloudscraper.debug:
+                print("Detected a Cloudflare version 2 Captcha challenge, This feature is not available in the opensource (free) version.")
+            return True
 
         if self.is_New_IUAM_Challenge(resp):
-            self.cloudscraper.simpleException(
-                CloudflareChallengeError,
-                "Detected a Cloudflare version 2 challenge, This feature is not available in the opensource (free) version.",
-            )
+            if self.cloudscraper.debug:
+                print("Detected a Cloudflare version 2 challenge, This feature is not available in the opensource (free) version.")
+            return True
 
         if self.is_Captcha_Challenge(resp) or self.is_IUAM_Challenge(resp):
             if self.cloudscraper.debug:
@@ -337,7 +340,7 @@ class Cloudflare:
     # ------------------------------------------------------------------------------- #
 
     def Challenge_Response(self, resp, **kwargs):
-        if self.is_Captcha_Challenge(resp):
+        if self.is_New_Captcha_Challenge(resp) or self.is_Captcha_Challenge(resp):
             # ------------------------------------------------------------------------------- #
             # double down on the request as some websites are only checking
             # if cfuid is populated before issuing Captcha.
@@ -350,7 +353,7 @@ class Cloudflare:
                     )
                 )
 
-            if not self.is_Captcha_Challenge(resp):
+            if not self.is_New_Captcha_Challenge(resp) or not self.is_Captcha_Challenge(resp):
                 return resp
 
             # ------------------------------------------------------------------------------- #
