@@ -104,7 +104,7 @@ class Cloudflare:
                 resp.headers.get("Server", "").startswith("cloudflare")
                 and resp.status_code == 403
                 and re.search(
-                    r'action="/\S+__cf_chl_(?:captcha|managed|f)_tk__=\S+',
+                    r'action="/\S+__cf_chl_(?:captcha|managed|f)_tk(__|)=\S+',
                     resp.text,
                     re.M | re.DOTALL,
                 )
