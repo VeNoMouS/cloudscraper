@@ -6,7 +6,6 @@ init-dev:
 	pip install -r requirements-dev.txt
 
 retry:
-	# This will retry failed tests on every file change.
 	py.test -n auto --forked --looponfail
 
 test:
