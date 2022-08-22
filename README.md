@@ -1,6 +1,7 @@
 # cloudscraper
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python](https://img.shields.io/badge/Made%20with-Python%203.10-blue.svg?style=flat-square&logo=Python&logoColor=white)](https://www.python.org/)
+[![GitHub license](https://img.shields.io/github/license/curseforge-mirror/cloudscraper)](https://github.com/curseforge-mirror/cloudscraper/blob/main/LICENSE)
 [![Recent Workflown Status](https://github.com/curseforge-mirror/cloudscraper/actions/workflows/ci.yml/badge.svg)](https://github.com/curseforge-mirror/cloudscraper/actions/workflows/ci.yml)
 
 A simple Python module to bypass Cloudflare's anti-bot page (also known as "I'm Under Attack Mode", or IUAM), implemented with [Requests](https://github.com/kennethreitz/requests). Cloudflare changes their techniques periodically, so I will update this repo frequently.
