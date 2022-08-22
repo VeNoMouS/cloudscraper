@@ -73,14 +73,9 @@ class User_Agent:
         if not self.desktop and not self.mobile:
             sys.tracebacklimit = 0
             raise RuntimeError("Sorry you can't have mobile and desktop disabled at the same time.")
-        try:
-            with open(f"{pathlib.Path(__file__).parent.absolute()}/browsers.json", "r") as fp:
-                user_agents = json.load(fp, object_pairs_hook=OrderedDict)
-        except FileNotFoundError as e:
-            p = pathlib.Path()
-            for i in p.glob('**/*'):
-                print(i.name)
-            raise e
+
+        with open(f"{pathlib.Path(__file__).parent.absolute()}/browsers.json", "r") as fp:
+            user_agents = json.load(fp, object_pairs_hook=OrderedDict)
 
         if self.custom:
             if not self.tryMatchCustom(user_agents):

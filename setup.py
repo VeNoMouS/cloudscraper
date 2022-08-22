@@ -17,6 +17,11 @@ setup(
     description="A Python module to bypass Cloudflare's anti-bot page.",
     long_description=readme,
     long_description_content_type="text/markdown",
+    data_files=[
+        ("License", ["LICENSE"]),
+        ("README", ["README.md"]),
+        ("browsers", ["cloudscraper/user_agent/browsers.json"]),
+    ],
     url="https://github.com/curseforge-mirror/cloudscraper",
     keywords=[
         "cloudflare",
