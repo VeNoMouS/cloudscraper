@@ -11,6 +11,7 @@ from cloudscraper.exceptions import (
     CloudflareLoopProtection,
     CloudflareIUAMError,
     CloudflareCaptchaError,
+    CloudflareCaptchaOutdated,
     CloudflareCaptchaProvider,
     CaptchaParameter,
 )
@@ -221,8 +222,7 @@ class TestCloudScraper:
     def test_reCaptcha_providers(self, **kwargs):
         for provider in ["9kw", "2captcha", "anticaptcha", "deathbycaptcha"]:
             with pytest.raises(
-                (CaptchaParameter, ImportError, CloudflareCaptchaError),
-                match=r".*?: Missing .*? parameter\.|Please install.*?|Cloudflare Captcha detected.*?",
+                (CaptchaParameter, ImportError, CloudflareCaptchaOutdated),
             ):
                 scraper = cloudscraper.create_scraper(captcha={"provider": provider}, delay=0.1)
                 scraper.get(url)

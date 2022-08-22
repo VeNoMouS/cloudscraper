@@ -350,7 +350,7 @@ class Cloudflare:
             # ------------------------------------------------------------------------------- #
             # Raise Error as Captcha Providers are currently broken unless we're in debug mode.
             # ------------------------------------------------------------------------------- #
-            
+
             if not self.cloudscraper.debug:
                 self.cloudscraper.simpleException(
                     CloudflareCaptchaOutdated,
@@ -361,7 +361,7 @@ class Cloudflare:
             # ------------------------------------------------------------------------------- #
             # Submit request to parser wrapper to solve captcha
             # ------------------------------------------------------------------------------- #
-            
+
             submit_url = self.captcha_Challenge_Response(
                 self.cloudscraper.captcha.get("provider"),
                 self.cloudscraper.captcha,
