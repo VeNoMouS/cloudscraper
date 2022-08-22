@@ -15,6 +15,7 @@ from .exceptions import (
     CloudflareSolveError,
     CloudflareCaptchaError,
     CloudflareCaptchaProvider,
+    CloudflareCaptchaOutdated,
 )
 
 # ------------------------------------------------------------------------------- #
@@ -85,10 +86,7 @@ class Cloudflare:
                     resp.text,
                     re.M | re.S,
                 )
-                and (
-                    re.search(r'\s*id="trk_captcha_js"', resp.text, re.M | re.S)
-                    or re.search(r'\s*id="trk_jschal_js"', resp.text, re.M | re.S)
-                )
+                and re.search(r'\s*id="trk_(captcha|jschal)_js"', resp.text, re.M | re.S)
             )
         except AttributeError:
             pass
@@ -105,17 +103,10 @@ class Cloudflare:
             return (
                 resp.headers.get("Server", "").startswith("cloudflare")
                 and resp.status_code == 403
-                and (
-                    re.search(
-                        r'action="/\S+__cf_chl_(?:captcha|managed)_tk__=\S+',
-                        resp.text,
-                        re.M | re.DOTALL,
-                    )
-                    or re.search(
-                        r'action="/\S+__cf_chl_f_tk=\S+',
-                        resp.text,
-                        re.M | re.DOTALL,
-                    )
+                and re.search(
+                    r'action="/\S+__cf_chl_(?:captcha|managed|f)_tk__=\S+',
+                    resp.text,
+                    re.M | re.DOTALL,
                 )
             )
         except AttributeError:
@@ -357,9 +348,20 @@ class Cloudflare:
                 return resp
 
             # ------------------------------------------------------------------------------- #
+            # Raise Error as Captcha Providers are currently broken unless we're in debug mode.
+            # ------------------------------------------------------------------------------- #
+            
+            if not self.cloudscraper.debug:
+                self.cloudscraper.simpleException(
+                    CloudflareCaptchaOutdated,
+                    "Cloudflare v2 Captcha Detected -- the captcha solvers in this library are currently"
+                    " out dated and can only be used by enabling debug mode!",
+                )
+
+            # ------------------------------------------------------------------------------- #
             # Submit request to parser wrapper to solve captcha
             # ------------------------------------------------------------------------------- #
-
+            
             submit_url = self.captcha_Challenge_Response(
                 self.cloudscraper.captcha.get("provider"),
                 self.cloudscraper.captcha,

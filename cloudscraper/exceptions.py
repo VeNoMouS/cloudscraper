@@ -31,7 +31,7 @@ class CloudflareCode1020(CloudflareException):
 
 class CloudflareIUAMError(CloudflareException):
     """
-    Raise an error for problem extracting IUAM paramters
+    Raise an error for problem extracting IUAM parameters
     from Cloudflare payload
     """
 
@@ -50,12 +50,18 @@ class CloudflareSolveError(CloudflareException):
 
 class CloudflareCaptchaError(CloudflareException):
     """
-    Raise an error for problem extracting Captcha paramters
+    Raise an error for problem extracting Captcha parameters
     from Cloudflare payload
     """
 
 
 class CloudflareCaptchaProvider(CloudflareException):
+    """
+    Raise an exception for no Captcha provider loaded for Cloudflare.
+    """
+
+
+class CloudflareCaptchaOutdated(CloudflareException):
     """
     Raise an exception for no Captcha provider loaded for Cloudflare.
     """
