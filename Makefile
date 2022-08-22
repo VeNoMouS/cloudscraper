@@ -7,10 +7,10 @@ init-dev:
 
 retry:
 	# This will retry failed tests on every file change.
-	python -m py.test -n auto --forked --looponfail
+	python -m pytest test -n auto --forked --looponfail
 
 test:
-	python -m py.test -n 8 --forked
+	python -m pytest test -n 8 --forked
 
 lint:
 	make lint-flake8
