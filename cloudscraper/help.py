@@ -28,11 +28,11 @@ def _pythonVersion():
     interpreter_version = platform.python_version()
 
     if interpreter == "PyPy":
-        interpreter_version = f"{sys.pypy_version_info.major}.{sys.pypy_version_info.minor}.{sys.pypy_version_info.micro}"
+        interpreter_version = (
+            f"{sys.pypy_version_info.major}.{sys.pypy_version_info.minor}.{sys.pypy_version_info.micro}"
+        )
         if sys.pypy_version_info.releaselevel != "final":
-            interpreter_version = (
-                f"{interpreter_version}{sys.pypy_version_info.releaselevel}"
-            )
+            interpreter_version = f"{interpreter_version}{sys.pypy_version_info.releaselevel}"
     return {"name": interpreter, "version": interpreter_version}
 
 

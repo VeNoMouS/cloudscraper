@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import hashlib
 import responses
+import subprocess
 
 from os import path
 from io import open
@@ -29,7 +30,6 @@ def fixtures(filename):
     Returns: HTML (bytes): The HTML challenge fixture
     """
     if not cache.get(filename):
-        print("reading...")
         with open(path.join(path.dirname(__file__), "fixtures", filename), "r") as fp:
             cache[filename] = fp.read()
     return cache[filename]
@@ -44,9 +44,7 @@ def mockCloudflare(fixture, payload):
         def wrapper(self):
             def post_callback(request):
                 postPayload = dict(parse_qsl(request.body))
-                postPayload["r"] = hashlib.sha256(
-                    postPayload.get("r", "").encode("ascii")
-                ).hexdigest()
+                postPayload["r"] = hashlib.sha256(postPayload.get("r", "").encode("ascii")).hexdigest()
 
                 for param in payload:
                     if param not in postPayload or postPayload[param] != payload[param]:
@@ -116,3 +114,20 @@ def mockCloudflare(fixture, payload):
     # ------------------------------------------------------------------------------- #
 
     return responses_decorator
+
+
+def safelyHandleNoNode(func):
+    def wrapper(*args, **kwargs):
+        node_enabled = True
+        interpreters = ["native", "js2py"]
+        try:
+            subprocess.check_output(["node", "-v"])
+        except OSError:
+            node_enabled = False
+        if node_enabled:
+            interpreters.append("nodejs")
+        kwargs["interpreters"] = interpreters
+
+        func(*args, **kwargs)
+
+    return wrapper

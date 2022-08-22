@@ -34,9 +34,7 @@ class captchaSolver(Captcha):
     @staticmethod
     def checkErrorStatus(response):
         if response.status_code in [500, 502]:
-            raise CaptchaServiceUnavailable(
-                f"CapMonster: Server Side Error {response.status_code}"
-            )
+            raise CaptchaServiceUnavailable(f"CapMonster: Server Side Error {response.status_code}")
 
         payload = response.json()
         if payload["errorId"] == 1:
@@ -91,9 +89,7 @@ class captchaSolver(Captcha):
             "task": {
                 "websiteURL": url,
                 "websiteKey": siteKey,
-                "type": "NoCaptchaTask"
-                if captchaType == "reCaptcha"
-                else "HCaptchaTask",
+                "type": "NoCaptchaTask" if captchaType == "reCaptcha" else "HCaptchaTask",
             },
             "softId": 37,
         }
@@ -104,9 +100,7 @@ class captchaSolver(Captcha):
             data["task"]["type"] = f"{data['task']['type']}Proxyless"
 
         response = polling2.poll(
-            lambda: self.session.post(
-                f"{self.host}/createTask", json=data, allow_redirects=False, timeout=30
-            ),
+            lambda: self.session.post(f"{self.host}/createTask", json=data, allow_redirects=False, timeout=30),
             check_success=_checkRequest,
             step=5,
             timeout=180,
@@ -141,9 +135,7 @@ class captchaSolver(Captcha):
             self.proxy = {
                 "proxyType": hostParsed.scheme,
                 "proxyAddress": hostParsed.hostname,
-                "proxyPort": hostParsed.port
-                if hostParsed.port
-                else ports[self.proxy["proxyType"]],
+                "proxyPort": hostParsed.port if hostParsed.port else ports[self.proxy["proxyType"]],
                 "proxyLogin": hostParsed.username,
                 "proxyPassword": hostParsed.password,
             }
@@ -163,10 +155,7 @@ class captchaSolver(Captcha):
                     f"reporting the task with task id {taskID}."
                 )
 
-            raise CaptchaTimeout(
-                "CapMonster: Captcha solve took to long to execute "
-                f"task id {taskID}, aborting."
-            )
+            raise CaptchaTimeout("CapMonster: Captcha solve took to long to execute " f"task id {taskID}, aborting.")
 
 
 # ------------------------------------------------------------------------------- #

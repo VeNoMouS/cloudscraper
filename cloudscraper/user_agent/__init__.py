@@ -1,9 +1,9 @@
-import json
 import os
-import random
 import re
 import sys
 import ssl
+import json
+import random
 
 from collections import OrderedDict
 
@@ -25,17 +25,11 @@ class User_Agent:
         filtered = {}
 
         if self.mobile:
-            if (
-                self.platform in user_agents["mobile"]
-                and user_agents["mobile"][self.platform]
-            ):
+            if self.platform in user_agents["mobile"] and user_agents["mobile"][self.platform]:
                 filtered.update(user_agents["mobile"][self.platform])
 
         if self.desktop:
-            if (
-                self.platform in user_agents["desktop"]
-                and user_agents["desktop"][self.platform]
-            ):
+            if self.platform in user_agents["desktop"] and user_agents["desktop"][self.platform]:
                 filtered.update(user_agents["desktop"][self.platform])
 
         return filtered
@@ -48,9 +42,7 @@ class User_Agent:
                 for browser in user_agents["user_agents"][device_type][platform]:
                     if re.search(
                         re.escape(self.custom),
-                        " ".join(
-                            user_agents["user_agents"][device_type][platform][browser]
-                        ),
+                        " ".join(user_agents["user_agents"][device_type][platform][browser]),
                     ):
                         self.headers = user_agents["headers"][browser]
                         self.headers["User-Agent"] = self.custom
@@ -80,9 +72,7 @@ class User_Agent:
 
         if not self.desktop and not self.mobile:
             sys.tracebacklimit = 0
-            raise RuntimeError(
-                "Sorry you can't have mobile and desktop disabled at the same time."
-            )
+            raise RuntimeError("Sorry you can't have mobile and desktop disabled at the same time.")
 
         with open(os.path.join(os.path.dirname(__file__), "browsers.json"), "r") as fp:
             user_agents = json.load(fp, object_pairs_hook=OrderedDict)
@@ -118,7 +108,8 @@ class User_Agent:
             if self.platform not in self.platforms:
                 sys.tracebacklimit = 0
                 raise RuntimeError(
-                    f'Sorry the platform "{self.platform}" is not valid, valid platforms are [{", ".join(self.platforms)}]'
+                    f'Sorry the platform "{self.platform}" is not valid, '
+                    f'valid platforms are [{", ".join(self.platforms)}]'
                 )
 
             filteredAgents = self.filterAgents(user_agents["user_agents"])
@@ -126,9 +117,7 @@ class User_Agent:
             if not self.browser:
                 # has to be at least one in there...
                 while not filteredAgents.get(self.browser):
-                    self.browser = random.SystemRandom().choice(
-                        list(filteredAgents.keys())
-                    )
+                    self.browser = random.SystemRandom().choice(list(filteredAgents.keys()))
 
             if not filteredAgents[self.browser]:
                 sys.tracebacklimit = 0
@@ -139,18 +128,9 @@ class User_Agent:
             self.cipherSuite = user_agents["cipherSuite"][self.browser]
             self.headers = user_agents["headers"][self.browser]
 
-            self.headers["User-Agent"] = random.SystemRandom().choice(
-                filteredAgents[self.browser]
-            )
+            self.headers["User-Agent"] = random.SystemRandom().choice(filteredAgents[self.browser])
 
-        if (
-            not kwargs.get("allow_brotli", False)
-            and "br" in self.headers["Accept-Encoding"]
-        ):
+        if not kwargs.get("allow_brotli", False) and "br" in self.headers["Accept-Encoding"]:
             self.headers["Accept-Encoding"] = ",".join(
-                [
-                    encoding
-                    for encoding in self.headers["Accept-Encoding"].split(",")
-                    if encoding.strip() != "br"
-                ]
+                [encoding for encoding in self.headers["Accept-Encoding"].split(",") if encoding.strip() != "br"]
             ).strip()

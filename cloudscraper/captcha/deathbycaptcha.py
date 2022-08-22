@@ -58,14 +58,10 @@ class captchaSolver(Captcha):
         def _checkRequest(response):
             if response.ok:
                 if response.json().get("is_banned"):
-                    raise CaptchaServiceUnavailable(
-                        "DeathByCaptcha: Your account is banned."
-                    )
+                    raise CaptchaServiceUnavailable("DeathByCaptcha: Your account is banned.")
 
                 if response.json().get("balanace") == 0:
-                    raise CaptchaServiceUnavailable(
-                        "DeathByCaptcha: insufficient credits."
-                    )
+                    raise CaptchaServiceUnavailable("DeathByCaptcha: insufficient credits.")
 
                 return response
 
@@ -90,9 +86,7 @@ class captchaSolver(Captcha):
 
     def reportJob(self, jobID):
         if not jobID:
-            raise CaptchaBadJobID(
-                "DeathByCaptcha: Error bad job id to report failed reCaptcha."
-            )
+            raise CaptchaBadJobID("DeathByCaptcha: Error bad job id to report failed reCaptcha.")
 
         def _checkRequest(response):
             if response.status_code == 200:
@@ -122,9 +116,7 @@ class captchaSolver(Captcha):
 
     def requestJob(self, jobID):
         if not jobID:
-            raise CaptchaBadJobID(
-                "DeathByCaptcha: Error bad job id to request reCaptcha."
-            )
+            raise CaptchaBadJobID("DeathByCaptcha: Error bad job id to request reCaptcha.")
 
         def _checkRequest(response):
             if response.ok and response.json().get("text"):
@@ -135,9 +127,7 @@ class captchaSolver(Captcha):
             return None
 
         response = polling2.poll(
-            lambda: self.session.get(
-                f"{self.host}/captcha/{jobID}", headers={"Accept": "application/json"}
-            ),
+            lambda: self.session.get(f"{self.host}/captcha/{jobID}", headers={"Accept": "application/json"}),
             check_success=_checkRequest,
             step=10,
             timeout=180,
@@ -152,11 +142,7 @@ class captchaSolver(Captcha):
 
     def requestSolve(self, captchaType, url, siteKey):
         def _checkRequest(response):
-            if (
-                response.ok
-                and response.json().get("is_correct")
-                and response.json().get("captcha")
-            ):
+            if response.ok and response.json().get("is_correct") and response.json().get("captcha"):
                 return response
 
             self.checkErrorStatus(response)
@@ -236,9 +222,7 @@ class captchaSolver(Captcha):
                     f"DeathByCaptcha: Captcha solve took to long and also failed reporting the job id {jobID}."
                 )
 
-            raise CaptchaTimeout(
-                f"DeathByCaptcha: Captcha solve took to long to execute job id {jobID}, aborting."
-            )
+            raise CaptchaTimeout(f"DeathByCaptcha: Captcha solve took to long to execute job id {jobID}, aborting.")
 
 
 # ------------------------------------------------------------------------------- #

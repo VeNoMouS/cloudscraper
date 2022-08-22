@@ -22,7 +22,7 @@ class ChallengeInterpreter(JavaScriptInterpreter):
 
     # ------------------------------------------------------------------------------- #
 
-    def eval(self, body, domain):
+    def do_eval(self, body, domain):
         try:
             return v8eval.V8().eval(template(body, domain))
         except (TypeError, v8eval.V8Error):

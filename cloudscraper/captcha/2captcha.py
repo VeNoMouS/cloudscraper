@@ -35,55 +35,69 @@ class captchaSolver(Captcha):
     @staticmethod
     def checkErrorStatus(response, request_type):
         if response.status_code in [500, 502]:
-            raise CaptchaServiceUnavailable(
-                f"2Captcha: Server Side Error {response.status_code}"
-            )
+            raise CaptchaServiceUnavailable(f"2Captcha: Server Side Error {response.status_code}")
 
         errors = {
             "in.php": {
-                "ERROR_WRONG_USER_KEY": "You've provided api_key parameter value is in incorrect format, it should contain 32 symbols.",
+                "ERROR_WRONG_USER_KEY": (
+                    "You've provided api_key parameter value is in incorrect format, it should contain 32 symbols."
+                ),
                 "ERROR_KEY_DOES_NOT_EXIST": "The api_key you've provided does not exists.",
                 "ERROR_ZERO_BALANCE": "You don't have sufficient funds on your account.",
                 "ERROR_PAGEURL": "pageurl parameter is missing in your request.",
-                "ERROR_NO_SLOT_AVAILABLE": "No Slots Available.\nYou can receive this error in two cases:\n"
-                "1. If you solve ReCaptcha: the queue of your captchas that are not distributed to workers is too long. "
-                "Queue limit changes dynamically and depends on total amount of captchas awaiting solution and usually it's between 50 and 100 captchas.\n"
-                "2. If you solve Normal Captcha: your maximum rate for normal captchas is lower than current rate on the server."
+                "ERROR_NO_SLOT_AVAILABLE": "No Slots Available.\nYou can receive this error in two cases:\n1. If you "
+                "solve ReCaptcha: the queue of your captchas that are not distributed to workers is too long. "
+                "Queue limit changes dynamically and depends on total amount of captchas awaiting solution and "
+                "usually it's between 50 and 100 captchas.\n2. If you solve Normal Captcha: your maximum rate for "
+                "normal captchas is lower than current rate on the server."
                 "You can change your maximum rate in your account's settings.",
                 "ERROR_IP_NOT_ALLOWED": "The request is sent from the IP that is not on the list of your allowed IPs.",
-                "IP_BANNED": "Your IP address is banned due to many frequent attempts to access the server using wrong authorization keys.",
+                "IP_BANNED": (
+                    "Your IP address is banned due to many frequent attempts to access the server using "
+                    "wrong authorization keys."
+                ),
                 "ERROR_BAD_TOKEN_OR_PAGEURL": "You can get this error code when sending ReCaptcha V2. "
-                "That happens if your request contains invalid pair of googlekey and pageurl. "
-                "The common reason for that is that ReCaptcha is loaded inside an iframe hosted on another domain/subdomain.",
+                "That happens if your request contains invalid pair of googlekey and pageurl. The common reason "
+                "for that is that ReCaptcha is loaded inside an iframe hosted on another domain/subdomain.",
                 "ERROR_GOOGLEKEY": "You can get this error code when sending ReCaptcha V2. "
                 "That means that sitekey value provided in your request is incorrect: it's blank or malformed.",
-                "MAX_USER_TURN": "You made more than 60 requests within 3 seconds.Your account is banned for 10 seconds. Ban will be lifted automatically.",
+                "MAX_USER_TURN": (
+                    "You made more than 60 requests within 3 seconds.Your account is banned for 10 seconds. "
+                    "Ban will be lifted automatically."
+                ),
             },
             "res.php": {
-                "ERROR_CAPTCHA_UNSOLVABLE": "We are unable to solve your captcha - three of our workers were unable solve it "
-                "or we didn't get an answer within 90 seconds (300 seconds for ReCaptcha V2). "
+                "ERROR_CAPTCHA_UNSOLVABLE": "We are unable to solve your captcha - three of our workers were unable "
+                "solve it or we didn't get an answer within 90 seconds (300 seconds for ReCaptcha V2). "
                 "We will not charge you for that request.",
-                "ERROR_WRONG_USER_KEY": "You've provided api_key parameter value in incorrect format, it should contain 32 symbols.",
+                "ERROR_WRONG_USER_KEY": (
+                    "You've provided api_key parameter value in incorrect format, it should contain 32 symbols."
+                ),
                 "ERROR_KEY_DOES_NOT_EXIST": "The api_key you've provided does not exists.",
-                "ERROR_WRONG_ID_FORMAT": "You've provided captcha ID in wrong format. The ID can contain numbers only.",
+                "ERROR_WRONG_ID_FORMAT": (
+                    "You've provided captcha ID in wrong format. The ID can contain numbers only."
+                ),
                 "ERROR_WRONG_CAPTCHA_ID": "You've provided incorrect captcha ID.",
                 "ERROR_BAD_DUPLICATES": "Error is returned when 100% accuracy feature is enabled. "
                 "The error means that max numbers of tries is reached but min number of matches not found.",
-                "REPORT_NOT_RECORDED": "Error is returned to your complain request if you already complained lots of correctly solved captchas.",
-                "ERROR_IP_ADDRES": "You can receive this error code when registering a pingback (callback) IP or domain."
-                "That happes if your request is coming from an IP address that doesn't match the IP address of your pingback IP or domain.",
-                "ERROR_TOKEN_EXPIRED": "You can receive this error code when sending GeeTest. That error means that challenge value you provided is expired.",
+                "REPORT_NOT_RECORDED": (
+                    "Error is returned to your complain request if you already complained "
+                    "lots of correctly solved captchas."
+                ),
+                "ERROR_IP_ADDRES": "You can receive this error code when registering a pingback (callback) IP or "
+                "domain. That happes if your request is coming from an IP address that doesn't match the IP address "
+                "of your pingback IP or domain.",
+                "ERROR_TOKEN_EXPIRED": (
+                    "You can receive this error code when sending GeeTest. That error means "
+                    "that challenge value you provided is expired."
+                ),
                 "ERROR_EMPTY_ACTION": "Action parameter is missing or no value is provided for action parameter.",
             },
         }
 
         rPayload = response.json()
-        if rPayload.get("status") == 0 and rPayload.get("request") in errors.get(
-            request_type
-        ):
-            raise CaptchaAPIError(
-                f"{rPayload['request']} {errors.get(request_type).get(rPayload['request'])}"
-            )
+        if rPayload.get("status") == 0 and rPayload.get("request") in errors.get(request_type):
+            raise CaptchaAPIError(f"{rPayload['request']} {errors.get(request_type).get(rPayload['request'])}")
 
     # ------------------------------------------------------------------------------- #
 
@@ -116,9 +130,7 @@ class captchaSolver(Captcha):
         if response:
             return True
         else:
-            raise CaptchaReportError(
-                "2Captcha: Error - Failed to report bad Captcha solve."
-            )
+            raise CaptchaReportError("2Captcha: Error - Failed to report bad Captcha solve.")
 
     # ------------------------------------------------------------------------------- #
 
@@ -153,11 +165,7 @@ class captchaSolver(Captcha):
     def requestSolve(self, captchaType, url, siteKey):
         def _checkRequest(response):
             self.checkErrorStatus(response, "in.php")
-            if (
-                response.ok
-                and response.json().get("status") == 1
-                and response.json().get("request")
-            ):
+            if response.ok and response.json().get("status") == 1 and response.json().get("request"):
                 return response
             return None
 
@@ -173,9 +181,7 @@ class captchaSolver(Captcha):
             data.update({"proxy": self.proxy, "proxytype": self.proxyType})
 
         response = polling2.poll(
-            lambda: self.session.post(
-                f"{self.host}/in.php", data=data, allow_redirects=False, timeout=30
-            ),
+            lambda: self.session.post(f"{self.host}/in.php", data=data, allow_redirects=False, timeout=30),
             check_success=_checkRequest,
             step=5,
             timeout=180,
@@ -222,9 +228,7 @@ class captchaSolver(Captcha):
                     f"2Captcha: Captcha solve took to long and also failed reporting the job the job id {jobID}."
                 )
 
-            raise CaptchaTimeout(
-                f"2Captcha: Captcha solve took to long to execute job id {jobID}, aborting."
-            )
+            raise CaptchaTimeout(f"2Captcha: Captcha solve took to long to execute job id {jobID}, aborting.")
 
 
 # ------------------------------------------------------------------------------- #

@@ -1,10 +1,7 @@
 # cloudscraper
 
-[![PyPI version](https://badge.fury.io/py/cloudscraper.svg)](https://badge.fury.io/py/cloudscraper)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![image](https://img.shields.io/pypi/pyversions/cloudscraper.svg)](https://pypi.org/project/cloudscraper/)
-[![Build Status](https://travis-ci.com/VeNoMouS/cloudscraper.svg?branch=master)](https://travis-ci.com/VeNoMouS/cloudscraper)
-[![Donate](https://img.shields.io/badge/Donate-Buy%20Me%20A%20Coffee-brightgreen.svg)](https://www.buymeacoffee.com/venomous)
+[![Recent Workflown Status](https://github.com/curseforge-mirror/cloudscraper/actions/workflows/ci.yml/badge.svg)](https://github.com/curseforge-mirror/cloudscraper/actions/workflows/ci.yml)
 
 A simple Python module to bypass Cloudflare's anti-bot page (also known as "I'm Under Attack Mode", or IUAM), implemented with [Requests](https://github.com/kennethreitz/requests). Cloudflare changes their techniques periodically, so I will update this repo frequently.
 
@@ -24,23 +21,20 @@ Please allow up to 5 seconds...
 
 Any script using cloudscraper will sleep for ~5 seconds for the first visit to any site with Cloudflare anti-bots enabled, though no delay will occur after the first request.
 
-# Donations
-
-If you feel like showing your love and/or appreciation for this project, then how about shouting me a coffee or beer :)
-
-<a href="https://buymeacoff.ee/venomous" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a>
-
 # Installation
 
-Simply run `pip install cloudscraper`. The PyPI package is at https://pypi.python.org/pypi/cloudscraper/
+Simply run `pip install git+https://github.com/curseforge-mirror/cloudscraper#egg=cloudscraper`. The PyPI package is **NOT** this project and will not contain its fixes
 
 Alternatively, clone this repository and run `python setup.py install`.
 
+# Contributing
+This repo is accepting contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for more info!
+
 # Dependencies
 
-- Python 3.x
-- **[Requests](https://github.com/kennethreitz/requests)** >= 2.9.2
-- **[requests_toolbelt](https://pypi.org/project/requests-toolbelt/)** >= 0.9.1
+- Python 3.10+ (though will run on non-EOL versions!)
+- **[Requests](https://github.com/kennethreitz/requests)**
+- **[requests_toolbelt](https://pypi.org/project/requests-toolbelt/)**
 
 `python setup.py install` will install the Python dependencies automatically. The javascript interpreters and/or engines you decide to use are the only things you need to install yourself, excluding js2py which is part of the requirements as the default.
 
@@ -48,7 +42,6 @@ Alternatively, clone this repository and run `python setup.py install`.
 
 We support the following Javascript interpreters/engines.
 
-- **[ChakraCore](https://github.com/microsoft/ChakraCore):** Library binaries can also be located [here](https://www.github.com/VeNoMouS/cloudscraper/tree/ChakraCore/).
 - **[js2py](https://github.com/PiotrDabkowski/Js2Py):** >=0.67
 - **native**: Self made native python solver **(Default)**
 - **[Node.js](https://nodejs.org/)**
@@ -270,7 +263,6 @@ sess = cloudscraper.create_scraper()
 #### Description
 cloudscraper currently supports the following JavaScript Engines/Interpreters
 
-- **[ChakraCore](https://github.com/microsoft/ChakraCore)**
 - **[js2py](https://github.com/PiotrDabkowski/Js2Py)**
 - **native**: Self made native python solver **(Default)**
 - **[Node.js](https://nodejs.org/)**
@@ -291,184 +283,9 @@ scraper = cloudscraper.create_scraper(interpreter='nodejs')
 ```
 
 ------
-
 ### 3rd Party Captcha Solvers
 
-#### Description
-`cloudscraper` currently supports the following 3rd party Captcha solvers, should you require them.
-
-- **[2captcha](https://www.2captcha.com/)**
-- **[anticaptcha](https://www.anti-captcha.com/)**
-- **[CapMonster Cloud](https://capmonster.cloud/)**
-- **[deathbycaptcha](https://www.deathbycaptcha.com/)**
-- **[9kw](https://www.9kw.eu/)**
-- **__return_response__**
-
-#### Note
-
-I am working on adding more 3rd party solvers, if you wish to have a service added that is not currently supported, please raise a support ticket on github.
-
-##### Required Parameters
-
-Can be set as an attribute via your `cloudscraper` object or passed as an argument to `create_scraper()`, `get_tokens()`, `get_cookie_string()`.
-
-|Parameter|Value|Default|
-|-------------|:-------------:|:-----:|
-|captcha|(dict)|None|
-
-------
-
-#### 2captcha
-
-##### Required `captcha` Parameters
-
-|Parameter|Value|Required|Default|
-|-------------|:-------------:|:-----:|:-----:|
-|provider|(string) `2captcha`| yes||
-|api_key|(string)| yes||
-|no_proxy|(boolean)|no|False|
-
-##### Note
-
-if proxies are set you can disable sending the proxies to 2captcha by setting `no_proxy` to `True`
-
-##### Example
-
-```python
-scraper = cloudscraper.create_scraper(
-  interpreter='nodejs',
-  captcha={
-    'provider': '2captcha',
-    'api_key': 'your_2captcha_api_key'
-  }
-)
-```
-
-------
-
-#### anticaptcha
-
-##### Required `captcha` Parameters
-
-|Parameter|Value|Required|Default|
-|-------------|:-------------:|:-----:|:-----:|
-|provider|(string) `anticaptcha`|yes||
-|api_key|(string)|yes||
-|no_proxy|(boolean)|no|False|
-
-##### Note
-
-if proxies are set you can disable sending the proxies to anticaptcha by setting `no_proxy` to `True`
-
-##### Example
-
-```python
-scraper = cloudscraper.create_scraper(
-  interpreter='nodejs',
-  captcha={
-    'provider': 'anticaptcha',
-    'api_key': 'your_anticaptcha_api_key'
-  }
-)
-```
-
-------
-
-#### CapMonster Cloud
-
-##### Required `captcha` Parameters
-
-|Parameter|Value|Required|Default|
-|-------------|:-------------:|:-----:|:-----:|
-|provider|(string) `capmonster`| yes||
-|clientKey|(string)| yes||
-|no_proxy|(boolean)|no|False|
-
-##### Note
-
-if proxies are set you can disable sending the proxies to CapMonster by setting `no_proxy` to `True`
-
-##### Example
-
-```python
-scraper = cloudscraper.create_scraper(
-  interpreter='nodejs',
-  captcha={
-    'provider': 'capmonster',
-    'clientKey': 'your_capmonster_clientKey'
-  }
-)
-```
-
-------
-
-#### deathbycaptcha
-
-##### Required `captcha` Parameters
-
-|Parameter|Value|Required|Default|
-|-------------|:-------------:|:-----:|:-----:|
-|provider|(string) `deathbycaptcha`|yes||
-|username|(string)|yes||
-|password|(string)|yes||
-
-##### Example
-
-```python
-scraper = cloudscraper.create_scraper(
-  interpreter='nodejs',
-  captcha={
-    'provider': 'deathbycaptcha',
-    'username': 'your_deathbycaptcha_username',
-    'password': 'your_deathbycaptcha_password',
-  }
-)
-```
-
-------
-
-#### 9kw
-
-##### Required `captcha` Parameters
-
-|Parameter|Value|Required|Default|
-|-------------|:-------------:|:-----:|:-----:|
-|provider|(string) `9kw`|yes||
-|api_key|(string)|yes||
-|maxtimeout|(int)|no|180|
-
-##### Example
-
-```python
-scraper = cloudscraper.create_scraper(
-  interpreter='nodejs',
-  captcha={
-    'provider': '9kw',
-    'api_key': 'your_9kw_api_key',
-    'maxtimeout': 300
-  }
-)
-```
-
-------
-
-#### return_response
-
-Use this if you want the requests response payload without solving the Captcha.
-
-##### Required `captcha` Parameters
-
-|Parameter|Value|Required|Default|
-|-------------|:-------------:|:-----:|:-----:|
-|provider|(string) `return_response`| yes||
-
-##### Example
-```python
-scraper = cloudscraper.create_scraper(
-  interpreter='nodejs',
-  captcha={'provider': 'return_response'}
-)
-```
+#### Note: There are currently several implementations for 3rd party Captcha solvers but they're all currently broken due to Cloudflare's rollout of hcaptcha. See [this run down](captcha_info.md) of the old implementation if you're brave of heart!
 
 ## Integration
 

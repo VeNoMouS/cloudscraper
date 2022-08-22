@@ -1,0 +1,14 @@
+# Development
+pytest
+pytest-cov
+pytest-xdist
+pytest-forked
+pytest-watch
+pytest-timeout
+pytest-env
+responses
+flake8
+black
+js2py
+polling
+python_anticaptcha

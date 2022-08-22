@@ -1,10 +1,12 @@
 # ------------------------------------------------------------------------------- #
 
-import logging
-import requests
 import sys
 import ssl
+import copyreg
+import logging
+import requests
 
+from urllib.parse import urlparse
 from requests.adapters import HTTPAdapter
 from requests.sessions import Session
 from requests_toolbelt.utils import dump
@@ -16,22 +18,11 @@ try:
 except ImportError:
     pass
 
-try:
-    import copyreg
-except ImportError:
-    import copy_reg as copyreg
-
-try:
-    from urlparse import urlparse
-except ImportError:
-    from urllib.parse import urlparse
-
 # ------------------------------------------------------------------------------- #
-
-from .exceptions import CloudflareLoopProtection, CloudflareIUAMError
 
 from .cloudflare import Cloudflare
 from .user_agent import User_Agent
+from .exceptions import CloudflareLoopProtection, CloudflareIUAMError
 
 # ------------------------------------------------------------------------------- #
 
@@ -64,9 +55,7 @@ class CipherSuiteAdapter(HTTPAdapter):
                 self.source_address = (self.source_address, 0)
 
             if not isinstance(self.source_address, tuple):
-                raise TypeError(
-                    "source_address must be IP address string or (ip, port) tuple"
-                )
+                raise TypeError("source_address must be IP address string or (ip, port) tuple")
 
         if not self.ssl_context:
             self.ssl_context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
@@ -79,19 +68,14 @@ class CipherSuiteAdapter(HTTPAdapter):
 
             self.ssl_context.set_ciphers(self.cipherSuite)
             self.ssl_context.set_ecdh_curve(self.ecdhCurve)
-            self.ssl_context.options |= (
-                ssl.OP_NO_SSLv2 | ssl.OP_NO_SSLv3 | ssl.OP_NO_TLSv1 | ssl.OP_NO_TLSv1_1
-            )
+            self.ssl_context.options |= ssl.OP_NO_SSLv2 | ssl.OP_NO_SSLv3 | ssl.OP_NO_TLSv1 | ssl.OP_NO_TLSv1_1
 
         super(CipherSuiteAdapter, self).__init__(**kwargs)
 
     # ------------------------------------------------------------------------------- #
 
     def wrap_socket(self, *args, **kwargs):
-        if (
-            hasattr(self.ssl_context, "server_hostname")
-            and self.ssl_context.server_hostname
-        ):
+        if hasattr(self.ssl_context, "server_hostname") and self.ssl_context.server_hostname:
             kwargs["server_hostname"] = self.ssl_context.server_hostname
             self.ssl_context.check_hostname = False
         else:
@@ -136,13 +120,9 @@ class CloudScraper(Session):
         self.server_hostname = kwargs.pop("server_hostname", None)
         self.ssl_context = kwargs.pop("ssl_context", None)
 
-        self.allow_brotli = kwargs.pop(
-            "allow_brotli", True if "brotli" in sys.modules.keys() else False
-        )
+        self.allow_brotli = kwargs.pop("allow_brotli", True if "brotli" in sys.modules.keys() else False)
 
-        self.user_agent = User_Agent(
-            allow_brotli=self.allow_brotli, browser=kwargs.pop("browser", None)
-        )
+        self.user_agent = User_Agent(allow_brotli=self.allow_brotli, browser=kwargs.pop("browser", None))
 
         self._solveDepthCnt = 0
         self.solveDepth = kwargs.pop("solveDepth", 3)
@@ -214,10 +194,7 @@ class CloudScraper(Session):
     # ------------------------------------------------------------------------------- #
 
     def decodeBrotli(self, resp):
-        if (
-            requests.packages.urllib3.__version__ < "1.25.1"
-            and resp.headers.get("Content-Encoding") == "br"
-        ):
+        if requests.packages.urllib3.__version__ < "1.25.1" and resp.headers.get("Content-Encoding") == "br":
             if self.allow_brotli and resp._content:
                 resp._content = brotli.decompress(resp.content)
             else:
@@ -244,9 +221,7 @@ class CloudScraper(Session):
         # ------------------------------------------------------------------------------- #
 
         if self.requestPreHook:
-            (method, url, args, kwargs) = self.requestPreHook(
-                self, method, url, *args, **kwargs
-            )
+            (method, url, args, kwargs) = self.requestPreHook(self, method, url, *args, **kwargs)
 
         # ------------------------------------------------------------------------------- #
         # Make the request via requests.
@@ -381,11 +356,7 @@ class CloudScraper(Session):
             )
 
         return (
-            {
-                "cf_clearance": scraper.cookies.get(
-                    "cf_clearance", "", domain=cookie_domain
-                )
-            },
+            {"cf_clearance": scraper.cookies.get("cf_clearance", "", domain=cookie_domain)},
             scraper.headers["User-Agent"],
         )
 
@@ -404,8 +375,8 @@ class CloudScraper(Session):
 
 if ssl.OPENSSL_VERSION_INFO < (1, 1, 1):
     print(
-        f"DEPRECATION: The OpenSSL being used by this python install ({ssl.OPENSSL_VERSION}) does not meet the minimum supported "
-        "version (>= OpenSSL 1.1.1) in order to support TLS 1.3 required by Cloudflare, "
+        f"DEPRECATION: The OpenSSL being used by this python install ({ssl.OPENSSL_VERSION}) does not "
+        "meet the minimum supported version (>= OpenSSL 1.1.1) in order to support TLS 1.3 required by Cloudflare, "
         "You may encounter an unexpected Captcha or cloudflare 1020 blocks."
     )
 

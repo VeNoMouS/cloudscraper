@@ -15,7 +15,7 @@ from cloudscraper.exceptions import (
     CaptchaParameter,
 )
 
-from . import url, mockCloudflare
+from . import url, mockCloudflare, safelyHandleNoNode
 
 
 class TestCloudScraper:
@@ -36,9 +36,10 @@ class TestCloudScraper:
             ]
         ),
     )
+    @safelyHandleNoNode
     def test_js_challenge_27_05_2020(self, **kwargs):
         # test interpreters
-        for interpreter in ["native", "nodejs", "js2py"]:
+        for interpreter in kwargs.pop("interpreters"):
             print("Testing {}".format(interpreter))
             scraper = cloudscraper.create_scraper(interpreter=interpreter, **kwargs)
             scraper.get(url)
@@ -59,9 +60,10 @@ class TestCloudScraper:
             ]
         ),
     )
+    @safelyHandleNoNode
     def test_js_challenge1_16_05_2020(self, **kwargs):
         # test interpreters
-        for interpreter in ["native", "js2py", "nodejs"]:
+        for interpreter in kwargs.pop("interpreters"):
             scraper = cloudscraper.create_scraper(interpreter=interpreter, **kwargs)
             scraper.get(url)
 
@@ -81,9 +83,10 @@ class TestCloudScraper:
             ]
         ),
     )
+    @safelyHandleNoNode
     def test_js_challenge2_16_05_2020(self, **kwargs):
         # test interpreters
-        for interpreter in ["native", "js2py", "nodejs"]:
+        for interpreter in kwargs.pop("interpreters"):
             scraper = cloudscraper.create_scraper(interpreter=interpreter, **kwargs)
             scraper.get(url)
 
@@ -104,9 +107,7 @@ class TestCloudScraper:
             CloudflareIUAMError,
             match=r"Unable to parse Cloudflare anti-bots page: No module named*?",
         ):
-            scraper = cloudscraper.create_scraper(
-                interpreter="badInterpreter", **kwargs
-            )
+            scraper = cloudscraper.create_scraper(interpreter="badInterpreter", **kwargs)
             scraper.get(url)
 
     # ------------------------------------------------------------------------------- #
@@ -162,9 +163,7 @@ class TestCloudScraper:
             scraper = cloudscraper.create_scraper(**kwargs)
             scraper.get(url)
 
-        scraper = cloudscraper.create_scraper(
-            captcha={"provider": "return_response"}, **kwargs
-        )
+        scraper = cloudscraper.create_scraper(captcha={"provider": "return_response"}, **kwargs)
         scraper.get(url)
 
     # ------------------------------------------------------------------------------- #
@@ -176,23 +175,17 @@ class TestCloudScraper:
             match=r".*?we can't extract the parameters correctly.*?",
         ):
             scraper = cloudscraper.create_scraper(**kwargs)
-            cloudscraper.Cloudflare(scraper).captcha_Challenge_Response(
-                None, None, "", ""
-            )
+            cloudscraper.Cloudflare(scraper).captcha_Challenge_Response(None, None, "", "")
 
     # ------------------------------------------------------------------------------- #
 
     def test_user_agent(self, **kwargs):
         for browser in ["chrome", "firefox"]:
-            scraper = cloudscraper.create_scraper(
-                browser={"browser": browser, "platform": "windows"}, delay=0.1
-            )
+            scraper = cloudscraper.create_scraper(browser={"browser": browser, "platform": "windows"}, delay=0.1)
             assert browser in scraper.headers["User-Agent"].lower()
 
         # Check it can't find browsers.json
-        with pytest.raises(
-            RuntimeError, match=r"Sorry \"bad_match\" browser is not valid.*?"
-        ):
+        with pytest.raises(RuntimeError, match=r"Sorry \"bad_match\" browser is not valid.*?"):
             scraper = cloudscraper.create_scraper(browser="bad_match", delay=0.1)
 
         # Check mobile and desktop disabled
@@ -206,9 +199,7 @@ class TestCloudScraper:
             )
 
         # check brotli
-        scraper = cloudscraper.create_scraper(
-            browser="chrome", allow_brotli=False, delay=0.1
-        )
+        scraper = cloudscraper.create_scraper(browser="chrome", allow_brotli=False, delay=0.1)
         assert "br" not in scraper.headers["Accept-Encoding"]
 
         # test custom  User-Agent
@@ -216,15 +207,11 @@ class TestCloudScraper:
         assert scraper.headers["User-Agent"] == "test"
 
         # check its matched chrome and loaded correct cipherSuite
-        scraper = cloudscraper.create_scraper(
-            browser={"custom": "50.0.9370.394", "tryMatchCustom": True}, delay=0.1
-        )
+        scraper = cloudscraper.create_scraper(browser={"custom": "50.0.9370.394", "tryMatchCustom": True}, delay=0.1)
         assert any("!" not in _ for _ in scraper.user_agent.cipherSuite)
 
         # check it didn't match anything and loaded custom cipherSuite
-        scraper = cloudscraper.create_scraper(
-            browser={"custom": "aa50.0.9370.394", "tryMatchCustom": True}, delay=0.1
-        )
+        scraper = cloudscraper.create_scraper(browser={"custom": "aa50.0.9370.394", "tryMatchCustom": True}, delay=0.1)
         assert any("!" in _ for _ in scraper.user_agent.cipherSuite)
 
     # ------------------------------------------------------------------------------- #
@@ -237,9 +224,7 @@ class TestCloudScraper:
                 (CaptchaParameter, ImportError, CloudflareCaptchaError),
                 match=r".*?: Missing .*? parameter\.|Please install.*?|Cloudflare Captcha detected.*?",
             ):
-                scraper = cloudscraper.create_scraper(
-                    captcha={"provider": provider}, delay=0.1
-                )
+                scraper = cloudscraper.create_scraper(captcha={"provider": provider}, delay=0.1)
                 scraper.get(url)
 
     # ------------------------------------------------------------------------------- #

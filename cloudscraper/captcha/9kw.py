@@ -34,9 +34,7 @@ class captchaSolver(reCaptcha):
     @staticmethod
     def checkErrorStatus(response):
         if response.status_code in [500, 502]:
-            raise reCaptchaServiceUnavailable(
-                f"9kw: Server Side Error {response.status_code}"
-            )
+            raise reCaptchaServiceUnavailable(f"9kw: Server Side Error {response.status_code}")
 
         error_codes = {
             1: "No API Key available.",
@@ -97,15 +95,9 @@ class captchaSolver(reCaptcha):
 
         if response.text.startswith("{"):
             if response.json().get("error"):
-                raise reCaptchaAPIError(
-                    error_codes.get(int(response.json().get("error")))
-                )
+                raise reCaptchaAPIError(error_codes.get(int(response.json().get("error"))))
         else:
-            error_code = int(
-                re.search(r"^00(?P<error_code>\d+)", response.text)
-                .groupdict()
-                .get("error_code", 0)
-            )
+            error_code = int(re.search(r"^00(?P<error_code>\d+)", response.text).groupdict().get("error_code", 0))
             if error_code:
                 raise reCaptchaAPIError(error_codes.get(error_code))
 
@@ -113,9 +105,7 @@ class captchaSolver(reCaptcha):
 
     def requestJob(self, jobID):
         if not jobID:
-            raise reCaptchaBadJobID(
-                "9kw: Error bad job id to request reCaptcha against."
-            )
+            raise reCaptchaBadJobID("9kw: Error bad job id to request reCaptcha against.")
 
         def _checkRequest(response):
             if response.ok and response.json().get("answer") != "NO DATA":
@@ -150,11 +140,7 @@ class captchaSolver(reCaptcha):
 
     def requestSolve(self, captchaType, url, siteKey):
         def _checkRequest(response):
-            if (
-                response.ok
-                and response.text.startswith("{")
-                and response.json().get("captchaid")
-            ):
+            if response.ok and response.text.startswith("{") and response.json().get("captchaid"):
                 return response
 
             self.checkErrorStatus(response)
@@ -208,9 +194,7 @@ class captchaSolver(reCaptcha):
             jobID = self.requestSolve(captchaType, url, siteKey)
             return self.requestJob(jobID)
         except polling.TimeoutException:
-            raise reCaptchaTimeout(
-                f"9kw: reCaptcha solve took to long to execute 'captchaid' {jobID}, aborting."
-            )
+            raise reCaptchaTimeout(f"9kw: reCaptcha solve took to long to execute 'captchaid' {jobID}, aborting.")
 
 
 # ------------------------------------------------------------------------------- #

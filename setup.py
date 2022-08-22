@@ -11,14 +11,13 @@ with open("README.md", "r", encoding="utf-8") as fp:
 
 setup(
     name="cloudscraper",
-    author="VeNoMouS",
-    author_email="venom@gen-x.co.nz",
+    author="curseforge-mirror",
     version=VERSION,
     packages=find_packages(exclude=["tests*"]),
     description="A Python module to bypass Cloudflare's anti-bot page.",
     long_description=readme,
     long_description_content_type="text/markdown",
-    url="https://github.com/venomous/cloudscraper",
+    url="https://github.com/curseforge-mirror/cloudscraper",
     keywords=[
         "cloudflare",
         "scraping",
@@ -33,9 +32,9 @@ setup(
     ],
     include_package_data=True,
     install_requires=[
-        "requests >= 2.9.2",
-        "requests_toolbelt >= 0.9.1",
-        "pyparsing >= 2.4.7",
+        "requests",
+        "requests_toolbelt",
+        "pyparsing",
     ],
     classifiers=[
         "Development Status :: 5 - Production/Stable",

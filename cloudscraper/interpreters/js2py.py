@@ -21,18 +21,14 @@ class ChallengeInterpreter(JavaScriptInterpreter):
 
     # ------------------------------------------------------------------------------- #
 
-    def eval(self, body, domain):
+    def do_eval(self, body, domain):
 
         jsPayload = template(body, domain)
 
-        if (
-            js2py.eval_js(
-                "(+(+!+[]+[+!+[]]+(!![]+[])[!+[]+!+[]+!+[]]+[!+[]+!+[]]+[+[]])+[])[+!+[]]"
-            )
-            == "1"
-        ):
+        if js2py.eval_js("(+(+!+[]+[+!+[]]+(!![]+[])[!+[]+!+[]+!+[]]+[!+[]+!+[]]+[+[]])+[])[+!+[]]") == "1":
             logging.warning(
-                "WARNING - Please upgrade your js2py https://github.com/PiotrDabkowski/Js2Py, applying work around for the meantime."
+                "WARNING - Please upgrade your js2py https://github.com/PiotrDabkowski/Js2Py,"
+                "applying work around for the meantime."
             )
             jsPayload = jsunfuck(jsPayload)
 

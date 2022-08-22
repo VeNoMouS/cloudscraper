@@ -88,7 +88,7 @@ class ChallengeInterpreter(JavaScriptInterpreter):
 
     # ------------------------------------------------------------------------------- #
 
-    def eval(self, body, domain):
+    def do_eval(self, body, domain):
 
         operators = {"+": op.add, "-": op.sub, "*": op.mul, "/": op.truediv}
 
@@ -126,20 +126,11 @@ class ChallengeInterpreter(JavaScriptInterpreter):
             if needle in jsfuckMath[1]:
                 expression = re.findall(r"^(.*?)(.)\(function", jsfuckMath[1])[0]
 
+                starting_index = jsfuckMath[1].find('"("+p+")")}') + len('"("+p+")")}')
+
                 expression_value = operators[expression[1]](
                     float(jsfuckToNumber(expression[0])),
-                    float(
-                        ord(
-                            domain[
-                                jsfuckToNumber(
-                                    jsfuckMath[1][
-                                        jsfuckMath[1].find('"("+p+")")}')
-                                        + len('"("+p+")")}') : -2
-                                    ]
-                                )
-                            ]
-                        )
-                    ),
+                    float(ord(domain[jsfuckToNumber(jsfuckMath[1][starting_index:-2])])),
                 )
             else:
                 expression_value = jsfuckToNumber(jsfuckMath[1])
@@ -181,16 +172,10 @@ class ChallengeInterpreter(JavaScriptInterpreter):
                 try:
                     kID = re.search(r"\s*k\s*=\s*'(?P<kID>\S+)';", body).group("kID")
                 except IndexError:
-                    raise CloudflareSolveError(
-                        'There was an issue extracting "kID" from the Cloudflare challenge.'
-                    )
+                    raise CloudflareSolveError('There was an issue extracting "kID" from the Cloudflare challenge.')
 
                 try:
-                    r = re.compile(
-                        r'<div id="{}(?P<id>\d+)">\s*(?P<jsfuck>[^<>]*)</div>'.format(
-                            kID
-                        )
-                    )
+                    r = re.compile(r'<div id="{}(?P<id>\d+)">\s*(?P<jsfuck>[^<>]*)</div>'.format(kID))
 
                     kValues = {}
                     for m in r.finditer(body):
@@ -226,9 +211,7 @@ class ChallengeInterpreter(JavaScriptInterpreter):
                     expression_value = divisorMath(expression, "function(p)", domain)
                 else:
                     if "Element" in expression:
-                        expression_value = divisorMath(
-                            jsfuckChallenge["k"], '"("+p+")")}', domain
-                        )
+                        expression_value = divisorMath(jsfuckChallenge["k"], '"("+p+")")}', domain)
                     else:
                         expression_value = jsfuckToNumber(expression)
 

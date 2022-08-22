@@ -1,13 +1,7 @@
-import sys
 import logging
 import abc
 
 from ..exceptions import CloudflareSolveError
-
-if sys.version_info >= (3, 4):
-    ABC = abc.ABC  # noqa
-else:
-    ABC = abc.ABCMeta("ABC", (), {})
 
 # ------------------------------------------------------------------------------- #
 
@@ -16,7 +10,7 @@ interpreters = {}
 # ------------------------------------------------------------------------------- #
 
 
-class JavaScriptInterpreter(ABC):
+class JavaScriptInterpreter(abc.ABC):
 
     # ------------------------------------------------------------------------------- #
 
@@ -42,14 +36,14 @@ class JavaScriptInterpreter(ABC):
     # ------------------------------------------------------------------------------- #
 
     @abc.abstractmethod
-    def eval(self, jsEnv, js):
+    def do_eval(self, jsEnv, js):
         pass
 
     # ------------------------------------------------------------------------------- #
 
     def solveChallenge(self, body, domain):
         try:
-            return "{0:.10f}".format(float(self.eval(body, domain)))
+            return "{0:.10f}".format(float(self.do_eval(body, domain)))
         except Exception:
             raise CloudflareSolveError(
                 "Error trying to solve Cloudflare IUAM Javascript, they may have changed their technique."

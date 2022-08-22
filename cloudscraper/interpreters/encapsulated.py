@@ -14,11 +14,7 @@ def template(body, domain):
             re.M | re.S,
         ).group(1)
     except Exception:
-        raise ValueError(
-            "Unable to identify Cloudflare IUAM Javascript on website. {}".format(
-                BUG_REPORT
-            )
-        )
+        raise ValueError("Unable to identify Cloudflare IUAM Javascript on website. {}".format(BUG_REPORT))
 
     jsEnv = """String.prototype.italics=function(str) {{return "<i>" + this + "</i>";}};
         var subVars= {{{subVars}}};
@@ -43,15 +39,11 @@ def template(body, domain):
 
         subVars = ""
         for m in r.finditer(body):
-            subVars = "{}\n\t\t{}{}: {},\n".format(
-                subVars, k, m.group("id"), m.group("jsfuck")
-            )
+            subVars = "{}\n\t\t{}{}: {},\n".format(subVars, k, m.group("id"), m.group("jsfuck"))
         subVars = subVars[:-2]
 
     except:  # noqa
-        logging.error(
-            "Error extracting Cloudflare IUAM Javascript. {}".format(BUG_REPORT)
-        )
+        logging.error("Error extracting Cloudflare IUAM Javascript. {}".format(BUG_REPORT))
         raise
 
     return "{}{}".format(
