@@ -92,11 +92,10 @@ class Cloudflare():
                 resp.headers.get('Server', '').startswith('cloudflare')
                 and resp.status_code in [429, 503]
                 and re.search(
-                    r'cpo.src\s*=\s*"/cdn-cgi/challenge-platform/\S+orchestrate/jsch/v1',
+                    r'''cpo.src\s*=\s*['"]/cdn-cgi/challenge-platform/\S+orchestrate/jsch/v1''',
                     resp.text,
                     re.M | re.S
                 )
-                and re.search(r'window._cf_chl_enter\s*[\(=]', resp.text, re.M | re.S)
             )
         except AttributeError:
             pass
@@ -112,11 +111,10 @@ class Cloudflare():
             return (
                 self.is_Captcha_Challenge(resp)
                 and re.search(
-                    r'cpo.src\s*=\s*"/cdn-cgi/challenge-platform/\S+orchestrate/(captcha|managed)/v1',
+                    r'''cpo.src\s*=\s*['"]/cdn-cgi/challenge-platform/\S+orchestrate/(captcha|managed)/v1''',
                     resp.text,
                     re.M | re.S
                 )
-                and re.search(r'\s*id="trk_captcha_js"', resp.text, re.M | re.S)
             )
         except AttributeError:
             pass
