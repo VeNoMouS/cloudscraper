@@ -70,8 +70,9 @@ class Cloudflare():
             return (
                 resp.headers.get('Server', '').startswith('cloudflare')
                 and resp.status_code in [429, 503]
+                and re.search(r'/cdn-cgi/images/trace/jsch/', resp.text, re.M | re.S)
                 and re.search(
-                    r'<form .*?="challenge-form" action="/.*?__cf_chl_jschl_tk__=\S+"',
+                    r'''<form .*?="challenge-form" action="/\S+__cf_chl_f_tk=''',
                     resp.text,
                     re.M | re.S
                 )
@@ -85,12 +86,10 @@ class Cloudflare():
     # check if the response contains new Cloudflare challenge
     # ------------------------------------------------------------------------------- #
 
-    @staticmethod
-    def is_New_IUAM_Challenge(resp):
+    def is_New_IUAM_Challenge(self, resp):
         try:
             return (
-                resp.headers.get('Server', '').startswith('cloudflare')
-                and resp.status_code in [429, 503]
+                self.is_IUAM_Challenge(resp)
                 and re.search(
                     r'''cpo.src\s*=\s*['"]/cdn-cgi/challenge-platform/\S+orchestrate/jsch/v1''',
                     resp.text,
@@ -131,10 +130,11 @@ class Cloudflare():
             return (
                 resp.headers.get('Server', '').startswith('cloudflare')
                 and resp.status_code == 403
+                and re.search(r'/cdn-cgi/images/trace/(captcha|managed)/', resp.text, re.M | re.S)
                 and re.search(
-                    r'''action="/\S+__cf_chl(|_f)_tk=\S+''',
+                    r'''<form .*?="challenge-form" action="/\S+__cf_chl_f_tk=''',
                     resp.text,
-                    re.M | re.DOTALL
+                    re.M | re.S
                 )
             )
         except AttributeError:
@@ -202,7 +202,7 @@ class Cloudflare():
             formPayload = re.search(
                 r'<form (?P<form>.*?="challenge-form" '
                 r'action="(?P<challengeUUID>.*?'
-                r'__cf_chl_jschl_tk__=\S+)"(.*?)</form>)',
+                r'__cf_chl_f_tk=\S+)"(.*?)</form>)',
                 body,
                 re.M | re.DOTALL
             ).groupdict()
