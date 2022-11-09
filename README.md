@@ -299,6 +299,7 @@ scraper = cloudscraper.create_scraper(interpreter='nodejs')
 
 - **[2captcha](https://www.2captcha.com/)**
 - **[anticaptcha](https://www.anti-captcha.com/)**
+- **[Captcha AI](https://www.captchaai.io/)**
 - **[CapMonster Cloud](https://capmonster.cloud/)**
 - **[deathbycaptcha](https://www.deathbycaptcha.com/)**
 - **[9kw](https://www.9kw.eu/)**
@@ -336,7 +337,6 @@ if proxies are set you can disable sending the proxies to 2captcha by setting `n
 
 ```python
 scraper = cloudscraper.create_scraper(
-  interpreter='nodejs',
   captcha={
     'provider': '2captcha',
     'api_key': 'your_2captcha_api_key'
@@ -364,10 +364,32 @@ if proxies are set you can disable sending the proxies to anticaptcha by setting
 
 ```python
 scraper = cloudscraper.create_scraper(
-  interpreter='nodejs',
   captcha={
     'provider': 'anticaptcha',
     'api_key': 'your_anticaptcha_api_key'
+  }
+)
+```
+
+------
+
+#### Captcha AI
+
+##### Required `captcha` Parameters
+
+|Parameter|Value|Required|Default|
+|-------------|:-------------:|:-----:|:-----:|
+|provider|(string) `captchaai`|yes||
+|api_key|(string)|yes||
+
+
+##### Example
+
+```python
+scraper = cloudscraper.create_scraper(
+  captcha={
+    'provider': 'captchaai',
+    'api_key': 'your_captchaai_api_key'
   }
 )
 ```
@@ -392,7 +414,6 @@ if proxies are set you can disable sending the proxies to CapMonster by setting 
 
 ```python
 scraper = cloudscraper.create_scraper(
-  interpreter='nodejs',
   captcha={
     'provider': 'capmonster',
     'clientKey': 'your_capmonster_clientKey'
@@ -416,7 +437,6 @@ scraper = cloudscraper.create_scraper(
 
 ```python
 scraper = cloudscraper.create_scraper(
-  interpreter='nodejs',
   captcha={
     'provider': 'deathbycaptcha',
     'username': 'your_deathbycaptcha_username',
@@ -441,7 +461,6 @@ scraper = cloudscraper.create_scraper(
 
 ```python
 scraper = cloudscraper.create_scraper(
-  interpreter='nodejs',
   captcha={
     'provider': '9kw',
     'api_key': 'your_9kw_api_key',
@@ -465,7 +484,6 @@ Use this if you want the requests response payload without solving the Captcha.
 ##### Example
 ```python
 scraper = cloudscraper.create_scraper(
-  interpreter='nodejs',
   captcha={'provider': 'return_response'}
 )
 ```
