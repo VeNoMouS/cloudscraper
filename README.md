@@ -299,7 +299,7 @@ scraper = cloudscraper.create_scraper(interpreter='nodejs')
 
 - **[2captcha](https://www.2captcha.com/)**
 - **[anticaptcha](https://www.anti-captcha.com/)**
-- **[Captcha AI](https://www.captchaai.io/)**
+- **[CapSolver](https://capsolver.com/)**
 - **[CapMonster Cloud](https://capmonster.cloud/)**
 - **[deathbycaptcha](https://www.deathbycaptcha.com/)**
 - **[9kw](https://www.9kw.eu/)**
@@ -373,7 +373,7 @@ scraper = cloudscraper.create_scraper(
 
 ------
 
-#### Captcha AI
+#### CapSolver
 
 ##### Required `captcha` Parameters
 
@@ -388,7 +388,7 @@ scraper = cloudscraper.create_scraper(
 ```python
 scraper = cloudscraper.create_scraper(
   captcha={
-    'provider': 'captchaai',
+    'provider': 'capsolver',
     'api_key': 'your_captchaai_api_key'
   }
 )
