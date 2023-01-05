@@ -23,7 +23,7 @@ class captchaSolver(Captcha):
     def __init__(self):
         self.host = 'https://api.capsolver.com'
         self.session = requests.Session()
-        super(captchaSolver, self).__init__('CapSolver')
+        super(captchaSolver, self).__init__('capsolver')
 
     # ------------------------------------------------------------------------------- #
 
