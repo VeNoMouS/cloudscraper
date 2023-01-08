@@ -37,7 +37,7 @@ class captchaSolver(Captcha):
         except Exception:
             return
 
-        if rPayload.get('errorDescription', False) and 'Current system busy' not in rayload['errorDescription']:
+        if rPayload.get('errorDescription', False) and 'Current system busy' not in rPayload['errorDescription']:
             raise CaptchaAPIError(
                 f"CapSolver: {request_type} -> {rPayload.get('errorDescription')}"
             )
