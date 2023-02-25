@@ -38,7 +38,7 @@ from .user_agent import User_Agent
 
 # ------------------------------------------------------------------------------- #
 
-__version__ = '1.2.68'
+__version__ = '1.2.69'
 
 # ------------------------------------------------------------------------------- #
 
@@ -400,5 +400,6 @@ if ssl.OPENSSL_VERSION_INFO < (1, 1, 1):
 # ------------------------------------------------------------------------------- #
 
 create_scraper = CloudScraper.create_scraper
+session = CloudScraper.create_scraper
 get_tokens = CloudScraper.get_tokens
 get_cookie_string = CloudScraper.get_cookie_string
