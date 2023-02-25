@@ -12,30 +12,35 @@ except ImportError:
     )
 
 from ..exceptions import (
-    reCaptchaServiceUnavailable,
-    reCaptchaAPIError,
-    reCaptchaTimeout,
-    reCaptchaParameter,
-    reCaptchaBadJobID
+    CaptchaException,
+    CaptchaServiceUnavailable,
+    CaptchaAPIError,
+    CaptchaTimeout,
+    CaptchaParameter,
+    CaptchaBadJobID
 )
 
-from . import reCaptcha
+from . import Captcha
 
 
-class captchaSolver(reCaptcha):
+class captchaSolver(Captcha):
 
     def __init__(self):
         super(captchaSolver, self).__init__('9kw')
         self.host = 'https://www.9kw.eu/index.cgi'
         self.maxtimeout = 180
         self.session = requests.Session()
+        self.captchaType = {
+            'reCaptcha': 'recaptchav2',
+            'hCaptcha': 'hcaptcha'
+        }
 
     # ------------------------------------------------------------------------------- #
 
     @staticmethod
     def checkErrorStatus(response):
         if response.status_code in [500, 502]:
-            raise reCaptchaServiceUnavailable(
+            raise CaptchaServiceUnavailable(
                 f'9kw: Server Side Error {response.status_code}'
             )
 
@@ -98,18 +103,18 @@ class captchaSolver(reCaptcha):
 
         if response.text.startswith('{'):
             if response.json().get('error'):
-                raise reCaptchaAPIError(error_codes.get(int(response.json().get('error'))))
+                raise CaptchaAPIError(error_codes.get(int(response.json().get('error'))))
         else:
             error_code = int(re.search(r'^00(?P<error_code>\d+)', response.text).groupdict().get('error_code', 0))
             if error_code:
-                raise reCaptchaAPIError(error_codes.get(error_code))
+                raise CaptchaAPIError(error_codes.get(error_code))
 
     # ------------------------------------------------------------------------------- #
 
     def requestJob(self, jobID):
         if not jobID:
-            raise reCaptchaBadJobID(
-                "9kw: Error bad job id to request reCaptcha against."
+            raise CaptchaBadJobID(
+                "9kw: Error bad job id to request against."
             )
 
         def _checkRequest(response):
@@ -139,7 +144,7 @@ class captchaSolver(reCaptcha):
         if response:
             return response.json().get('answer')
         else:
-            raise reCaptchaTimeout("9kw: Error failed to solve reCaptcha.")
+            raise CaptchaTimeout("9kw: Error failed to solve.")
 
     # ------------------------------------------------------------------------------- #
 
@@ -152,11 +157,6 @@ class captchaSolver(reCaptcha):
 
             return None
 
-        captchaMap = {
-            'reCaptcha': 'recaptchav2',
-            'hCaptcha': 'hcaptcha'
-        }
-
         response = polling.poll(
             lambda: self.session.post(
                 self.host,
@@ -165,7 +165,7 @@ class captchaSolver(reCaptcha):
                     'action': 'usercaptchaupload',
                     'interactive': 1,
                     'file-upload-01': siteKey,
-                    'oldsource': captchaMap[captchaType],
+                    'oldsource': self.captchaType[captchaType],
                     'pageurl': url,
                     'maxtimeout': self.maxtimeout,
                     'json': 1
@@ -180,33 +180,35 @@ class captchaSolver(reCaptcha):
         if response:
             return response.json().get('captchaid')
         else:
-            raise reCaptchaBadJobID('9kw: Error no valid job id was returned.')
+            raise CaptchaBadJobID('9kw: Error no valid job id was returned.')
 
     # ------------------------------------------------------------------------------- #
-
-    def getCaptchaAnswer(self, captchaType, url, siteKey, reCaptchaParams):
+    def getCaptchaAnswer(self, captchaType, url, siteKey, captchaParams):
         jobID = None
 
-        if not reCaptchaParams.get('api_key'):
-            raise reCaptchaParameter("9kw: Missing api_key parameter.")
+        if not captchaParams.get('api_key'):
+            raise CaptchaParameter("9kw: Missing api_key parameter.")
 
-        self.api_key = reCaptchaParams.get('api_key')
+        self.api_key = captchaParams.get('api_key')
 
-        if reCaptchaParams.get('maxtimeout'):
-            self.maxtimeout = reCaptchaParams.get('maxtimeout')
+        if captchaParams.get('maxtimeout'):
+            self.maxtimeout = captchaParams.get('maxtimeout')
 
-        if reCaptchaParams.get('proxy'):
-            self.session.proxies = reCaptchaParams.get('proxies')
+        if captchaParams.get('proxy'):
+            self.session.proxies = captchaParams.get('proxies')
+
+        if captchaType not in self.captchaType:
+            raise CaptchaException(f'9kw: {captchaType} is not supported by this provider.')
 
         try:
             jobID = self.requestSolve(captchaType, url, siteKey)
             return self.requestJob(jobID)
         except polling.TimeoutException:
-            raise reCaptchaTimeout(
-                f"9kw: reCaptcha solve took to long to execute 'captchaid' {jobID}, aborting."
+            raise CaptchaTimeout(
+                f"9kw: solve took to long to execute 'captchaid' {jobID}, aborting."
             )
 
-# ------------------------------------------------------------------------------- #
 
+# ------------------------------------------------------------------------------- #
 
 captchaSolver()

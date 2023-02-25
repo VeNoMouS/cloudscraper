@@ -1,31 +1,24 @@
 from __future__ import absolute_import
-from ..exceptions import (
-    CaptchaParameter,
-    CaptchaTimeout,
-    CaptchaAPIError
-)
+
+import requests
 
 try:
     from urlparse import urlparse
 except ImportError:
     from urllib.parse import urlparse
 
-try:
-    from python_anticaptcha import (
-        AnticaptchaClient,
-        NoCaptchaTaskProxylessTask,
-        HCaptchaTaskProxyless,
-        NoCaptchaTask,
-        HCaptchaTask,
-        AnticaptchaException
-    )
-except ImportError:
-    raise ImportError(
-        "Please install/upgrade the python module 'python_anticaptcha' via "
-        "pip install python-anticaptcha or https://github.com/ad-m/python-anticaptcha/"
-    )
+from ..exceptions import (
+    CaptchaServiceUnavailable,
+    CaptchaAPIError,
+    CaptchaTimeout,
+    CaptchaParameter,
+    CaptchaBadJobID
+)
 
-import sys
+try:
+    import polling2
+except ImportError:
+    raise ImportError("Please install the python module 'polling2' via pip")
 
 from . import Captcha
 
@@ -33,76 +26,172 @@ from . import Captcha
 class captchaSolver(Captcha):
 
     def __init__(self):
-        if sys.modules['python_anticaptcha'].__version__ < '0.6':
-            raise ImportError(
-                "Please upgrade the python module 'python_anticaptcha' via "
-                "pip install -U python-anticaptcha or https://github.com/ad-m/python-anticaptcha/"
-            )
         super(captchaSolver, self).__init__('anticaptcha')
+        self.host = 'https://api.anti-captcha.com'
+        self.session = requests.Session()
+        self.captchaType = {
+            'reCaptcha': 'NoCaptchaTask',
+            'hCaptcha': 'HCaptchaTask',
+            'turnstile': 'TurnstileTask'
+        }
 
     # ------------------------------------------------------------------------------- #
 
-    def parseProxy(self, url, user_agent):
-        parsed = urlparse(url)
+    @staticmethod
+    def checkErrorStatus(response):
+        if response.status_code in [500, 502]:
+            raise CaptchaServiceUnavailable(
+                f'anticaptcha: Server Side Error {response.status_code}'
+            )
 
-        return dict(
-            proxy_type=parsed.scheme,
-            proxy_address=parsed.hostname,
-            proxy_port=parsed.port,
-            proxy_login=parsed.username,
-            proxy_password=parsed.password,
-            user_agent=user_agent
+        payload = response.json()
+        if payload['errorId'] >= 1:
+            if 'errorDescription' in payload:
+                raise CaptchaAPIError(
+                    payload['errorDescription']
+                )
+            else:
+                raise CaptchaAPIError(payload['errorCode'])
+
+    # ------------------------------------------------------------------------------- #
+
+    def requestJob(self, taskID):
+        if not taskID:
+            raise CaptchaBadJobID(
+                'anticaptcha: Error bad task id to request Captcha.'
+            )
+
+        def _checkRequest(response):
+            self.checkErrorStatus(response)
+
+            if response.ok and response.json()['status'] == 'ready':
+                return True
+
+            return None
+
+        response = polling2.poll(
+            lambda: self.session.post(
+                f'{self.host}/getTaskResult',
+                json={
+                    'clientKey': self.clientKey,
+                    'taskId': taskID
+                },
+                timeout=30
+            ),
+            check_success=_checkRequest,
+            step=5,
+            timeout=180
         )
+
+        if response:
+            payload = response.json()['solution']
+            if 'token' in payload:
+                return payload['token']
+            else:
+                return payload['gRecaptchaResponse']
+        else:
+            raise CaptchaTimeout(
+                "anticaptcha: Error failed to solve Captcha."
+            )
+
+    # ------------------------------------------------------------------------------- #
+
+    def requestSolve(self, captchaType, url, siteKey):
+        def _checkRequest(response):
+            self.checkErrorStatus(response)
+
+            if response.ok and response.json()['taskId']:
+                return True
+
+            return None
+
+        data = {
+            'clientKey': self.clientKey,
+            'task': {
+                'websiteURL': url,
+                'websiteKey': siteKey,
+                'type': self.captchaType[captchaType]
+            },
+            'softId': 959
+        }
+
+        if self.proxy:
+            data['task'].update(self.proxy)
+        else:
+            data['task']['type'] = f"{data['task']['type']}Proxyless"
+
+        response = polling2.poll(
+            lambda: self.session.post(
+                f'{self.host}/createTask',
+                json=data,
+                allow_redirects=False,
+                timeout=30
+            ),
+            check_success=_checkRequest,
+            step=5,
+            timeout=180
+        )
+
+        if response:
+            return response.json()['taskId']
+        else:
+            raise CaptchaBadJobID(
+                'anticaptcha: Error no task id was returned.'
+            )
 
     # ------------------------------------------------------------------------------- #
 
     def getCaptchaAnswer(self, captchaType, url, siteKey, captchaParams):
-        if not captchaParams.get('api_key'):
-            raise CaptchaParameter("anticaptcha: Missing api_key parameter.")
+        taskID = None
 
-        client = AnticaptchaClient(captchaParams.get('api_key'))
-        client.SOFT_ID = 959
+        if not captchaParams.get('clientKey'):
+            raise CaptchaParameter(
+                "anticaptcha: Missing clientKey parameter."
+            )
+
+        self.clientKey = captchaParams.get('clientKey')
 
         if captchaParams.get('proxy') and not captchaParams.get('no_proxy'):
-            captchaMap = {
-                'reCaptcha': NoCaptchaTask,
-                'hCaptcha': HCaptchaTask
+            hostParsed = urlparse(captchaParams.get('proxy', {}).get('https'))
+
+            if not hostParsed.scheme:
+                raise CaptchaParameter('Cannot parse proxy correctly, bad scheme')
+
+            if not hostParsed.netloc:
+                raise CaptchaParameter('Cannot parse proxy correctly, bad netloc')
+
+            ports = {
+                'http': 80,
+                'https': 443
             }
 
-            proxy = self.parseProxy(
-                captchaParams.get('proxy', {}).get('https'),
-                captchaParams.get('User-Agent', '')
-            )
-
-            task = captchaMap[captchaType](
-                url,
-                siteKey,
-                **proxy
-            )
+            self.proxy = {
+                'proxyType': hostParsed.scheme,
+                'proxyAddress': hostParsed.hostname,
+                'proxyPort': hostParsed.port if hostParsed.port else ports[self.proxy['proxyType']],
+                'proxyLogin': hostParsed.username,
+                'proxyPassword': hostParsed.password,
+            }
         else:
-            captchaMap = {
-                'reCaptcha': NoCaptchaTaskProxylessTask,
-                'hCaptcha': HCaptchaTaskProxyless
-            }
-            task = captchaMap[captchaType](url, siteKey)
-
-        if not hasattr(client, 'createTaskSmee'):
-            raise NotImplementedError(
-                "Please upgrade 'python_anticaptcha' via pip or download it from "
-                "https://github.com/ad-m/python-anticaptcha/"
-            )
-
-        job = client.createTaskSmee(task, timeout=180)
+            self.proxy = None
 
         try:
-            job.join(maximum_time=180)
-        except (AnticaptchaException) as e:
-            raise CaptchaTimeout(f"{getattr(e, 'message', e)}")
+            taskID = self.requestSolve(captchaType, url, siteKey)
+            return self.requestJob(taskID)
+        except polling2.TimeoutException:
+            try:
+                if taskID:
+                    self.reportJob(taskID)
+            except polling2.TimeoutException:
+                raise CaptchaTimeout(
+                    "anticaptcha: Captcha solve took to long and also failed "
+                    f"reporting the task with task id {taskID}."
+                )
 
-        if 'solution' in job._last_result:
-            return job.get_solution_response()
-        else:
-            raise CaptchaAPIError('Job did not return `solution` key in payload.')
+            raise CaptchaTimeout(
+                "anticaptcha: Captcha solve took to long to execute "
+                f"task id {taskID}, aborting."
+            )
 
 
 # ------------------------------------------------------------------------------- #

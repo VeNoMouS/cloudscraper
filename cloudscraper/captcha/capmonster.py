@@ -29,6 +29,11 @@ class captchaSolver(Captcha):
         super(captchaSolver, self).__init__('capmonster')
         self.host = 'https://api.capmonster.cloud'
         self.session = requests.Session()
+        self.captchaType = {
+            'reCaptcha': 'NoCaptchaTask',
+            'hCaptcha': 'HCaptchaTask',
+            'turnstile': 'TurnstileTask'
+        }
 
     # ------------------------------------------------------------------------------- #
 
@@ -79,7 +84,11 @@ class captchaSolver(Captcha):
         )
 
         if response:
-            return response.json()['solution']['gRecaptchaResponse']
+            payload = response.json()['solution']
+            if 'token' in payload:
+                return payload['token']
+            else:
+                return payload['gRecaptchaResponse']
         else:
             raise CaptchaTimeout(
                 "CapMonster: Error failed to solve Captcha."
@@ -101,7 +110,7 @@ class captchaSolver(Captcha):
             'task': {
                 'websiteURL': url,
                 'websiteKey': siteKey,
-                'type': 'NoCaptchaTask' if captchaType == 'reCaptcha' else 'HCaptchaTask'
+                'type': self.captchaType[captchaType]
             },
             'softId': 37
         }
