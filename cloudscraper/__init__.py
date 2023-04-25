@@ -38,6 +38,16 @@ from .user_agent import User_Agent
 
 # ------------------------------------------------------------------------------- #
 
+# Avoid DeprecationWarning in Python 3.10. According to the warning OP_NO_SSL*
+# should be deprecated as well, but only the OP_NO_TLS* options actually trigger
+# the warning.
+if sys.version_info[:2] == (3, 10):
+    ssl_context_options = (ssl.OP_NO_SSLv2 | ssl.OP_NO_SSLv3)
+else:
+    ssl_context_options = (ssl.OP_NO_SSLv2 | ssl.OP_NO_SSLv3 | ssl.OP_NO_TLSv1 | ssl.OP_NO_TLSv1_1)
+
+# ------------------------------------------------------------------------------- #
+
 __version__ = '1.2.69'
 
 # ------------------------------------------------------------------------------- #
@@ -82,7 +92,7 @@ class CipherSuiteAdapter(HTTPAdapter):
 
             self.ssl_context.set_ciphers(self.cipherSuite)
             self.ssl_context.set_ecdh_curve(self.ecdhCurve)
-            self.ssl_context.options |= (ssl.OP_NO_SSLv2 | ssl.OP_NO_SSLv3 | ssl.OP_NO_TLSv1 | ssl.OP_NO_TLSv1_1)
+            self.ssl_context.options |= ssl_context_options
 
         super(CipherSuiteAdapter, self).__init__(**kwargs)
 
