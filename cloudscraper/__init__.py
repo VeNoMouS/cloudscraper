@@ -38,7 +38,7 @@ from .user_agent import User_Agent
 
 # ------------------------------------------------------------------------------- #
 
-__version__ = '1.2.69'
+__version__ = '1.2.70'
 
 # ------------------------------------------------------------------------------- #
 
@@ -82,7 +82,10 @@ class CipherSuiteAdapter(HTTPAdapter):
 
             self.ssl_context.set_ciphers(self.cipherSuite)
             self.ssl_context.set_ecdh_curve(self.ecdhCurve)
-            self.ssl_context.options |= (ssl.OP_NO_SSLv2 | ssl.OP_NO_SSLv3 | ssl.OP_NO_TLSv1 | ssl.OP_NO_TLSv1_1)
+
+            self.ssl_context.options |= (ssl.OP_NO_SSLv2 | ssl.OP_NO_SSLv3 | ssl.OP_NO_TLSv1_1)
+            if sys.version_info[:2] < (3, 10):  # Remove deprecation warning in >= py3.10
+                self.ssl_context.options |= ssl.OP_NO_TLSv1
 
         super(CipherSuiteAdapter, self).__init__(**kwargs)
 
