@@ -1,1 +1,2 @@
 include LICENSE README.md cloudscraper/user_agent/browsers.json
+recursive-include tests *.py *.html
