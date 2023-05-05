@@ -16,6 +16,7 @@ setup(
     version=VERSION,
     packages = find_packages(exclude=['tests*']),
     description = 'A Python module to bypass Cloudflare\'s anti-bot page.',
+    license='MIT',
     long_description=readme,
     long_description_content_type='text/markdown',
     url = 'https://github.com/venomous/cloudscraper',
