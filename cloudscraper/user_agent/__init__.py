@@ -73,7 +73,7 @@ class User_Agent():
             sys.tracebacklimit = 0
             raise RuntimeError("Sorry you can't have mobile and desktop disabled at the same time.")
 
-        if sys.version >= (3, 7):
+        if sys.version_info >= (3, 7):
             browsers_json = resources.files(__name__) / "browsers.json"
         else:
             browsers_json = pathlib.Path(__file__).parent / "browsers.json"
