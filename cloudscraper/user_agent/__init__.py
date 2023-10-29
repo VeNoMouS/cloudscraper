@@ -1,11 +1,13 @@
 import json
-import os
+import pathlib
 import random
 import re
 import sys
 import ssl
 
 from collections import OrderedDict
+from importlib import resources
+
 
 # ------------------------------------------------------------------------------- #
 
@@ -71,7 +73,12 @@ class User_Agent():
             sys.tracebacklimit = 0
             raise RuntimeError("Sorry you can't have mobile and desktop disabled at the same time.")
 
-        with open(os.path.join(os.path.dirname(__file__), 'browsers.json'), 'r') as fp:
+        if sys.version_info >= (3, 7):
+            browsers_json = resources.files(__name__) / "browsers.json"
+        else:
+            browsers_json = pathlib.Path(__file__).parent / "browsers.json"
+
+        with browsers_json.open("r") as fp:
             user_agents = json.load(
                 fp,
                 object_pairs_hook=OrderedDict
