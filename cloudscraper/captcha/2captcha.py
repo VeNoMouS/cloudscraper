@@ -44,14 +44,14 @@ class captchaSolver(Captcha):
 
         errors = {
             'in.php': {
-                "ERROR_WRONG_USER_KEY": "You've provided api_key parameter value is in incorrect format, it should contain 32 symbols.",
-                "ERROR_KEY_DOES_NOT_EXIST": "The api_key you've provided does not exists.",
+                "ERROR_WRONG_USER_KEY": "You've provided api_key parameter value in incorrect format, it should contain 32 symbols.",
+                "ERROR_KEY_DOES_NOT_EXIST": "The api_key you've provided does not exist.",
                 "ERROR_ZERO_BALANCE": "You don't have sufficient funds on your account.",
                 "ERROR_PAGEURL": "pageurl parameter is missing in your request.",
                 "ERROR_NO_SLOT_AVAILABLE":
                     "No Slots Available.\nYou can receive this error in two cases:\n"
                     "1. If you solve ReCaptcha: the queue of your captchas that are not distributed to workers is too long. "
-                    "Queue limit changes dynamically and depends on total amount of captchas awaiting solution and usually it's between 50 and 100 captchas.\n"
+                    "Queue limit changes dynamically and depends on total amount of captchas awaiting solution and is usually between 50 and 100 captchas.\n"
                     "2. If you solve Normal Captcha: your maximum rate for normal captchas is lower than current rate on the server."
                     "You can change your maximum rate in your account's settings.",
                 "ERROR_IP_NOT_ALLOWED": "The request is sent from the IP that is not on the list of your allowed IPs.",
@@ -80,8 +80,8 @@ class captchaSolver(Captcha):
                 "REPORT_NOT_RECORDED": "Error is returned to your complain request if you already complained lots of correctly solved captchas.",
                 "ERROR_IP_ADDRES":
                     "You can receive this error code when registering a pingback (callback) IP or domain."
-                    "That happes if your request is coming from an IP address that doesn't match the IP address of your pingback IP or domain.",
-                "ERROR_TOKEN_EXPIRED": "You can receive this error code when sending GeeTest. That error means that challenge value you provided is expired.",
+                    "That happens if your request is coming from an IP address that doesn't match the IP address of your pingback IP or domain.",
+                "ERROR_TOKEN_EXPIRED": "You can receive this error code when sending GeeTest. That error means the challenge value you provided is expired.",
                 "ERROR_EMPTY_ACTION": "Action parameter is missing or no value is provided for action parameter."
             }
         }
@@ -245,11 +245,11 @@ class captchaSolver(Captcha):
                     self.reportJob(jobID)
             except polling2.TimeoutException:
                 raise CaptchaTimeout(
-                    f"2Captcha: Captcha solve took to long and also failed reporting the job the job id {jobID}."
+                    f"2Captcha: Captcha solve took too long and also failed reporting the job the job id {jobID}."
                 )
 
             raise CaptchaTimeout(
-                f"2Captcha: Captcha solve took to long to execute job id {jobID}, aborting."
+                f"2Captcha: Captcha solve took too long to execute job id {jobID}, aborting."
             )
 
 
