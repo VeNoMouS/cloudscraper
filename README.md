@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![image](https://img.shields.io/pypi/pyversions/cloudscraper.svg)](https://pypi.org/project/cloudscraper/)
 [![Build Status](https://travis-ci.com/VeNoMouS/cloudscraper.svg?branch=master)](https://travis-ci.com/VeNoMouS/cloudscraper)
-[![Donate](https://img.shields.io/badge/Donate-Buy%20Me%20A%20Coffee-brightgreen.svg)](https://www.buymeacoffee.com/venomous)
+[![Donate](https://img.shields.io/badge/Donate-Buy%20Me%20A%20Coffee-brightgreen.svg)](https://buymeacoffee.com/zied)
 
 **Enhanced by [Zied Boughdir](https://github.com/zinzied) - 2025 Edition**
 
@@ -28,13 +28,13 @@ Any script using cloudscraper will sleep for ~5 seconds for the first visit to a
 
 # Donations
 
-If you feel like showing your love and/or appreciation for this project, then how about shouting me a coffee or beer :)
+If you feel like showing your love and/or appreciation for this enhanced version, then how about shouting me a coffee or beer :)
 
-<a href="https://buymeacoff.ee/venomous" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a>
+<a href="https://buymeacoffee.com/zied" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a>
 
 # Installation
 
-Simply run `pip install cloudscraper`. The PyPI package is at https://pypi.python.org/pypi/cloudscraper/
+Simply run `pip install cloudscraper25`. The PyPI package is at https://pypi.python.org/pypi/cloudscraper25/
 
 Alternatively, clone this repository and run `python setup.py install`.
 
@@ -66,10 +66,10 @@ We support the following Javascript interpreters/engines.
 The simplest way to use cloudscraper is by calling `create_scraper()`.
 
 ```python
-import cloudscraper
+import cloudscraper25
 
-scraper = cloudscraper.create_scraper()  # returns a CloudScraper instance
-# Or: scraper = cloudscraper.CloudScraper()  # CloudScraper inherits from requests.Session
+scraper = cloudscraper25.create_scraper()  # returns a CloudScraper instance
+# Or: scraper = cloudscraper25.CloudScraper()  # CloudScraper inherits from requests.Session
 print(scraper.get("http://somesite.com").text)  # => "<!DOCTYPE html><html><head>..."
 ```
 
