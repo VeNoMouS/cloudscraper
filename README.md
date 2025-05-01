@@ -1,4 +1,4 @@
-# cloudscraper
+# cloudscraper - Enhanced Edition
 
 [![PyPI version](https://badge.fury.io/py/cloudscraper.svg)](https://badge.fury.io/py/cloudscraper)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -6,7 +6,9 @@
 [![Build Status](https://travis-ci.com/VeNoMouS/cloudscraper.svg?branch=master)](https://travis-ci.com/VeNoMouS/cloudscraper)
 [![Donate](https://img.shields.io/badge/Donate-Buy%20Me%20A%20Coffee-brightgreen.svg)](https://www.buymeacoffee.com/venomous)
 
-A simple Python module to bypass Cloudflare's anti-bot page (also known as "I'm Under Attack Mode", or IUAM), implemented with [Requests](https://github.com/kennethreitz/requests). Cloudflare changes their techniques periodically, so I will update this repo frequently.
+**Enhanced by Admin - 2025 Edition**
+
+A Python module to bypass Cloudflare's anti-bot page (also known as "I'm Under Attack Mode", or IUAM), implemented with [Requests](https://github.com/kennethreitz/requests). This enhanced version includes support for Cloudflare v2 challenges, proxy rotation, stealth mode, and more. Cloudflare changes their techniques periodically, so I will update this repo frequently.
 
 This can be useful if you wish to scrape or crawl a website protected with Cloudflare. Cloudflare's anti-bot page currently just checks if the client supports Javascript, though they may add additional techniques in the future.
 
@@ -41,6 +43,11 @@ Alternatively, clone this repository and run `python setup.py install`.
 - Python 3.x
 - **[Requests](https://github.com/kennethreitz/requests)** >= 2.9.2
 - **[requests_toolbelt](https://pypi.org/project/requests-toolbelt/)** >= 0.9.1
+- **[pyparsing](https://pypi.org/project/pyparsing/)** >= 2.4.7
+- **[pyOpenSSL](https://pypi.org/project/pyOpenSSL/)** >= 22.0.0
+- **[pycryptodome](https://pypi.org/project/pycryptodome/)** >= 3.15.0
+- **[websocket-client](https://pypi.org/project/websocket-client/)** >= 1.3.3
+- **[js2py](https://pypi.org/project/Js2Py/)** >= 0.74
 
 `python setup.py install` will install the Python dependencies automatically. The javascript interpreters and/or engines you decide to use are the only things you need to install yourself, excluding js2py which is part of the requirements as the default.
 
@@ -49,8 +56,8 @@ Alternatively, clone this repository and run `python setup.py install`.
 We support the following Javascript interpreters/engines.
 
 - **[ChakraCore](https://github.com/microsoft/ChakraCore):** Library binaries can also be located [here](https://www.github.com/VeNoMouS/cloudscraper/tree/ChakraCore/).
-- **[js2py](https://github.com/PiotrDabkowski/Js2Py):** >=0.67
-- **native**: Self made native python solver **(Default)**
+- **[js2py](https://github.com/PiotrDabkowski/Js2Py):** >=0.74 **(Default for enhanced version)**
+- **native**: Self made native python solver
 - **[Node.js](https://nodejs.org/)**
 - **[V8](https://github.com/sony/v8eval/):** We use Sony's [v8eval](https://v8.dev)() python module.
 
@@ -92,6 +99,104 @@ If you don't want to even attempt Cloudflare v1 (Deprecated) solving..
 
 ```python
 scraper = cloudscraper.create_scraper(disableCloudflareV1=True)
+```
+
+------
+
+### Disable Cloudflare V2
+#### Description
+
+If you don't want to even attempt Cloudflare v2 solving..
+
+#### Parameters
+
+
+|Parameter|Value|Default|
+|-------------|:-------------:|:-----:|
+|disableCloudflareV2|(boolean)|False|
+
+#### Example
+
+```python
+scraper = cloudscraper.create_scraper(disableCloudflareV2=True)
+```
+
+------
+
+### Proxy Rotation
+#### Description
+
+Automatically rotate through a list of proxies to avoid IP-based blocking.
+
+#### Parameters
+
+|Parameter|Value|Default|
+|-------------|:-------------:|:-----:|
+|rotating_proxies|(list or dict)|None|
+|proxy_options|(dict)|{}|
+
+#### `proxy_options` Parameters
+
+|Parameter|Value|Default|
+|-------------|:-------------:|:-----:|
+|rotation_strategy|(string) `sequential`, `random`, or `smart`|`sequential`|
+|ban_time|(int) seconds to ban a proxy after failure|300|
+
+#### Example
+
+```python
+proxies = [
+    'http://user:pass@proxy1.example.com:8080',
+    'http://user:pass@proxy2.example.com:8080',
+    'http://user:pass@proxy3.example.com:8080'
+]
+
+scraper = cloudscraper.create_scraper(
+    rotating_proxies=proxies,
+    proxy_options={
+        'rotation_strategy': 'smart',
+        'ban_time': 300
+    }
+)
+```
+
+------
+
+### Stealth Mode
+#### Description
+
+Enable stealth techniques to better mimic human behavior and avoid detection.
+
+#### Parameters
+
+|Parameter|Value|Default|
+|-------------|:-------------:|:-----:|
+|enable_stealth|(boolean)|True|
+|stealth_options|(dict)|{}|
+
+#### `stealth_options` Parameters
+
+|Parameter|Value|Default|
+|-------------|:-------------:|:-----:|
+|min_delay|(float) minimum delay between requests|1.0|
+|max_delay|(float) maximum delay between requests|5.0|
+|human_like_delays|(boolean) add random delays between requests|True|
+|randomize_headers|(boolean) randomize headers to avoid fingerprinting|True|
+|browser_quirks|(boolean) apply browser-specific quirks|True|
+
+#### Example
+
+```python
+scraper = cloudscraper.create_scraper(
+    enable_stealth=True,
+    stealth_options={
+        'min_delay': 2.0,
+        'max_delay': 6.0,
+        'human_like_delays': True,
+        'randomize_headers': True,
+        'browser_quirks': True
+    }
+)
 ```
 
 ------
@@ -271,8 +376,8 @@ sess = cloudscraper.create_scraper()
 cloudscraper currently supports the following JavaScript Engines/Interpreters
 
 - **[ChakraCore](https://github.com/microsoft/ChakraCore)**
-- **[js2py](https://github.com/PiotrDabkowski/Js2Py)**
-- **native**: Self made native python solver **(Default)**
+- **[js2py](https://github.com/PiotrDabkowski/Js2Py)** **(Default in enhanced version)**
+- **native**: Self made native python solver
 - **[Node.js](https://nodejs.org/)**
 - **[V8](https://github.com/sony/v8eval/)**
 
@@ -282,13 +387,17 @@ Can be set as an attribute via your `cloudscraper` object or passed as an argume
 
 |Parameter|Value|Default|
 |-------------|:-------------:|:-----:|
-|interpreter|(string)|`native`|
+|interpreter|(string)|`js2py`|
 
 #### Example
 
 ```python
 scraper = cloudscraper.create_scraper(interpreter='nodejs')
 ```
+
+#### Note
+
+The enhanced version uses `js2py` as the default interpreter because it provides better compatibility with modern Cloudflare challenges. If you encounter issues, you can try other interpreters.
 
 ------
 
@@ -525,13 +634,37 @@ If you do not wish to use a proxy, just don't pass the `proxies` keyword argumen
 ```python
 import cloudscraper
 
+# Using a single proxy
 proxies = {"http": "http://localhost:8080", "https": "http://localhost:8080"}
 tokens, user_agent = cloudscraper.get_tokens("http://somesite.com", proxies=proxies)
 print(tokens)
 # => {
     'cf_clearance': 'c8f913c707b818b47aa328d81cab57c349b1eee5-1426733163-3600',
-    '__cfduid': 'dd8ec03dfdbcb8c2ea63e920f1335c1001426733158'
+    '__cfduid': 'dd8ec03dfdbcb8c2ea63e920f1335c1001426733158',
+    'cf_chl_2': 'some_value',
+    'cf_chl_prog': 'some_value'
 }
+
+# Using proxy rotation
+rotating_proxies = [
+    'http://user:pass@proxy1.example.com:8080',
+    'http://user:pass@proxy2.example.com:8080',
+    'http://user:pass@proxy3.example.com:8080'
+]
+
+tokens, user_agent = cloudscraper.get_tokens(
+    "http://somesite.com",
+    rotating_proxies=rotating_proxies,
+    proxy_options={
+        'rotation_strategy': 'smart',
+        'ban_time': 300
+    },
+    enable_stealth=True,
+    stealth_options={
+        'min_delay': 2.0,
+        'max_delay': 6.0
+    }
+)
 ```
 
 ------
@@ -642,3 +775,85 @@ scraper.get(
     headers={'Host': 'www.somesite.com'}
 )
 ```
+
+# Enhanced Edition Information
+
+This enhanced version of cloudscraper was created by Admin in 2025 to provide better capabilities for bypassing modern Cloudflare protection mechanisms. The original cloudscraper repository by VeNoMouS (https://github.com/VeNoMouS/cloudscraper) served as the foundation for these improvements.
+
+## New Features in the Enhanced Edition
+
+1. **Cloudflare v2 Challenge Support**
+   - Added support for newer Cloudflare challenge mechanisms
+   - Implemented better JavaScript challenge solving
+
+2. **Proxy Rotation System**
+   - Smart proxy rotation with multiple strategies
+   - Automatic proxy banning and statistics tracking
+   - Support for different proxy types
+
+3. **Stealth Mode**
+   - Human-like behavior simulation
+   - Randomized delays between requests
+   - Browser fingerprint protection
+   - Header randomization
+
+4. **Improved JavaScript Handling**
+   - Better JavaScript interpreter (js2py as default)
+   - Enhanced challenge solving capabilities
+   - Support for more complex JavaScript challenges
+
+5. **Enhanced Cookie Management**
+   - Better handling of Cloudflare cookies
+   - Support for newer Cloudflare cookie types
+
+## Example Using All Enhanced Features
+
+```python
+import cloudscraper
+
+# Create a scraper with all enhanced features
+scraper = cloudscraper.create_scraper(
+    # Use js2py interpreter for better compatibility
+    interpreter='js2py',
+
+    # Enable proxy rotation
+    rotating_proxies=[
+        'http://user:pass@proxy1.example.com:8080',
+        'http://user:pass@proxy2.example.com:8080',
+        'http://user:pass@proxy3.example.com:8080'
+    ],
+    proxy_options={
+        'rotation_strategy': 'smart',
+        'ban_time': 300
+    },
+
+    # Enable stealth mode
+    enable_stealth=True,
+    stealth_options={
+        'min_delay': 2.0,
+        'max_delay': 6.0,
+        'human_like_delays': True,
+        'randomize_headers': True,
+        'browser_quirks': True
+    },
+
+    # Set browser fingerprint
+    browser={
+        'browser': 'chrome',
+        'platform': 'windows',
+        'mobile': False
+    },
+
+    # Enable debugging if needed
+    debug=False
+)
+
+# Make a request to a Cloudflare-protected site
+response = scraper.get('https://example.com')
+print(response.text)
+```
+
+## Credits
+
+- Original cloudscraper by [VeNoMouS](https://github.com/VeNoMouS/cloudscraper)
+- Enhanced Edition by Admin (2025)

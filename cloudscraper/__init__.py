@@ -4,6 +4,8 @@ import logging
 import requests
 import sys
 import ssl
+import random
+import time
 
 from requests.adapters import HTTPAdapter
 from requests.sessions import Session
@@ -30,15 +32,19 @@ except ImportError:
 
 from .exceptions import (
     CloudflareLoopProtection,
-    CloudflareIUAMError
+    CloudflareIUAMError,
+    CloudflareChallengeError
 )
 
 from .cloudflare import Cloudflare
+from .cloudflare_v2 import CloudflareV2
 from .user_agent import User_Agent
+from .proxy_manager import ProxyManager
+from .stealth import StealthMode
 
 # ------------------------------------------------------------------------------- #
 
-__version__ = '1.2.71'
+__version__ = '1.3.0'
 
 # ------------------------------------------------------------------------------- #
 
@@ -121,41 +127,71 @@ class CloudScraper(Session):
     def __init__(self, *args, **kwargs):
         self.debug = kwargs.pop('debug', False)
 
+        # Cloudflare challenge handling options
         self.disableCloudflareV1 = kwargs.pop('disableCloudflareV1', False)
+        self.disableCloudflareV2 = kwargs.pop('disableCloudflareV2', False)
         self.delay = kwargs.pop('delay', None)
         self.captcha = kwargs.pop('captcha', {})
         self.doubleDown = kwargs.pop('doubleDown', True)
-        self.interpreter = kwargs.pop('interpreter', 'native')
+        self.interpreter = kwargs.pop('interpreter', 'js2py')  # Default to js2py for better compatibility
 
+        # Request hooks
         self.requestPreHook = kwargs.pop('requestPreHook', None)
         self.requestPostHook = kwargs.pop('requestPostHook', None)
 
+        # TLS/SSL options
         self.cipherSuite = kwargs.pop('cipherSuite', None)
         self.ecdhCurve = kwargs.pop('ecdhCurve', 'prime256v1')
         self.source_address = kwargs.pop('source_address', None)
         self.server_hostname = kwargs.pop('server_hostname', None)
         self.ssl_context = kwargs.pop('ssl_context', None)
 
+        # Compression options
         self.allow_brotli = kwargs.pop(
             'allow_brotli',
             True if 'brotli' in sys.modules.keys() else False
         )
 
+        # User agent handling
         self.user_agent = User_Agent(
             allow_brotli=self.allow_brotli,
             browser=kwargs.pop('browser', None)
         )
 
+        # Challenge solving depth
         self._solveDepthCnt = 0
         self.solveDepth = kwargs.pop('solveDepth', 3)
 
+        # Proxy management
+        proxy_options = kwargs.pop('proxy_options', {})
+        self.proxy_manager = ProxyManager(
+            proxies=kwargs.pop('rotating_proxies', None),
+            proxy_rotation_strategy=proxy_options.get('rotation_strategy', 'sequential'),
+            ban_time=proxy_options.get('ban_time', 300)
+        )
+
+        # Stealth mode
+        self.stealth_mode = StealthMode(self)
+        self.enable_stealth = kwargs.pop('enable_stealth', True)
+
+        # Stealth mode configuration
+        stealth_options = kwargs.pop('stealth_options', {})
+        if stealth_options:
+            if 'min_delay' in stealth_options and 'max_delay' in stealth_options:
+                self.stealth_mode.set_delay_range(
+                    stealth_options['min_delay'],
+                    stealth_options['max_delay']
+                )
+            self.stealth_mode.enable_human_like_delays(stealth_options.get('human_like_delays', True))
+            self.stealth_mode.enable_randomize_headers(stealth_options.get('randomize_headers', True))
+            self.stealth_mode.enable_browser_quirks(stealth_options.get('browser_quirks', True))
+
+        # Initialize the session
         super(CloudScraper, self).__init__(*args, **kwargs)
 
-        # pylint: disable=E0203
-        if 'requests' in self.headers['User-Agent']:
-            # ------------------------------------------------------------------------------- #
+        # Set up User-Agent and headers
+        if 'requests' in self.headers.get('User-Agent', ''):
             # Set a random User-Agent if no custom User-Agent has been set
-            # ------------------------------------------------------------------------------- #
             self.headers = self.user_agent.headers
             if not self.cipherSuite:
                 self.cipherSuite = self.user_agent.cipherSuite
@@ -163,6 +199,7 @@ class CloudScraper(Session):
         if isinstance(self.cipherSuite, list):
             self.cipherSuite = ':'.join(self.cipherSuite)
 
+        # Mount the HTTPS adapter with our custom cipher suite
         self.mount(
             'https://',
             CipherSuiteAdapter(
@@ -174,7 +211,11 @@ class CloudScraper(Session):
             )
         )
 
-        # purely to allow us to pickle dump
+        # Initialize Cloudflare handlers
+        self.cloudflare_v1 = Cloudflare(self)
+        self.cloudflare_v2 = CloudflareV2(self)
+
+        # Allow pickle serialization
         copyreg.pickle(ssl.SSLContext, lambda obj: (obj.__class__, (obj.protocol,)))
 
     # ------------------------------------------------------------------------------- #
@@ -234,9 +275,15 @@ class CloudScraper(Session):
     # ------------------------------------------------------------------------------- #
 
     def request(self, method, url, *args, **kwargs):
-        # pylint: disable=E0203
-        if kwargs.get('proxies') and kwargs.get('proxies') != self.proxies:
+        # Handle proxy rotation if no specific proxies are provided
+        if not kwargs.get('proxies') and hasattr(self, 'proxy_manager') and self.proxy_manager.proxies:
+            kwargs['proxies'] = self.proxy_manager.get_proxy()
+        elif kwargs.get('proxies') and kwargs.get('proxies') != self.proxies:
             self.proxies = kwargs.get('proxies')
+
+        # Apply stealth techniques if enabled
+        if self.enable_stealth:
+            kwargs = self.stealth_mode.apply_stealth_techniques(method, url, **kwargs)
 
         # ------------------------------------------------------------------------------- #
         # Pre-Hook the request via user defined function.
@@ -255,9 +302,20 @@ class CloudScraper(Session):
         # Make the request via requests.
         # ------------------------------------------------------------------------------- #
 
-        response = self.decodeBrotli(
-            self.perform_request(method, url, *args, **kwargs)
-        )
+        try:
+            response = self.decodeBrotli(
+                self.perform_request(method, url, *args, **kwargs)
+            )
+
+            # Report successful proxy use if applicable
+            if kwargs.get('proxies') and hasattr(self, 'proxy_manager'):
+                self.proxy_manager.report_success(kwargs['proxies'])
+
+        except (requests.exceptions.ProxyError, requests.exceptions.ConnectionError) as e:
+            # Report failed proxy use if applicable
+            if kwargs.get('proxies') and hasattr(self, 'proxy_manager'):
+                self.proxy_manager.report_failure(kwargs['proxies'])
+            raise e
 
         # ------------------------------------------------------------------------------- #
         # Debug the request via the Response object.
@@ -273,39 +331,50 @@ class CloudScraper(Session):
         if self.requestPostHook:
             newResponse = self.requestPostHook(self, response)
 
-            if response != newResponse:  # Give me walrus in 3.7!!!
+            if response != newResponse:
                 response = newResponse
                 if self.debug:
                     print('==== requestPostHook Debug ====')
                     self.debugRequest(response)
 
         # ------------------------------------------------------------------------------- #
+        # Handle Cloudflare challenges
+        # ------------------------------------------------------------------------------- #
 
-        if not self.disableCloudflareV1:
-            cloudflareV1 = Cloudflare(self)
+        # Check for loop protection
+        if self._solveDepthCnt >= self.solveDepth:
+            _ = self._solveDepthCnt
+            self.simpleException(
+                CloudflareLoopProtection,
+                f"!!Loop Protection!! We have tried to solve {_} time(s) in a row."
+            )
 
-            # ------------------------------------------------------------------------------- #
-            # Check if Cloudflare v1 anti-bot is on
-            # ------------------------------------------------------------------------------- #
-
-            if cloudflareV1.is_Challenge_Request(response):
-                # ------------------------------------------------------------------------------- #
-                # Try to solve the challenge and send it back
-                # ------------------------------------------------------------------------------- #
-
-                if self._solveDepthCnt >= self.solveDepth:
-                    _ = self._solveDepthCnt
-                    self.simpleException(
-                        CloudflareLoopProtection,
-                        f"!!Loop Protection!! We have tried to solve {_} time(s) in a row."
-                    )
-
+        # Check for Cloudflare v2 challenges first (if not disabled)
+        if not self.disableCloudflareV2:
+            # Check for v2 Captcha Challenge
+            if self.cloudflare_v2.is_V2_Captcha_Challenge(response):
                 self._solveDepthCnt += 1
+                response = self.cloudflare_v2.handle_V2_Captcha_Challenge(response, **kwargs)
+                return response
 
-                response = cloudflareV1.Challenge_Response(response, **kwargs)
-            else:
-                if not response.is_redirect and response.status_code not in [429, 503]:
-                    self._solveDepthCnt = 0
+            # Check for v2 JavaScript Challenge
+            if self.cloudflare_v2.is_V2_Challenge(response):
+                self._solveDepthCnt += 1
+                response = self.cloudflare_v2.handle_V2_Challenge(response, **kwargs)
+                return response
+
+        # Check for Cloudflare v1 challenges (if not disabled)
+        if not self.disableCloudflareV1:
+            # Check if Cloudflare v1 anti-bot is on
+            if self.cloudflare_v1.is_Challenge_Request(response):
+                # Try to solve the challenge and send it back
+                self._solveDepthCnt += 1
+                response = self.cloudflare_v1.Challenge_Response(response, **kwargs)
+                return response
+
+        # Reset solve depth counter if no challenge was detected
+        if not response.is_redirect and response.status_code not in [429, 503]:
+            self._solveDepthCnt = 0
 
         return response
 
@@ -315,6 +384,19 @@ class CloudScraper(Session):
     def create_scraper(cls, sess=None, **kwargs):
         """
         Convenience function for creating a ready-to-go CloudScraper object.
+
+        Additional parameters:
+        - rotating_proxies: List of proxy URLs or dict mapping URL schemes to proxy URLs
+        - proxy_options: Dict with proxy configuration options
+            - rotation_strategy: Strategy for rotating proxies ('sequential', 'random', or 'smart')
+            - ban_time: Time in seconds to ban a proxy after a failure
+        - enable_stealth: Whether to enable stealth mode (default: True)
+        - stealth_options: Dict with stealth mode configuration options
+            - min_delay: Minimum delay between requests in seconds
+            - max_delay: Maximum delay between requests in seconds
+            - human_like_delays: Whether to add random delays between requests
+            - randomize_headers: Whether to randomize headers
+            - browser_quirks: Whether to apply browser-specific quirks
         """
         scraper = cls(**kwargs)
 
@@ -332,6 +414,15 @@ class CloudScraper(Session):
 
     @classmethod
     def get_tokens(cls, url, **kwargs):
+        """
+        Get Cloudflare tokens for a URL
+
+        Additional parameters:
+        - rotating_proxies: List of proxy URLs or dict mapping URL schemes to proxy URLs
+        - proxy_options: Dict with proxy configuration options
+        - enable_stealth: Whether to enable stealth mode (default: True)
+        - stealth_options: Dict with stealth mode configuration options
+        """
         scraper = cls.create_scraper(
             **{
                 field: kwargs.pop(field, None) for field in [
@@ -344,7 +435,11 @@ class CloudScraper(Session):
                     'interpreter',
                     'source_address',
                     'requestPreHook',
-                    'requestPostHook'
+                    'requestPostHook',
+                    'rotating_proxies',
+                    'proxy_options',
+                    'enable_stealth',
+                    'stealth_options'
                 ] if field in kwargs
             }
         )
@@ -352,12 +447,11 @@ class CloudScraper(Session):
         try:
             resp = scraper.get(url, **kwargs)
             resp.raise_for_status()
-        except Exception:
-            logging.error(f'"{url}" returned an error. Could not collect tokens.')
+        except Exception as e:
+            logging.error(f'"{url}" returned an error. Could not collect tokens. Error: {str(e)}')
             raise
 
         domain = urlparse(resp.url).netloc
-        # noinspection PyUnusedLocal
         cookie_domain = None
 
         for d in scraper.cookies.list_domains():
@@ -365,17 +459,28 @@ class CloudScraper(Session):
                 cookie_domain = d
                 break
         else:
-            cls.simpleException(
-                cls,
-                CloudflareIUAMError,
-                "Unable to find Cloudflare cookies. Does the site actually "
-                "have Cloudflare IUAM (I'm Under Attack Mode) enabled?"
-            )
+            # Try without the dot prefix
+            for d in scraper.cookies.list_domains():
+                if d == domain:
+                    cookie_domain = d
+                    break
+            else:
+                cls.simpleException(
+                    cls,
+                    CloudflareIUAMError,
+                    "Unable to find Cloudflare cookies. Does the site actually "
+                    "have Cloudflare IUAM (I'm Under Attack Mode) enabled?"
+                )
+
+        # Get all Cloudflare cookies
+        cf_cookies = {}
+        for cookie_name in ['cf_clearance', 'cf_chl_2', 'cf_chl_prog', 'cf_chl_rc_ni']:
+            cookie_value = scraper.cookies.get(cookie_name, '', domain=cookie_domain)
+            if cookie_value:
+                cf_cookies[cookie_name] = cookie_value
 
         return (
-            {
-                'cf_clearance': scraper.cookies.get('cf_clearance', '', domain=cookie_domain)
-            },
+            cf_cookies,
             scraper.headers['User-Agent']
         )
 
@@ -385,6 +490,12 @@ class CloudScraper(Session):
     def get_cookie_string(cls, url, **kwargs):
         """
         Convenience function for building a Cookie HTTP header value.
+
+        Additional parameters:
+        - rotating_proxies: List of proxy URLs or dict mapping URL schemes to proxy URLs
+        - proxy_options: Dict with proxy configuration options
+        - enable_stealth: Whether to enable stealth mode (default: True)
+        - stealth_options: Dict with stealth mode configuration options
         """
         tokens, user_agent = cls.get_tokens(url, **kwargs)
         return '; '.join('='.join(pair) for pair in tokens.items()), user_agent
