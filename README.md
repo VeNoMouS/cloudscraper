@@ -56,6 +56,16 @@ import cloudscraper25  # Enhanced version
 
 The API remains compatible, so you only need to change the import statements in your code. All function calls and parameters work the same way.
 
+### Codebase Structure
+
+The codebase has been streamlined to improve maintainability and reduce confusion:
+
+- **Single Module**: All code is now in the `cloudscraper25` module
+- **Removed Redundancy**: The redundant `cloudscraper` directory has been removed
+- **Updated Tests**: All test files have been updated to use the `cloudscraper25` module
+
+This makes the codebase cleaner and easier to maintain while ensuring backward compatibility with existing code that uses the original API.
+
 ## Key Features in cloudscraper25
 
 | Feature | Description |
@@ -815,6 +825,12 @@ This enhanced version of cloudscraper provides better capabilities for bypassing
 4. **Improved JavaScript Handling** - Better JS interpreter (js2py as default)
 5. **Enhanced Cookie Management** - Support for newer Cloudflare cookie types
 
+## Recent Updates
+
+- **Codebase Cleanup**: Removed redundant code and consolidated to a single module
+- **Test Suite Updates**: All tests now use the cloudscraper25 module
+- **Documentation**: Improved README with clearer examples and usage instructions
+
 ## Example Using All Enhanced Features
 
 ```python
@@ -869,6 +885,10 @@ print(response.text)
 
 ## Testing
 
+The library includes comprehensive test scripts to verify functionality:
+
+### Basic Test
+
 Quick test to verify the library is working:
 
 ```python
@@ -880,6 +900,18 @@ scraper = cloudscraper25.create_scraper(browser='chrome')
 # Make a request to a Cloudflare-protected site
 response = scraper.get('https://example.com')
 print(f"Status code: {response.status_code}")
+```
+
+### Running the Test Suite
+
+The library includes several test scripts:
+
+```bash
+# Run the comprehensive test suite
+python test_cloudscraper25_comprehensive.py https://example-cloudflare-site.com
+
+# Test with a specific Cloudflare-protected site
+python test_cloudflare_site.py https://example-cloudflare-site.com --browser firefox --stealth
 ```
 
 ### Troubleshooting Tips
