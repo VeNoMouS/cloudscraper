@@ -856,4 +856,4 @@ print(response.text)
 ## Credits
 
 - Original cloudscraper by [VeNoMouS](https://github.com/VeNoMouS/cloudscraper)
-- Enhanced Edition by Zied Boughdir (2025)
+- Enhanced Edition by [Zied Boughdir](https://github.com/zinzied)
