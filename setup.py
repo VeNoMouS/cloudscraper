@@ -10,15 +10,15 @@ with open('README.md', 'r', encoding='utf-8') as fp:
     readme = fp.read()
 
 setup(
-    name = 'cloudscraper',
-    author = 'VeNoMouS',
-    author_email = 'venom@gen-x.co.nz',
+    name = 'cloudscraper25',
+    author = 'Zied Boughdir, VeNoMouS',
+    author_email = 'ziedboughdir@gmail.com',
     version=VERSION,
     packages = find_packages(exclude=['tests*']),
-    description = 'A Python module to bypass Cloudflare\'s anti-bot page.',
+    description = 'Enhanced Python module to bypass Cloudflare\'s anti-bot page with support for v2 challenges, proxy rotation, and stealth mode.',
     long_description=readme,
     long_description_content_type='text/markdown',
-    url = 'https://github.com/venomous/cloudscraper',
+    url = 'https://github.com/zinzied/cloudscraper25',
     keywords = [
         'cloudflare',
         'scraping',
