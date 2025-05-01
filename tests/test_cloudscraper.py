@@ -2,12 +2,12 @@
 
 import pytest
 import requests
-import cloudscraper
-import cloudscraper.help as helper
+import cloudscraper25
+import cloudscraper25.help as helper
 
 from collections import OrderedDict
 
-from cloudscraper.exceptions import (
+from cloudscraper25.exceptions import (
     CloudflareLoopProtection,
     CloudflareIUAMError,
     CloudflareCaptchaError,
@@ -35,7 +35,7 @@ class TestCloudScraper:
         # test interpreters
         for interpreter in ['native', 'nodejs', 'js2py']:
             print('Testing {}'.format(interpreter))
-            scraper = cloudscraper.create_scraper(interpreter=interpreter, **kwargs)
+            scraper = cloudscraper25.create_scraper(interpreter=interpreter, **kwargs)
             scraper.get(url)
 
     # ------------------------------------------------------------------------------- #
@@ -52,7 +52,7 @@ class TestCloudScraper:
     def test_js_challenge1_16_05_2020(self, **kwargs):
         # test interpreters
         for interpreter in ['native', 'js2py', 'nodejs']:
-            scraper = cloudscraper.create_scraper(interpreter=interpreter, **kwargs)
+            scraper = cloudscraper25.create_scraper(interpreter=interpreter, **kwargs)
             scraper.get(url)
 
     # ------------------------------------------------------------------------------- #
@@ -69,7 +69,7 @@ class TestCloudScraper:
     def test_js_challenge2_16_05_2020(self, **kwargs):
         # test interpreters
         for interpreter in ['native', 'js2py', 'nodejs']:
-            scraper = cloudscraper.create_scraper(interpreter=interpreter, **kwargs)
+            scraper = cloudscraper25.create_scraper(interpreter=interpreter, **kwargs)
             scraper.get(url)
 
     # ------------------------------------------------------------------------------- #
@@ -78,7 +78,7 @@ class TestCloudScraper:
         # test
         session = requests.session()
         session.auth = ('user', 'test')
-        cloudscraper.create_scraper(session)
+        cloudscraper25.create_scraper(session)
 
     # ------------------------------------------------------------------------------- #
 
@@ -89,7 +89,7 @@ class TestCloudScraper:
             CloudflareIUAMError,
             match=r"Unable to parse Cloudflare anti-bots page: No module named*?"
         ):
-            scraper = cloudscraper.create_scraper(interpreter='badInterpreter', **kwargs)
+            scraper = cloudscraper25.create_scraper(interpreter='badInterpreter', **kwargs)
             scraper.get(url)
 
     # ------------------------------------------------------------------------------- #
@@ -109,7 +109,7 @@ class TestCloudScraper:
             CloudflareLoopProtection,
             match=r".*?Loop Protection.*?"
         ):
-            scraper = cloudscraper.create_scraper(**kwargs)
+            scraper = cloudscraper25.create_scraper(**kwargs)
             scraper.get(url)
 
     # ------------------------------------------------------------------------------- #
@@ -120,15 +120,15 @@ class TestCloudScraper:
             CloudflareIUAMError,
             match=r".*?we can't extract the parameters correctly.*?"
         ):
-            scraper = cloudscraper.create_scraper(**kwargs)
-            cloudscraper.Cloudflare(scraper).IUAM_Challenge_Response('', '', '')
+            scraper = cloudscraper25.create_scraper(**kwargs)
+            cloudscraper25.Cloudflare(scraper).IUAM_Challenge_Response('', '', '')
 
         with pytest.raises(
             CloudflareIUAMError,
             match=r"Cloudflare IUAM detected, unfortunately we can't extract the parameters correctly."
         ):
-            scraper = cloudscraper.create_scraper(**kwargs)
-            cloudscraper.Cloudflare(scraper).IUAM_Challenge_Response(
+            scraper = cloudscraper25.create_scraper(**kwargs)
+            cloudscraper25.Cloudflare(scraper).IUAM_Challenge_Response(
                 'id="challenge-form" action="blaaaaah" r value="" jschl_vc value="" pass value=""',
                 url,
                 'native'
@@ -143,10 +143,10 @@ class TestCloudScraper:
             CloudflareCaptchaProvider,
             match=r".*?Captcha detected*?"
         ):
-            scraper = cloudscraper.create_scraper(**kwargs)
+            scraper = cloudscraper25.create_scraper(**kwargs)
             scraper.get(url)
 
-        scraper = cloudscraper.create_scraper(captcha={'provider': 'return_response'}, **kwargs)
+        scraper = cloudscraper25.create_scraper(captcha={'provider': 'return_response'}, **kwargs)
         scraper.get(url)
 
     # ------------------------------------------------------------------------------- #
@@ -157,41 +157,41 @@ class TestCloudScraper:
             CloudflareCaptchaError,
             match=r".*?we can't extract the parameters correctly.*?"
         ):
-            scraper = cloudscraper.create_scraper(**kwargs)
-            cloudscraper.Cloudflare(scraper).captcha_Challenge_Response(None, None, '', '')
+            scraper = cloudscraper25.create_scraper(**kwargs)
+            cloudscraper25.Cloudflare(scraper).captcha_Challenge_Response(None, None, '', '')
 
     # ------------------------------------------------------------------------------- #
 
     def test_user_agent(self, **kwargs):
         for browser in ['chrome', 'firefox']:
-            scraper = cloudscraper.create_scraper(browser={'browser': browser, 'platform': 'windows'}, delay=0.1)
+            scraper = cloudscraper25.create_scraper(browser={'browser': browser, 'platform': 'windows'}, delay=0.1)
             assert browser in scraper.headers['User-Agent'].lower()
 
         # Check it can't find browsers.json
         with pytest.raises(RuntimeError, match=r"Sorry \"bad_match\" browser is not valid.*?"):
-            scraper = cloudscraper.create_scraper(browser='bad_match', delay=0.1)
+            scraper = cloudscraper25.create_scraper(browser='bad_match', delay=0.1)
 
         # Check mobile and desktop disabled
         with pytest.raises(
             RuntimeError,
             match=r"Sorry you can't have mobile and desktop disabled at the same time\."
         ):
-            scraper = cloudscraper.create_scraper(browser={'browser': 'chrome', 'desktop': False, 'mobile': False}, delay=0.1)
+            scraper = cloudscraper25.create_scraper(browser={'browser': 'chrome', 'desktop': False, 'mobile': False}, delay=0.1)
 
         # check brotli
-        scraper = cloudscraper.create_scraper(browser='chrome', allow_brotli=False, delay=0.1)
+        scraper = cloudscraper25.create_scraper(browser='chrome', allow_brotli=False, delay=0.1)
         assert 'br' not in scraper.headers['Accept-Encoding']
 
         # test custom  User-Agent
-        scraper = cloudscraper.create_scraper(browser={'custom': 'test'}, delay=0.1)
+        scraper = cloudscraper25.create_scraper(browser={'custom': 'test'}, delay=0.1)
         assert scraper.headers['User-Agent'] == 'test'
 
         # check its matched chrome and loaded correct cipherSuite
-        scraper = cloudscraper.create_scraper(browser={'custom': '50.0.9370.394', 'tryMatchCustom': True}, delay=0.1)
+        scraper = cloudscraper25.create_scraper(browser={'custom': '50.0.9370.394', 'tryMatchCustom': True}, delay=0.1)
         assert any('!' not in _ for _ in scraper.user_agent.cipherSuite)
 
         # check it didn't match anything and loaded custom cipherSuite
-        scraper = cloudscraper.create_scraper(browser={'custom': 'aa50.0.9370.394', 'tryMatchCustom': True}, delay=0.1)
+        scraper = cloudscraper25.create_scraper(browser={'custom': 'aa50.0.9370.394', 'tryMatchCustom': True}, delay=0.1)
         assert any('!' in _ for _ in scraper.user_agent.cipherSuite)
 
     # ------------------------------------------------------------------------------- #
@@ -204,7 +204,7 @@ class TestCloudScraper:
                 (CaptchaParameter, ImportError, CloudflareCaptchaError),
                 match=r".*?: Missing .*? parameter\.|Please install.*?|Cloudflare Captcha detected.*?"
             ):
-                scraper = cloudscraper.create_scraper(
+                scraper = cloudscraper25.create_scraper(
                     captcha={
                         'provider': provider
                     },
