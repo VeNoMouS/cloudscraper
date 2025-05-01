@@ -1,12 +1,17 @@
-# cloudscraper - Enhanced Edition
+# cloudscraper25 - Enhanced Edition
 
-[![PyPI version](https://badge.fury.io/py/cloudscraper.svg)](https://badge.fury.io/py/cloudscraper)
+[![PyPI version](https://badge.fury.io/py/cloudscraper25.svg)](https://badge.fury.io/py/cloudscraper25)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![image](https://img.shields.io/pypi/pyversions/cloudscraper.svg)](https://pypi.org/project/cloudscraper/)
-[![Build Status](https://travis-ci.com/VeNoMouS/cloudscraper.svg?branch=master)](https://travis-ci.com/VeNoMouS/cloudscraper)
+[![image](https://img.shields.io/pypi/pyversions/cloudscraper25.svg)](https://pypi.org/project/cloudscraper25/)
 [![Donate](https://img.shields.io/badge/Donate-Buy%20Me%20A%20Coffee-brightgreen.svg)](https://buymeacoffee.com/zied)
 
 **Enhanced by [Zied Boughdir](https://github.com/zinzied) - 2025 Edition**
+
+## Latest Release: v2.5.1 (May 2024)
+- Fixed package import issues
+- Improved compatibility with modern Cloudflare challenges
+- Enhanced stealth mode features
+- Better proxy rotation system
 
 A Python module to bypass Cloudflare's anti-bot page (also known as "I'm Under Attack Mode", or IUAM), implemented with [Requests](https://github.com/kennethreitz/requests). This enhanced version includes support for Cloudflare v2 challenges, proxy rotation, stealth mode, and more. Cloudflare changes their techniques periodically, so I will update this repo frequently.
 
@@ -34,9 +39,27 @@ If you feel like showing your love and/or appreciation for this enhanced version
 
 # Installation
 
-Simply run `pip install cloudscraper25`. The PyPI package is at https://pypi.python.org/pypi/cloudscraper25/
+Simply run `pip install cloudscraper25`. The PyPI package is at https://pypi.org/project/cloudscraper25/
+
+```bash
+pip install cloudscraper25
+```
 
 Alternatively, clone this repository and run `python setup.py install`.
+
+## Migration from cloudscraper
+
+If you were previously using the original `cloudscraper` package, you'll need to update your imports:
+
+```python
+# Old import
+import cloudscraper  # Original package
+
+# New import
+import cloudscraper25  # Enhanced version
+```
+
+The API remains compatible, so you only need to change the import statements in your code. All function calls and parameters work the same way.
 
 # Dependencies
 
@@ -98,7 +121,7 @@ If you don't want to even attempt Cloudflare v1 (Deprecated) solving..
 #### Example
 
 ```python
-scraper = cloudscraper.create_scraper(disableCloudflareV1=True)
+scraper = cloudscraper25.create_scraper(disableCloudflareV1=True)
 ```
 
 ------
@@ -118,7 +141,7 @@ If you don't want to even attempt Cloudflare v2 solving..
 #### Example
 
 ```python
-scraper = cloudscraper.create_scraper(disableCloudflareV2=True)
+scraper = cloudscraper25.create_scraper(disableCloudflareV2=True)
 ```
 
 ------
@@ -151,7 +174,7 @@ proxies = [
     'http://user:pass@proxy3.example.com:8080'
 ]
 
-scraper = cloudscraper.create_scraper(
+scraper = cloudscraper25.create_scraper(
     rotating_proxies=proxies,
     proxy_options={
         'rotation_strategy': 'smart',
@@ -187,7 +210,7 @@ Enable stealth techniques to better mimic human behavior and avoid detection.
 #### Example
 
 ```python
-scraper = cloudscraper.create_scraper(
+scraper = cloudscraper25.create_scraper(
     enable_stealth=True,
     stealth_options={
         'min_delay': 2.0,
@@ -217,7 +240,7 @@ scraper = cloudscraper.create_scraper(
 #### Example
 
 ```python
-scraper = cloudscraper.create_scraper(allow_brotli=False)
+scraper = cloudscraper25.create_scraper(allow_brotli=False)
 ```
 
 ------
@@ -253,14 +276,14 @@ Or
 #### Example
 
 ```python
-scraper = cloudscraper.create_scraper(browser='chrome')
+scraper = cloudscraper25.create_scraper(browser='chrome')
 ```
 
 or
 
 ```python
 # will give you only mobile chrome User-Agents on Android
-scraper = cloudscraper.create_scraper(
+scraper = cloudscraper25.create_scraper(
     browser={
         'browser': 'chrome',
         'platform': 'android',
@@ -269,7 +292,7 @@ scraper = cloudscraper.create_scraper(
 )
 
 # will give you only desktop firefox User-Agents on Windows
-scraper = cloudscraper.create_scraper(
+scraper = cloudscraper25.create_scraper(
     browser={
         'browser': 'firefox',
         'platform': 'windows',
@@ -280,7 +303,7 @@ scraper = cloudscraper.create_scraper(
 # Custom will also try find the user-agent string in the browsers.json,
 # If a match is found, it will use the headers and cipherSuite from that "browser",
 # Otherwise a generic set of headers and cipherSuite will be used.
-scraper = cloudscraper.create_scraper(
+scraper = cloudscraper25.create_scraper(
     browser={
         'custom': 'ScraperBot/1.0',
     }
@@ -305,7 +328,7 @@ Can be set as an attribute via your `cloudscraper` object or passed as an argume
 #### Example
 
 ```python
-scraper = cloudscraper.create_scraper(debug=True)
+scraper = cloudscraper25.create_scraper(debug=True)
 ```
 
 ------
@@ -327,7 +350,7 @@ Can be set as an attribute via your `cloudscraper` object or passed as an argume
 #### Example
 
 ```python
-scraper = cloudscraper.create_scraper(delay=10)
+scraper = cloudscraper25.create_scraper(delay=10)
 ```
 
 ------
@@ -348,7 +371,7 @@ If you already have an existing Requests session, you can pass it to the functio
 
 ```python
 session = requests.session()
-scraper = cloudscraper.create_scraper(sess=session)
+scraper = cloudscraper25.create_scraper(sess=session)
 ```
 
 #### Note
@@ -365,7 +388,7 @@ sess = requests.session()
 To:
 
 ```python
-sess = cloudscraper.create_scraper()
+sess = cloudscraper25.create_scraper()
 ```
 
 ------
@@ -392,7 +415,7 @@ Can be set as an attribute via your `cloudscraper` object or passed as an argume
 #### Example
 
 ```python
-scraper = cloudscraper.create_scraper(interpreter='nodejs')
+scraper = cloudscraper25.create_scraper(interpreter='nodejs')
 ```
 
 #### Note
@@ -632,11 +655,11 @@ Remember, you must always use the same user-agent when retrieving or using these
 If you do not wish to use a proxy, just don't pass the `proxies` keyword argument. These convenience functions support all of Requests' normal keyword arguments, like `params`, `data`, and `headers`.
 
 ```python
-import cloudscraper
+import cloudscraper25
 
 # Using a single proxy
 proxies = {"http": "http://localhost:8080", "https": "http://localhost:8080"}
-tokens, user_agent = cloudscraper.get_tokens("http://somesite.com", proxies=proxies)
+tokens, user_agent = cloudscraper25.get_tokens("http://somesite.com", proxies=proxies)
 print(tokens)
 # => {
     'cf_clearance': 'c8f913c707b818b47aa328d81cab57c349b1eee5-1426733163-3600',
@@ -652,7 +675,7 @@ rotating_proxies = [
     'http://user:pass@proxy3.example.com:8080'
 ]
 
-tokens, user_agent = cloudscraper.get_tokens(
+tokens, user_agent = cloudscraper25.get_tokens(
     "http://somesite.com",
     rotating_proxies=rotating_proxies,
     proxy_options={
@@ -676,9 +699,9 @@ tokens, user_agent = cloudscraper.get_tokens(
 This is useful when crafting an HTTP request manually, or working with an external application or library that passes on raw cookie headers.
 
 ```python
-import cloudscraper
+import cloudscraper25
 
-cookie_value, user_agent = cloudscraper.get_cookie_string('http://somesite.com')
+cookie_value, user_agent = cloudscraper25.get_cookie_string('http://somesite.com')
 
 print('GET / HTTP/1.1\nCookie: {}\nUser-Agent: {}\n'.format(cookie_value, user_agent))
 
@@ -695,21 +718,21 @@ Here is an example of integrating cloudscraper with curl. As you can see, all yo
 
 ```python
 import subprocess
-import cloudscraper
+import cloudscraper25
 
 # With get_tokens() cookie dict:
 
-# tokens, user_agent = cloudscraper.get_tokens("http://somesite.com")
+# tokens, user_agent = cloudscraper25.get_tokens("http://somesite.com")
 # cookie_arg = 'cf_clearance={}; __cfduid={}'.format(tokens['cf_clearance'], tokens['__cfduid'])
 
 # With get_cookie_string() cookie header; recommended for curl and similar external applications:
 
-cookie_arg, user_agent = cloudscraper.get_cookie_string('http://somesite.com')
+cookie_arg, user_agent = cloudscraper25.get_cookie_string('http://somesite.com')
 
 # With a custom user-agent string you can optionally provide:
 
 # ua = "Scraping Bot"
-# cookie_arg, user_agent = cloudscraper.get_cookie_string("http://somesite.com", user_agent=ua)
+# cookie_arg, user_agent = cloudscraper25.get_cookie_string("http://somesite.com", user_agent=ua)
 
 result = subprocess.check_output(
     [
@@ -729,7 +752,7 @@ Trimmed down version. Prints page contents of any site protected with Cloudflare
 
 ```python
 url = "http://somesite.com"
-cookie_arg, user_agent = cloudscraper.get_cookie_string(url)
+cookie_arg, user_agent = cloudscraper25.get_cookie_string(url)
 cmd = "curl --cookie {cookie_arg} -A {user_agent} {url}"
 print(
     subprocess.check_output(
@@ -764,12 +787,12 @@ Can be passed as an argument to `create_scraper()`.
 ```python
 # Some servers require the use of a more complex ecdh curve than the default "prime256v1"
 # It may can solve handshake failure
-scraper = cloudscraper.create_scraper(ecdhCurve='secp384r1')
+scraper = cloudscraper25.create_scraper(ecdhCurve='secp384r1')
 ```
 
 ```python
 # Manipulate server_hostname
-scraper = cloudscraper.create_scraper(server_hostname='www.somesite.com')
+scraper = cloudscraper25.create_scraper(server_hostname='www.somesite.com')
 scraper.get(
     'https://backend.hosting.com/',
     headers={'Host': 'www.somesite.com'}
@@ -779,6 +802,19 @@ scraper.get(
 # Enhanced Edition Information
 
 This enhanced version of cloudscraper was created by [Zied Boughdir](https://github.com/zinzied) in 2025 to provide better capabilities for bypassing modern Cloudflare protection mechanisms. The original cloudscraper repository by VeNoMouS (https://github.com/VeNoMouS/cloudscraper) served as the foundation for these improvements.
+
+## Version History
+
+### v2.5.1 (May 2024)
+- Fixed package import issues
+- Ensured proper recognition of the library when installed via pip
+- Updated package structure for better compatibility
+- Improved documentation
+
+### v2.5.0 (Initial Release)
+- First release of the enhanced cloudscraper25 package
+- Added support for modern Cloudflare challenges
+- Implemented proxy rotation and stealth mode
 
 ## New Features in the Enhanced Edition
 
@@ -809,10 +845,10 @@ This enhanced version of cloudscraper was created by [Zied Boughdir](https://git
 ## Example Using All Enhanced Features
 
 ```python
-import cloudscraper
+import cloudscraper25
 
 # Create a scraper with all enhanced features
-scraper = cloudscraper.create_scraper(
+scraper = cloudscraper25.create_scraper(
     # Use js2py interpreter for better compatibility
     interpreter='js2py',
 
@@ -857,3 +893,13 @@ print(response.text)
 
 - Original cloudscraper by [VeNoMouS](https://github.com/VeNoMouS/cloudscraper)
 - Enhanced Edition by [Zied Boughdir](https://github.com/zinzied) (2025)
+
+## Support and Issues
+
+If you encounter any issues or have questions about cloudscraper25, please open an issue on the GitHub repository. For commercial support or custom development, feel free to contact me directly.
+
+Remember to always use the latest version of cloudscraper25 for the best compatibility with current Cloudflare protection mechanisms:
+
+```bash
+pip install --upgrade cloudscraper25
+```
