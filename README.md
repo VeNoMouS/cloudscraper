@@ -6,11 +6,12 @@
 
 **Enhanced by [Zied Boughdir](https://github.com/zinzied)**
 
-## Latest Release: v2.5.1
-- Fixed package import issues
-- Improved compatibility with modern Cloudflare challenges
-- Enhanced stealth mode features
-- Better proxy rotation system
+## Latest Release: v2.5.2
+- Codebase cleanup and consolidation
+- Removed redundant code and directories
+- Updated test suite to use cloudscraper25 module
+- Improved documentation and examples
+- Fixed compatibility issues with modern Cloudflare challenges
 
 A Python module to bypass Cloudflare's anti-bot page (also known as "I'm Under Attack Mode", or IUAM), implemented with [Requests](https://github.com/kennethreitz/requests). This enhanced version includes support for Cloudflare v2 challenges, proxy rotation, stealth mode, and more. Cloudflare changes their techniques periodically, so I will update this repo frequently.
 
