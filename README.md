@@ -16,7 +16,7 @@ A Python module to bypass Cloudflare's anti-bot page (also known as "I'm Under A
 
 This can be useful if you wish to scrape or crawl a website protected with Cloudflare. Cloudflare's anti-bot page currently just checks if the client supports Javascript, though they may add additional techniques in the future.
 
-Due to Cloudflare continually changing and hardening their protection page, cloudscraper requires a JavaScript Engine/interpreter to solve Javascript challenges. This allows the script to easily impersonate a regular web browser without explicitly deobfuscating and parsing Cloudflare's Javascript.
+Due to Cloudflare continually changing and hardening their protection page, cloudscraper25 requires a JavaScript Engine/interpreter to solve Javascript challenges. This allows the script to easily impersonate a regular web browser without explicitly deobfuscating and parsing Cloudflare's Javascript.
 
 For reference, this is the default message Cloudflare uses for these sorts of pages:
 
@@ -28,7 +28,7 @@ This process is automatic. Your browser will redirect to your requested content 
 Please allow up to 5 seconds...
 ```
 
-Any script using cloudscraper will sleep for ~5 seconds for the first visit to any site with Cloudflare anti-bots enabled, though no delay will occur after the first request.
+Any script using cloudscraper25 will sleep for ~5 seconds for the first visit to any site with Cloudflare anti-bots enabled, though no delay will occur after the first request.
 
 
 
@@ -92,7 +92,7 @@ We support the following Javascript interpreters/engines.
 
 # Usage
 
-The simplest way to use cloudscraper is by calling `create_scraper()`.
+The simplest way to use cloudscraper25 is by calling `create_scraper()`.
 
 ```python
 import cloudscraper25
@@ -106,7 +106,7 @@ That's it...
 
 Any requests made from this session object to websites protected by Cloudflare anti-bot will be handled automatically. Websites not using Cloudflare will be treated normally. You don't need to configure or call anything further, and you can effectively treat all websites as if they're not protected with anything.
 
-You use cloudscraper exactly the same way you use Requests. `cloudScraper` works identically to a Requests `Session` object, just instead of calling `requests.get()` or `requests.post()`, you call `scraper.get()` or `scraper.post()`.
+You use cloudscraper25 exactly the same way you use Requests. `cloudScraper` works identically to a Requests `Session` object, just instead of calling `requests.get()` or `requests.post()`, you call `scraper.get()` or `scraper.post()`.
 
 Consult [Requests' documentation](http://docs.python-requests.org/en/latest/user/quickstart/) for more information.
 
@@ -325,7 +325,7 @@ Prints out header and content information of the request for debugging.
 
 #### Parameters
 
-Can be set as an attribute via your `cloudscraper` object or passed as an argument to `create_scraper()`, `get_tokens()`, `get_cookie_string()`.
+Can be set as an attribute via your `cloudscraper25` object or passed as an argument to `create_scraper()`, `get_tokens()`, `get_cookie_string()`.
 
 |Parameter|Value|Default|
 |-------------|:-------------:|:-----:|
@@ -347,7 +347,7 @@ Cloudflare IUAM challenge requires the browser to wait ~5 seconds before submitt
 
 #### Parameters
 
-Can be set as an attribute via your `cloudscraper` object or passed as an argument to `create_scraper()`, `get_tokens()`, `get_cookie_string()`.
+Can be set as an attribute via your `cloudscraper25` object or passed as an argument to `create_scraper()`, `get_tokens()`, `get_cookie_string()`.
 
 |Parameter|Value|Default|
 |-------------|:-------------:|:-----:|
@@ -402,7 +402,7 @@ sess = cloudscraper25.create_scraper()
 ### JavaScript Engines and Interpreters
 
 #### Description
-cloudscraper currently supports the following JavaScript Engines/Interpreters
+cloudscraper25 currently supports the following JavaScript Engines/Interpreters
 
 - **[ChakraCore](https://github.com/microsoft/ChakraCore)**
 - **[js2py](https://github.com/PiotrDabkowski/Js2Py)** **(Default in enhanced version)**
@@ -412,7 +412,7 @@ cloudscraper currently supports the following JavaScript Engines/Interpreters
 
 
 #### Parameters
-Can be set as an attribute via your `cloudscraper` object or passed as an argument to `create_scraper()`, `get_tokens()`, `get_cookie_string()`.
+Can be set as an attribute via your `cloudscraper25` object or passed as an argument to `create_scraper()`, `get_tokens()`, `get_cookie_string()`.
 
 |Parameter|Value|Default|
 |-------------|:-------------:|:-----:|
@@ -433,7 +433,7 @@ The enhanced version uses `js2py` as the default interpreter because it provides
 ### 3rd Party Captcha Solvers
 
 #### Description
-`cloudscraper` currently supports the following 3rd party Captcha solvers, should you require them.
+`cloudscraper25` currently supports the following 3rd party Captcha solvers, should you require them.
 
 - **[2captcha](https://www.2captcha.com/)**
 - **[anticaptcha](https://www.anti-captcha.com/)**
@@ -449,7 +449,7 @@ I am working on adding more 3rd party solvers, if you wish to have a service add
 
 ##### Required Parameters
 
-Can be set as an attribute via your `cloudscraper` object or passed as an argument to `create_scraper()`, `get_tokens()`, `get_cookie_string()`.
+Can be set as an attribute via your `cloudscraper25` object or passed as an argument to `create_scraper()`, `get_tokens()`, `get_cookie_string()`.
 
 |Parameter|Value|Default|
 |-------------|:-------------:|:-----:|
@@ -630,7 +630,7 @@ scraper = cloudscraper25.create_scraper(
 
 It's easy to integrate `cloudscraper25` with other applications and tools. Cloudflare uses two cookies as tokens: one to verify you made it past their challenge page and one to track your session. To bypass the challenge page, simply include both of these cookies (with the appropriate user-agent) in all HTTP requests you make.
 
-To retrieve just the cookies (as a dictionary), use `cloudscraper.get_tokens()`. To retrieve them as a full `Cookie` HTTP header, use `cloudscraper.get_cookie_string()`.
+To retrieve just the cookies (as a dictionary), use `cloudscraper25.get_tokens()`. To retrieve them as a full `Cookie` HTTP header, use `cloudscraper25.get_cookie_string()`.
 
 `get_tokens` and `get_cookie_string` both accept Requests' usual keyword arguments (like `get_tokens(url, proxies={"http": "socks5://localhost:9050"})`).
 
@@ -720,7 +720,7 @@ print('GET / HTTP/1.1\nCookie: {}\nUser-Agent: {}\n'.format(cookie_value, user_a
 
 #### curl example
 
-Here is an example of integrating cloudscraper with curl. As you can see, all you have to do is pass the cookies and user-agent to curl.
+Here is an example of integrating cloudscraper25 with curl. As you can see, all you have to do is pass the cookies and user-agent to curl.
 
 ```python
 import subprocess
@@ -805,48 +805,15 @@ scraper.get(
 )
 ```
 
-# Enhanced Edition Information
+# Enhanced Features
 
-This enhanced version of cloudscraper was created by [Zied Boughdir](https://github.com/zinzied) in 2025 to provide better capabilities for bypassing modern Cloudflare protection mechanisms. The original cloudscraper repository by VeNoMouS (https://github.com/VeNoMouS/cloudscraper) served as the foundation for these improvements.
+This enhanced version of cloudscraper provides better capabilities for bypassing modern Cloudflare protection mechanisms:
 
-## Version History
-
-### v2.5.1 (May 2024)
-- Fixed package import issues
-- Ensured proper recognition of the library when installed via pip
-- Updated package structure for better compatibility
-- Improved documentation
-
-### v2.5.0 (Initial Release)
-- First release of the enhanced cloudscraper25 package
-- Added support for modern Cloudflare challenges
-- Implemented proxy rotation and stealth mode
-
-## New Features in the Enhanced Edition
-
-1. **Cloudflare v2 Challenge Support**
-   - Added support for newer Cloudflare challenge mechanisms
-   - Implemented better JavaScript challenge solving
-
-2. **Proxy Rotation System**
-   - Smart proxy rotation with multiple strategies
-   - Automatic proxy banning and statistics tracking
-   - Support for different proxy types
-
-3. **Stealth Mode**
-   - Human-like behavior simulation
-   - Randomized delays between requests
-   - Browser fingerprint protection
-   - Header randomization
-
-4. **Improved JavaScript Handling**
-   - Better JavaScript interpreter (js2py as default)
-   - Enhanced challenge solving capabilities
-   - Support for more complex JavaScript challenges
-
-5. **Enhanced Cookie Management**
-   - Better handling of Cloudflare cookies
-   - Support for newer Cloudflare cookie types
+1. **Cloudflare v2 Challenge Support** - Better handling of modern challenges
+2. **Proxy Rotation** - Smart rotation with multiple strategies
+3. **Stealth Mode** - Human-like behavior simulation
+4. **Improved JavaScript Handling** - Better JS interpreter (js2py as default)
+5. **Enhanced Cookie Management** - Support for newer Cloudflare cookie types
 
 ## Example Using All Enhanced Features
 
