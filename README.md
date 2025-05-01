@@ -6,7 +6,7 @@
 [![Build Status](https://travis-ci.com/VeNoMouS/cloudscraper.svg?branch=master)](https://travis-ci.com/VeNoMouS/cloudscraper)
 [![Donate](https://img.shields.io/badge/Donate-Buy%20Me%20A%20Coffee-brightgreen.svg)](https://www.buymeacoffee.com/venomous)
 
-**Enhanced by Admin - 2025 Edition**
+**Enhanced by Zied Boughdir - 2025 Edition**
 
 A Python module to bypass Cloudflare's anti-bot page (also known as "I'm Under Attack Mode", or IUAM), implemented with [Requests](https://github.com/kennethreitz/requests). This enhanced version includes support for Cloudflare v2 challenges, proxy rotation, stealth mode, and more. Cloudflare changes their techniques periodically, so I will update this repo frequently.
 
@@ -778,7 +778,7 @@ scraper.get(
 
 # Enhanced Edition Information
 
-This enhanced version of cloudscraper was created by Admin in 2025 to provide better capabilities for bypassing modern Cloudflare protection mechanisms. The original cloudscraper repository by VeNoMouS (https://github.com/VeNoMouS/cloudscraper) served as the foundation for these improvements.
+This enhanced version of cloudscraper was created by Zied Boughdir in 2025 to provide better capabilities for bypassing modern Cloudflare protection mechanisms. The original cloudscraper repository by VeNoMouS (https://github.com/VeNoMouS/cloudscraper) served as the foundation for these improvements.
 
 ## New Features in the Enhanced Edition
 
@@ -856,4 +856,4 @@ print(response.text)
 ## Credits
 
 - Original cloudscraper by [VeNoMouS](https://github.com/VeNoMouS/cloudscraper)
-- Enhanced Edition by Admin (2025)
+- Enhanced Edition by Zied Boughdir (2025)
