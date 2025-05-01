@@ -3,11 +3,10 @@
 [![PyPI version](https://badge.fury.io/py/cloudscraper25.svg)](https://badge.fury.io/py/cloudscraper25)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![image](https://img.shields.io/pypi/pyversions/cloudscraper25.svg)](https://pypi.org/project/cloudscraper25/)
-[![Donate](https://img.shields.io/badge/Donate-Buy%20Me%20A%20Coffee-brightgreen.svg)](https://buymeacoffee.com/zied)
 
-**Enhanced by [Zied Boughdir](https://github.com/zinzied) - 2025 Edition**
+**Enhanced by [Zied Boughdir](https://github.com/zinzied)**
 
-## Latest Release: v2.5.1 (May 2025)
+## Latest Release: v2.5.1
 - Fixed package import issues
 - Improved compatibility with modern Cloudflare challenges
 - Enhanced stealth mode features
@@ -31,11 +30,7 @@ Please allow up to 5 seconds...
 
 Any script using cloudscraper will sleep for ~5 seconds for the first visit to any site with Cloudflare anti-bots enabled, though no delay will occur after the first request.
 
-# Donations
 
-If you feel like showing your love and/or appreciation for this enhanced version, then how about shouting me a coffee or beer :)
-
-<a href="https://buymeacoffee.com/zied" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a>
 
 # Installation
 
@@ -60,6 +55,17 @@ import cloudscraper25  # Enhanced version
 ```
 
 The API remains compatible, so you only need to change the import statements in your code. All function calls and parameters work the same way.
+
+## Key Features in cloudscraper25
+
+| Feature | Description |
+|---------|-------------|
+| **Modern Challenge Support** | Enhanced support for both v1 and v2 Cloudflare challenges |
+| **Proxy Rotation** | Built-in smart proxy rotation with multiple strategies |
+| **Stealth Mode** | Human-like behavior simulation to avoid detection |
+| **Browser Emulation** | Advanced browser fingerprinting for Chrome and Firefox |
+| **JavaScript Handling** | Better JS interpreter (js2py as default) for challenge solving |
+| **Captcha Solvers** | Support for multiple CAPTCHA solving services |
 
 # Dependencies
 
@@ -468,7 +474,7 @@ if proxies are set you can disable sending the proxies to 2captcha by setting `n
 ##### Example
 
 ```python
-scraper = cloudscraper.create_scraper(
+scraper = cloudscraper25.create_scraper(
   captcha={
     'provider': '2captcha',
     'api_key': 'your_2captcha_api_key'
@@ -495,7 +501,7 @@ if proxies are set you can disable sending the proxies to anticaptcha by setting
 ##### Example
 
 ```python
-scraper = cloudscraper.create_scraper(
+scraper = cloudscraper25.create_scraper(
   captcha={
     'provider': 'anticaptcha',
     'api_key': 'your_anticaptcha_api_key'
@@ -518,7 +524,7 @@ scraper = cloudscraper.create_scraper(
 ##### Example
 
 ```python
-scraper = cloudscraper.create_scraper(
+scraper = cloudscraper25.create_scraper(
   captcha={
     'provider': 'capsolver',
     'api_key': 'your_captchaai_api_key'
@@ -545,7 +551,7 @@ if proxies are set you can disable sending the proxies to CapMonster by setting 
 ##### Example
 
 ```python
-scraper = cloudscraper.create_scraper(
+scraper = cloudscraper25.create_scraper(
   captcha={
     'provider': 'capmonster',
     'clientKey': 'your_capmonster_clientKey'
@@ -568,7 +574,7 @@ scraper = cloudscraper.create_scraper(
 ##### Example
 
 ```python
-scraper = cloudscraper.create_scraper(
+scraper = cloudscraper25.create_scraper(
   captcha={
     'provider': 'deathbycaptcha',
     'username': 'your_deathbycaptcha_username',
@@ -592,7 +598,7 @@ scraper = cloudscraper.create_scraper(
 ##### Example
 
 ```python
-scraper = cloudscraper.create_scraper(
+scraper = cloudscraper25.create_scraper(
   captcha={
     'provider': '9kw',
     'api_key': 'your_9kw_api_key',
@@ -615,14 +621,14 @@ Use this if you want the requests response payload without solving the Captcha.
 
 ##### Example
 ```python
-scraper = cloudscraper.create_scraper(
+scraper = cloudscraper25.create_scraper(
   captcha={'provider': 'return_response'}
 )
 ```
 
 ## Integration
 
-It's easy to integrate `cloudscraper` with other applications and tools. Cloudflare uses two cookies as tokens: one to verify you made it past their challenge page and one to track your session. To bypass the challenge page, simply include both of these cookies (with the appropriate user-agent) in all HTTP requests you make.
+It's easy to integrate `cloudscraper25` with other applications and tools. Cloudflare uses two cookies as tokens: one to verify you made it past their challenge page and one to track your session. To bypass the challenge page, simply include both of these cookies (with the appropriate user-agent) in all HTTP requests you make.
 
 To retrieve just the cookies (as a dictionary), use `cloudscraper.get_tokens()`. To retrieve them as a full `Cookie` HTTP header, use `cloudscraper.get_cookie_string()`.
 
@@ -892,14 +898,36 @@ print(response.text)
 ## Credits
 
 - Original cloudscraper by [VeNoMouS](https://github.com/VeNoMouS/cloudscraper)
-- Enhanced Edition by [Zied Boughdir](https://github.com/zinzied) (2025)
+- Enhanced Edition by [Zied Boughdir](https://github.com/zinzied)
 
-## Support and Issues
+## Testing
 
-If you encounter any issues or have questions about cloudscraper25, please open an issue on the GitHub repository. For commercial support or custom development, feel free to contact me directly.
+Quick test to verify the library is working:
 
-Remember to always use the latest version of cloudscraper25 for the best compatibility with current Cloudflare protection mechanisms:
+```python
+import cloudscraper25
+
+# Create a scraper instance
+scraper = cloudscraper25.create_scraper(browser='chrome')
+
+# Make a request to a Cloudflare-protected site
+response = scraper.get('https://example.com')
+print(f"Status code: {response.status_code}")
+```
+
+### Troubleshooting Tips
+
+If you encounter issues:
+
+1. **Try different browser emulation** - Some sites work better with Chrome vs Firefox
+2. **Enable stealth mode** - Helps bypass sophisticated protection
+3. **Use proxy rotation** - For IP blocks or rate limits
+4. **Try different JS interpreters** - js2py, nodejs, or v8
+
+## Support
+
+For issues or questions, please open an issue on the GitHub repository.
 
 ```bash
-pip install --upgrade cloudscraper25
+pip install --upgrade cloudscraper25  # Always use the latest version
 ```
