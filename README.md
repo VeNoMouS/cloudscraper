@@ -7,7 +7,7 @@
 
 **Enhanced by [Zied Boughdir](https://github.com/zinzied) - 2025 Edition**
 
-## Latest Release: v2.5.1 (May 2024)
+## Latest Release: v2.5.1 (May 2025)
 - Fixed package import issues
 - Improved compatibility with modern Cloudflare challenges
 - Enhanced stealth mode features
