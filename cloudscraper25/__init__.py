@@ -33,18 +33,20 @@ except ImportError:
 from .exceptions import (
     CloudflareLoopProtection,
     CloudflareIUAMError,
-    CloudflareChallengeError
+    CloudflareChallengeError,
+    CloudflareTurnstileError
 )
 
 from .cloudflare import Cloudflare
 from .cloudflare_v2 import CloudflareV2
+from .turnstile import CloudflareTurnstile
 from .user_agent import User_Agent
 from .proxy_manager import ProxyManager
 from .stealth import StealthMode
 
 # ------------------------------------------------------------------------------- #
 
-__version__ = '2.5.2'
+__version__ = '2.5.3'
 
 # ------------------------------------------------------------------------------- #
 
@@ -130,6 +132,7 @@ class CloudScraper(Session):
         # Cloudflare challenge handling options
         self.disableCloudflareV1 = kwargs.pop('disableCloudflareV1', False)
         self.disableCloudflareV2 = kwargs.pop('disableCloudflareV2', False)
+        self.disableTurnstile = kwargs.pop('disableTurnstile', False)
         self.delay = kwargs.pop('delay', None)
         self.captcha = kwargs.pop('captcha', {})
         self.doubleDown = kwargs.pop('doubleDown', True)
@@ -214,6 +217,7 @@ class CloudScraper(Session):
         # Initialize Cloudflare handlers
         self.cloudflare_v1 = Cloudflare(self)
         self.cloudflare_v2 = CloudflareV2(self)
+        self.turnstile = CloudflareTurnstile(self)
 
         # Allow pickle serialization
         copyreg.pickle(ssl.SSLContext, lambda obj: (obj.__class__, (obj.protocol,)))
@@ -349,7 +353,17 @@ class CloudScraper(Session):
                 f"!!Loop Protection!! We have tried to solve {_} time(s) in a row."
             )
 
-        # Check for Cloudflare v2 challenges first (if not disabled)
+        # Check for Cloudflare Turnstile challenges first (if not disabled)
+        if not self.disableTurnstile:
+            # Check for Turnstile Challenge
+            if self.turnstile.is_Turnstile_Challenge(response):
+                if self.debug:
+                    print('Detected a Cloudflare Turnstile challenge.')
+                self._solveDepthCnt += 1
+                response = self.turnstile.handle_Turnstile_Challenge(response, **kwargs)
+                return response
+
+        # Check for Cloudflare v2 challenges (if not disabled)
         if not self.disableCloudflareV2:
             # Check for v2 Captcha Challenge
             if self.cloudflare_v2.is_V2_Captcha_Challenge(response):
@@ -397,6 +411,7 @@ class CloudScraper(Session):
             - human_like_delays: Whether to add random delays between requests
             - randomize_headers: Whether to randomize headers
             - browser_quirks: Whether to apply browser-specific quirks
+        - disableTurnstile: Whether to disable Cloudflare Turnstile challenge handling (default: False)
         """
         scraper = cls(**kwargs)
 
@@ -422,6 +437,7 @@ class CloudScraper(Session):
         - proxy_options: Dict with proxy configuration options
         - enable_stealth: Whether to enable stealth mode (default: True)
         - stealth_options: Dict with stealth mode configuration options
+        - disableTurnstile: Whether to disable Cloudflare Turnstile challenge handling (default: False)
         """
         scraper = cls.create_scraper(
             **{
@@ -439,7 +455,8 @@ class CloudScraper(Session):
                     'rotating_proxies',
                     'proxy_options',
                     'enable_stealth',
-                    'stealth_options'
+                    'stealth_options',
+                    'disableTurnstile'
                 ] if field in kwargs
             }
         )
@@ -474,7 +491,7 @@ class CloudScraper(Session):
 
         # Get all Cloudflare cookies
         cf_cookies = {}
-        for cookie_name in ['cf_clearance', 'cf_chl_2', 'cf_chl_prog', 'cf_chl_rc_ni']:
+        for cookie_name in ['cf_clearance', 'cf_chl_2', 'cf_chl_prog', 'cf_chl_rc_ni', 'cf_turnstile']:
             cookie_value = scraper.cookies.get(cookie_name, '', domain=cookie_domain)
             if cookie_value:
                 cf_cookies[cookie_name] = cookie_value

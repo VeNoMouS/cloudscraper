@@ -6,11 +6,11 @@
 
 **Enhanced by [Zied Boughdir](https://github.com/zinzied)**
 
-## Latest Release: v2.5.2
-- Codebase cleanup and consolidation
-- Removed redundant code and directories
-- Updated test suite to use cloudscraper25 module
-- Improved documentation and examples
+## Latest Release: v2.5.3
+- Added support for Cloudflare Turnstile challenges
+- Improved detection and handling of modern Cloudflare protection mechanisms
+- Enhanced proxy rotation and stealth mode capabilities
+- Updated documentation with Turnstile examples
 - Fixed compatibility issues with modern Cloudflare challenges
 
 A Python module to bypass Cloudflare's anti-bot page (also known as "I'm Under Attack Mode", or IUAM), implemented with [Requests](https://github.com/kennethreitz/requests). This enhanced version includes support for Cloudflare v2 challenges, proxy rotation, stealth mode, and more. Cloudflare changes their techniques periodically, so I will update this repo frequently.
@@ -71,7 +71,8 @@ This makes the codebase cleaner and easier to maintain while ensuring backward c
 
 | Feature | Description |
 |---------|-------------|
-| **Modern Challenge Support** | Enhanced support for both v1 and v2 Cloudflare challenges |
+| **Modern Challenge Support** | Enhanced support for v1, v2, and Turnstile Cloudflare challenges |
+| **Turnstile Support** | Support for Cloudflare's new Turnstile CAPTCHA replacement |
 | **Proxy Rotation** | Built-in smart proxy rotation with multiple strategies |
 | **Stealth Mode** | Human-like behavior simulation to avoid detection |
 | **Browser Emulation** | Advanced browser fingerprinting for Chrome and Firefox |
@@ -159,6 +160,26 @@ If you don't want to even attempt Cloudflare v2 solving..
 
 ```python
 scraper = cloudscraper25.create_scraper(disableCloudflareV2=True)
+```
+
+------
+
+### Disable Turnstile
+#### Description
+
+If you don't want to even attempt Cloudflare Turnstile solving..
+
+#### Parameters
+
+
+|Parameter|Value|Default|
+|-------------|:-------------:|:-----:|
+|disableTurnstile|(boolean)|False|
+
+#### Example
+
+```python
+scraper = cloudscraper25.create_scraper(disableTurnstile=True)
 ```
 
 ------
@@ -465,6 +486,25 @@ Can be set as an attribute via your `cloudscraper25` object or passed as an argu
 |Parameter|Value|Default|
 |-------------|:-------------:|:-----:|
 |captcha|(dict)|None|
+
+#### Turnstile Support
+
+Cloudflare Turnstile is a new CAPTCHA alternative that replaces traditional CAPTCHAs with a more user-friendly verification system. cloudscraper25 now supports solving Turnstile challenges using the same captcha providers you're already familiar with.
+
+##### Example
+
+```python
+# Using 2captcha to solve Turnstile challenges
+scraper = cloudscraper25.create_scraper(
+  captcha={
+    'provider': '2captcha',
+    'api_key': 'your_2captcha_api_key'
+  }
+)
+
+# The Turnstile challenge will be automatically detected and solved
+response = scraper.get('https://example.com')
+```
 
 ------
 
