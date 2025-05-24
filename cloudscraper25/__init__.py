@@ -34,11 +34,13 @@ from .exceptions import (
     CloudflareLoopProtection,
     CloudflareIUAMError,
     CloudflareChallengeError,
-    CloudflareTurnstileError
+    CloudflareTurnstileError,
+    CloudflareV3Error
 )
 
 from .cloudflare import Cloudflare
 from .cloudflare_v2 import CloudflareV2
+from .cloudflare_v3 import CloudflareV3
 from .turnstile import CloudflareTurnstile
 from .user_agent import User_Agent
 from .proxy_manager import ProxyManager
@@ -46,7 +48,7 @@ from .stealth import StealthMode
 
 # ------------------------------------------------------------------------------- #
 
-__version__ = '2.5.3'
+__version__ = '2.6.0'
 
 # ------------------------------------------------------------------------------- #
 
@@ -132,6 +134,7 @@ class CloudScraper(Session):
         # Cloudflare challenge handling options
         self.disableCloudflareV1 = kwargs.pop('disableCloudflareV1', False)
         self.disableCloudflareV2 = kwargs.pop('disableCloudflareV2', False)
+        self.disableCloudflareV3 = kwargs.pop('disableCloudflareV3', False)
         self.disableTurnstile = kwargs.pop('disableTurnstile', False)
         self.delay = kwargs.pop('delay', None)
         self.captcha = kwargs.pop('captcha', {})
@@ -217,6 +220,7 @@ class CloudScraper(Session):
         # Initialize Cloudflare handlers
         self.cloudflare_v1 = Cloudflare(self)
         self.cloudflare_v2 = CloudflareV2(self)
+        self.cloudflare_v3 = CloudflareV3(self)
         self.turnstile = CloudflareTurnstile(self)
 
         # Allow pickle serialization
@@ -363,6 +367,16 @@ class CloudScraper(Session):
                 response = self.turnstile.handle_Turnstile_Challenge(response, **kwargs)
                 return response
 
+        # Check for Cloudflare v3 challenges (if not disabled)
+        if not self.disableCloudflareV3:
+            # Check for v3 JavaScript VM Challenge
+            if self.cloudflare_v3.is_V3_Challenge(response):
+                if self.debug:
+                    print('Detected a Cloudflare v3 JavaScript VM challenge.')
+                self._solveDepthCnt += 1
+                response = self.cloudflare_v3.handle_V3_Challenge(response, **kwargs)
+                return response
+
         # Check for Cloudflare v2 challenges (if not disabled)
         if not self.disableCloudflareV2:
             # Check for v2 Captcha Challenge
@@ -411,6 +425,7 @@ class CloudScraper(Session):
             - human_like_delays: Whether to add random delays between requests
             - randomize_headers: Whether to randomize headers
             - browser_quirks: Whether to apply browser-specific quirks
+        - disableCloudflareV3: Whether to disable Cloudflare v3 JavaScript VM challenge handling (default: False)
         - disableTurnstile: Whether to disable Cloudflare Turnstile challenge handling (default: False)
         """
         scraper = cls(**kwargs)
@@ -437,6 +452,7 @@ class CloudScraper(Session):
         - proxy_options: Dict with proxy configuration options
         - enable_stealth: Whether to enable stealth mode (default: True)
         - stealth_options: Dict with stealth mode configuration options
+        - disableCloudflareV3: Whether to disable Cloudflare v3 JavaScript VM challenge handling (default: False)
         - disableTurnstile: Whether to disable Cloudflare Turnstile challenge handling (default: False)
         """
         scraper = cls.create_scraper(
@@ -456,6 +472,7 @@ class CloudScraper(Session):
                     'proxy_options',
                     'enable_stealth',
                     'stealth_options',
+                    'disableCloudflareV3',
                     'disableTurnstile'
                 ] if field in kwargs
             }
