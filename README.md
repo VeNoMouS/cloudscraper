@@ -6,20 +6,23 @@
 
 **Enhanced by [Zied Boughdir](https://github.com/zinzied)**
 
-## Latest Release: v2.6.0 🚀
+## Latest Release: v2.7.0 🚀
 
 ### 🆕 Major New Features
+- **✅ Executable Compatibility Fix** - Complete solution for PyInstaller, cx_Freeze, and auto-py-to-exe conversion
 - **Cloudflare v3 JavaScript VM Challenge Support** - Handle the latest and most sophisticated Cloudflare protection
 - **Cloudflare Turnstile Challenge Support** - Support for Cloudflare's CAPTCHA alternative
 - **Enhanced JavaScript Interpreter Support** - Improved VM-based challenge execution
 - **Complete Protection Coverage** - Now supports all Cloudflare challenge types (v1, v2, v3, Turnstile)
 
 ### 🔧 Improvements
+- **🎯 Fixed User Agent Issues in Executables** - Automatic fallback system for missing browsers.json
+- **🛡️ PyInstaller Detection** - Automatically detects and handles executable environments
+- **📦 Comprehensive Fallback System** - 70+ built-in user agents covering all platforms
 - Enhanced proxy rotation and stealth mode capabilities
 - Better detection and handling of modern Cloudflare protection mechanisms
 - Improved compatibility with all JavaScript interpreters (js2py, nodejs, native)
 - Updated documentation with comprehensive examples
-- Fixed compatibility issues with modern Cloudflare challenges
 
 ### 📊 Test Results
 All features tested with **100% success rate** for core functionality:
@@ -88,6 +91,7 @@ This makes the codebase cleaner and easier to maintain while ensuring backward c
 
 | Feature | Description | Status |
 |---------|-------------|--------|
+| **🆕 Executable Compatibility** | Complete fix for PyInstaller, cx_Freeze, auto-py-to-exe conversion | ✅ **FIXED** |
 | **🆕 v3 JavaScript VM Challenges** | Support for Cloudflare's latest JavaScript VM-based challenges | ✅ **NEW** |
 | **🆕 Turnstile Support** | Support for Cloudflare's new Turnstile CAPTCHA replacement | ✅ **NEW** |
 | **Modern Challenge Support** | Enhanced support for v1, v2, v3, and Turnstile Cloudflare challenges | ✅ Complete |
@@ -139,6 +143,50 @@ Any requests made from this session object to websites protected by Cloudflare a
 You use cloudscraper25 exactly the same way you use Requests. `cloudScraper` works identically to a Requests `Session` object, just instead of calling `requests.get()` or `requests.post()`, you call `scraper.get()` or `scraper.post()`.
 
 Consult [Requests' documentation](http://docs.python-requests.org/en/latest/user/quickstart/) for more information.
+
+## ✅ Executable Compatibility (v2.7.0)
+
+### Problem Solved!
+
+The user agent issue when converting Python applications using `cloudscraper25` to executables has been **completely fixed**!
+
+### What Was the Issue?
+
+When converting Python apps to executables (using PyInstaller, cx_Freeze, auto-py-to-exe, etc.), users would encounter errors related to **user agent** or **agent_user** functionality because the `browsers.json` file wasn't included properly.
+
+### The Solution
+
+cloudscraper25 v2.7.0 includes an automatic fallback system:
+
+1. **PyInstaller Detection** - Automatically detects executable environments
+2. **Multiple Fallback Paths** - Tries several locations for browsers.json
+3. **Comprehensive Built-in Fallback** - 70+ hardcoded user agents covering all platforms
+4. **Graceful Error Handling** - No more crashes when files are missing
+
+### How to Use
+
+**Option 1: Just build your executable** (works automatically):
+```bash
+pyinstaller your_app.py
+```
+
+**Option 2: Include full user agent database** (recommended):
+```bash
+pyinstaller --add-data "cloudscraper25/user_agent/browsers.json;cloudscraper25/user_agent/" your_app.py
+```
+
+### Testing
+
+All executable compatibility has been thoroughly tested:
+```
+✅ Normal operation with browsers.json
+✅ Fallback operation without browsers.json
+✅ PyInstaller environment simulation
+✅ All browser/platform combinations
+✅ HTTP requests with fallback user agents
+```
+
+Your cloudscraper25 applications will now work perfectly when converted to executables! 🎉
 
 ## 🆕 Cloudflare v3 JavaScript VM Challenge Support
 
