@@ -87,7 +87,7 @@ class User_Agent():
                 if getattr(sys, 'frozen', False):
                     # Running in a PyInstaller bundle
                     bundle_dir = sys._MEIPASS
-                    browsers_json_path = os.path.join(bundle_dir, 'cloudscraper25', 'user_agent', 'browsers.json')
+                    browsers_json_path = os.path.join(bundle_dir, 'cloudscraper', 'user_agent', 'browsers.json')
                 else:
                     # Try current directory
                     browsers_json_path = os.path.join(os.getcwd(), 'browsers.json')
