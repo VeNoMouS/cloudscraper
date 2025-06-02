@@ -34,7 +34,7 @@ All notable changes to this project will be documented in this file.
 - Created test scripts for verification
 
 ### 🛠️ Technical Details
-- Modified `cloudscraper25/user_agent/__init__.py` with fallback mechanisms
+- Modified `cloudscraper/user_agent/__init__.py` with fallback mechanisms
 - Added try-catch blocks around file loading operations
 - Implemented platform-specific user agent fallbacks
 - Enhanced error messages and debugging information
@@ -73,7 +73,7 @@ All features tested with **100% success rate** for core functionality:
 - **Optional enhancement** - Include browsers.json in your executable for full user agent database
 
 ### Recommended Actions
-1. Update to v2.7.0: `pip install --upgrade cloudscraper25`
+1. Update to v2.7.0: `pip install --upgrade cloudscraper`
 2. Test your executable conversion with the new version
 3. Use provided PyInstaller commands for best results
 4. Run test scripts to verify compatibility

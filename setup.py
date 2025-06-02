@@ -3,23 +3,23 @@ import re
 from setuptools import setup, find_packages
 from io import open
 
-with open(os.path.join(os.path.dirname(__file__), 'cloudscraper25', '__init__.py')) as fp:
+with open(os.path.join(os.path.dirname(__file__), 'cloudscraper', '__init__.py')) as fp:
     VERSION = re.match(r'.*__version__ = \'(.*?)\'', fp.read(), re.S).group(1)
 
 with open('README.md', 'r', encoding='utf-8') as fp:
     readme = fp.read()
 
 setup(
-    name = 'cloudscraper25',
+    name = 'cloudscraper',
     author = 'Zied Boughdir, VeNoMouS',
     author_email = 'ziedboughdir@gmail.com',
     version=VERSION,
-    packages = ['cloudscraper25', 'cloudscraper25.captcha', 'cloudscraper25.interpreters', 'cloudscraper25.user_agent'],
+    packages = ['cloudscraper', 'cloudscraper.captcha', 'cloudscraper.interpreters', 'cloudscraper.user_agent'],
     py_modules = [],
     description = 'Enhanced Python module to bypass Cloudflare\'s anti-bot page with support for v2 challenges, proxy rotation, and stealth mode.',
     long_description=readme,
     long_description_content_type='text/markdown',
-    url = 'https://github.com/zinzied/cloudscraper25',
+    url = 'https://github.com/zinzied/cloudscraper',
     keywords = [
         'cloudflare',
         'scraping',

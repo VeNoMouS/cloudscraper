@@ -1,8 +1,8 @@
-# cloudscraper25 - Enhanced Edition
+# cloudscraper - Enhanced Edition
 
-[![PyPI version](https://badge.fury.io/py/cloudscraper25.svg)](https://badge.fury.io/py/cloudscraper25)
+[![PyPI version](https://badge.fury.io/py/cloudscraper.svg)](https://badge.fury.io/py/cloudscraper)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![image](https://img.shields.io/pypi/pyversions/cloudscraper25.svg)](https://pypi.org/project/cloudscraper25/)
+[![image](https://img.shields.io/pypi/pyversions/cloudscraper.svg)](https://pypi.org/project/cloudscraper/)
 
 **Enhanced by [Zied Boughdir](https://github.com/zinzied)**
 
@@ -37,7 +37,7 @@ A Python module to bypass Cloudflare's anti-bot page (also known as "I'm Under A
 
 This can be useful if you wish to scrape or crawl a website protected with Cloudflare. Cloudflare's anti-bot page currently just checks if the client supports Javascript, though they may add additional techniques in the future.
 
-Due to Cloudflare continually changing and hardening their protection page, cloudscraper25 requires a JavaScript Engine/interpreter to solve Javascript challenges. This allows the script to easily impersonate a regular web browser without explicitly deobfuscating and parsing Cloudflare's Javascript.
+Due to Cloudflare continually changing and hardening their protection page, cloudscraper requires a JavaScript Engine/interpreter to solve Javascript challenges. This allows the script to easily impersonate a regular web browser without explicitly deobfuscating and parsing Cloudflare's Javascript.
 
 For reference, this is the default message Cloudflare uses for these sorts of pages:
 
@@ -49,30 +49,27 @@ This process is automatic. Your browser will redirect to your requested content 
 Please allow up to 5 seconds...
 ```
 
-Any script using cloudscraper25 will sleep for ~5 seconds for the first visit to any site with Cloudflare anti-bots enabled, though no delay will occur after the first request.
+Any script using cloudscraper will sleep for ~5 seconds for the first visit to any site with Cloudflare anti-bots enabled, though no delay will occur after the first request.
 
 
 
 # Installation
 
-Simply run `pip install cloudscraper25`. The PyPI package is at https://pypi.org/project/cloudscraper25/
+Simply run `pip install cloudscraper`. The PyPI package is at https://pypi.org/project/cloudscraper/
 
 ```bash
-pip install cloudscraper25
+pip install cloudscraper
 ```
 
 Alternatively, clone this repository and run `python setup.py install`.
 
 ## Migration from cloudscraper
 
-If you were previously using the original `cloudscraper` package, you'll need to update your imports:
+If you were previously using the original `cloudscraper` package, you can now use this enhanced version directly:
 
 ```python
-# Old import
-import cloudscraper  # Original package
-
-# New import
-import cloudscraper25  # Enhanced version
+# Enhanced import
+import cloudscraper  # Enhanced version
 ```
 
 The API remains compatible, so you only need to change the import statements in your code. All function calls and parameters work the same way.
@@ -81,13 +78,13 @@ The API remains compatible, so you only need to change the import statements in 
 
 The codebase has been streamlined to improve maintainability and reduce confusion:
 
-- **Single Module**: All code is now in the `cloudscraper25` module
-- **Removed Redundancy**: The redundant `cloudscraper` directory has been removed
-- **Updated Tests**: All test files have been updated to use the `cloudscraper25` module
+- **Single Module**: All code is now in the `cloudscraper` module
+- **Removed Redundancy**: The redundant directories have been removed
+- **Updated Tests**: All test files have been updated to use the `cloudscraper` module
 
 This makes the codebase cleaner and easier to maintain while ensuring backward compatibility with existing code that uses the original API.
 
-## Key Features in cloudscraper25
+## Key Features in cloudscraper
 
 | Feature | Description | Status |
 |---------|-------------|--------|
@@ -126,13 +123,13 @@ We support the following Javascript interpreters/engines.
 
 # Usage
 
-The simplest way to use cloudscraper25 is by calling `create_scraper()`.
+The simplest way to use cloudscraper is by calling `create_scraper()`.
 
 ```python
-import cloudscraper25
+import cloudscraper
 
-scraper = cloudscraper25.create_scraper()  # returns a CloudScraper instance
-# Or: scraper = cloudscraper25.CloudScraper()  # CloudScraper inherits from requests.Session
+scraper = cloudscraper.create_scraper()  # returns a CloudScraper instance
+# Or: scraper = cloudscraper.CloudScraper()  # CloudScraper inherits from requests.Session
 print(scraper.get("http://somesite.com").text)  # => "<!DOCTYPE html><html><head>..."
 ```
 
@@ -140,7 +137,7 @@ That's it...
 
 Any requests made from this session object to websites protected by Cloudflare anti-bot will be handled automatically. Websites not using Cloudflare will be treated normally. You don't need to configure or call anything further, and you can effectively treat all websites as if they're not protected with anything.
 
-You use cloudscraper25 exactly the same way you use Requests. `cloudScraper` works identically to a Requests `Session` object, just instead of calling `requests.get()` or `requests.post()`, you call `scraper.get()` or `scraper.post()`.
+You use cloudscraper exactly the same way you use Requests. `cloudScraper` works identically to a Requests `Session` object, just instead of calling `requests.get()` or `requests.post()`, you call `scraper.get()` or `scraper.post()`.
 
 Consult [Requests' documentation](http://docs.python-requests.org/en/latest/user/quickstart/) for more information.
 
@@ -148,7 +145,7 @@ Consult [Requests' documentation](http://docs.python-requests.org/en/latest/user
 
 ### Problem Solved!
 
-The user agent issue when converting Python applications using `cloudscraper25` to executables has been **completely fixed**!
+The user agent issue when converting Python applications using `cloudscraper` to executables has been **completely fixed**!
 
 ### What Was the Issue?
 
@@ -156,7 +153,7 @@ When converting Python apps to executables (using PyInstaller, cx_Freeze, auto-p
 
 ### The Solution
 
-cloudscraper25 v2.7.0 includes an automatic fallback system:
+cloudscraper v2.7.0 includes an automatic fallback system:
 
 1. **PyInstaller Detection** - Automatically detects executable environments
 2. **Multiple Fallback Paths** - Tries several locations for browsers.json
@@ -172,7 +169,7 @@ pyinstaller your_app.py
 
 **Option 2: Include full user agent database** (recommended):
 ```bash
-pyinstaller --add-data "cloudscraper25/user_agent/browsers.json;cloudscraper25/user_agent/" your_app.py
+pyinstaller --add-data "cloudscraper/user_agent/browsers.json;cloudscraper/user_agent/" your_app.py
 ```
 
 ### Testing
@@ -186,7 +183,7 @@ All executable compatibility has been thoroughly tested:
 ✅ HTTP requests with fallback user agents
 ```
 
-Your cloudscraper25 applications will now work perfectly when converted to executables! 🎉
+Your cloudscraper applications will now work perfectly when converted to executables! 🎉
 
 ## 🆕 Cloudflare v3 JavaScript VM Challenge Support
 
@@ -202,10 +199,10 @@ Cloudflare v3 challenges represent the latest evolution in bot protection techno
 ### Basic v3 Usage
 
 ```python
-import cloudscraper25
+import cloudscraper
 
 # v3 support is enabled by default
-scraper = cloudscraper25.create_scraper()
+scraper = cloudscraper.create_scraper()
 response = scraper.get("https://example.com")
 print(response.text)
 ```
@@ -213,10 +210,10 @@ print(response.text)
 ### Advanced v3 Configuration
 
 ```python
-import cloudscraper25
+import cloudscraper
 
 # Optimized configuration for v3 challenges
-scraper = cloudscraper25.create_scraper(
+scraper = cloudscraper.create_scraper(
     interpreter='js2py',  # Recommended for v3 challenges
     delay=5,              # Allow more time for complex challenges
     debug=True            # Enable debug output to see v3 detection
@@ -236,7 +233,7 @@ interpreters = ['js2py', 'nodejs', 'native']
 
 for interpreter in interpreters:
     try:
-        scraper = cloudscraper25.create_scraper(interpreter=interpreter)
+        scraper = cloudscraper.create_scraper(interpreter=interpreter)
         response = scraper.get("https://example.com")
         print(f"✅ {interpreter}: Success ({response.status_code})")
     except Exception as e:
@@ -248,7 +245,7 @@ for interpreter in interpreters:
 When debug mode is enabled, you'll see v3 challenge detection in action:
 
 ```python
-scraper = cloudscraper25.create_scraper(debug=True)
+scraper = cloudscraper.create_scraper(debug=True)
 response = scraper.get("https://example.com")
 
 # Debug output will show:
@@ -261,7 +258,7 @@ v3 challenges are more complex and may require additional time:
 
 ```python
 # Recommended settings for v3 challenges
-scraper = cloudscraper25.create_scraper(
+scraper = cloudscraper.create_scraper(
     delay=5,              # Longer delay for complex challenges
     interpreter='js2py',  # Most compatible interpreter
     enable_stealth=True   # Additional stealth for v3 detection
@@ -273,10 +270,10 @@ scraper = cloudscraper25.create_scraper(
 ### Example 1: Basic Usage with All Challenge Types
 
 ```python
-import cloudscraper25
+import cloudscraper
 
 # Create a scraper that handles all challenge types automatically
-scraper = cloudscraper25.create_scraper()
+scraper = cloudscraper.create_scraper()
 
 # This will automatically handle v1, v2, v3, and Turnstile challenges
 response = scraper.get("https://example.com")
@@ -287,10 +284,10 @@ print(f"Content length: {len(response.text)}")
 ### Example 2: Advanced Configuration for Maximum Compatibility
 
 ```python
-import cloudscraper25
+import cloudscraper
 
 # Advanced configuration for challenging websites
-scraper = cloudscraper25.create_scraper(
+scraper = cloudscraper.create_scraper(
     # Challenge handling
     interpreter='js2py',        # Best compatibility for v3 challenges
     delay=5,                    # Extra time for complex challenges
@@ -318,10 +315,10 @@ response = scraper.get("https://example.com")
 ### Example 3: Handling Turnstile with CAPTCHA Solver
 
 ```python
-import cloudscraper25
+import cloudscraper
 
 # Configure with 2captcha for Turnstile challenges
-scraper = cloudscraper25.create_scraper(
+scraper = cloudscraper.create_scraper(
     captcha={
         'provider': '2captcha',
         'api_key': 'your_2captcha_api_key'
@@ -337,7 +334,7 @@ print(f"Successfully bypassed Turnstile: {response.status_code}")
 ### Example 4: Proxy Rotation with v3 Support
 
 ```python
-import cloudscraper25
+import cloudscraper
 
 proxies = [
     'http://user:pass@proxy1.example.com:8080',
@@ -345,7 +342,7 @@ proxies = [
     'http://user:pass@proxy3.example.com:8080'
 ]
 
-scraper = cloudscraper25.create_scraper(
+scraper = cloudscraper.create_scraper(
     # Proxy rotation
     rotating_proxies=proxies,
     proxy_options={
@@ -370,12 +367,12 @@ for i in range(5):
 ### Example 5: Testing Different Challenge Types
 
 ```python
-import cloudscraper25
+import cloudscraper
 
 def test_challenge_handling():
     """Test different challenge types with comprehensive configuration"""
 
-    scraper = cloudscraper25.create_scraper(
+    scraper = cloudscraper.create_scraper(
         interpreter='js2py',
         delay=5,
         debug=True,
@@ -403,7 +400,7 @@ test_challenge_handling()
 
 ### Comprehensive Test Suite
 
-cloudscraper25 includes comprehensive test scripts to verify all features work correctly:
+cloudscraper includes comprehensive test scripts to verify all features work correctly:
 
 ```bash
 # Test all features
@@ -439,10 +436,10 @@ The library has been thoroughly tested with **100% success rate** for core funct
 You can manually test the library with debug mode to see challenge detection in action:
 
 ```python
-import cloudscraper25
+import cloudscraper
 
 # Enable debug mode to see what's happening
-scraper = cloudscraper25.create_scraper(debug=True)
+scraper = cloudscraper.create_scraper(debug=True)
 response = scraper.get("https://example.com")
 
 # Debug output will show:
@@ -464,7 +461,7 @@ If you encounter issues:
 
 ```python
 # Troubleshooting configuration
-scraper = cloudscraper25.create_scraper(
+scraper = cloudscraper.create_scraper(
     debug=True,           # See what's happening
     interpreter='js2py',  # Most compatible
     delay=10,            # Extra time
@@ -489,7 +486,7 @@ If you don't want to even attempt Cloudflare v1 (Deprecated) solving..
 #### Example
 
 ```python
-scraper = cloudscraper25.create_scraper(disableCloudflareV1=True)
+scraper = cloudscraper.create_scraper(disableCloudflareV1=True)
 ```
 
 ------
@@ -509,7 +506,7 @@ If you don't want to even attempt Cloudflare v2 solving..
 #### Example
 
 ```python
-scraper = cloudscraper25.create_scraper(disableCloudflareV2=True)
+scraper = cloudscraper.create_scraper(disableCloudflareV2=True)
 ```
 
 ------
@@ -529,7 +526,7 @@ If you don't want to even attempt Cloudflare v3 JavaScript VM solving..
 #### Example
 
 ```python
-scraper = cloudscraper25.create_scraper(disableCloudflareV3=True)
+scraper = cloudscraper.create_scraper(disableCloudflareV3=True)
 ```
 
 ------
@@ -549,7 +546,7 @@ If you don't want to even attempt Cloudflare Turnstile solving..
 #### Example
 
 ```python
-scraper = cloudscraper25.create_scraper(disableTurnstile=True)
+scraper = cloudscraper.create_scraper(disableTurnstile=True)
 ```
 
 ------
@@ -582,7 +579,7 @@ proxies = [
     'http://user:pass@proxy3.example.com:8080'
 ]
 
-scraper = cloudscraper25.create_scraper(
+scraper = cloudscraper.create_scraper(
     rotating_proxies=proxies,
     proxy_options={
         'rotation_strategy': 'smart',
@@ -618,7 +615,7 @@ Enable stealth techniques to better mimic human behavior and avoid detection.
 #### Example
 
 ```python
-scraper = cloudscraper25.create_scraper(
+scraper = cloudscraper.create_scraper(
     enable_stealth=True,
     stealth_options={
         'min_delay': 2.0,
@@ -648,7 +645,7 @@ scraper = cloudscraper25.create_scraper(
 #### Example
 
 ```python
-scraper = cloudscraper25.create_scraper(allow_brotli=False)
+scraper = cloudscraper.create_scraper(allow_brotli=False)
 ```
 
 ------
@@ -684,14 +681,14 @@ Or
 #### Example
 
 ```python
-scraper = cloudscraper25.create_scraper(browser='chrome')
+scraper = cloudscraper.create_scraper(browser='chrome')
 ```
 
 or
 
 ```python
 # will give you only mobile chrome User-Agents on Android
-scraper = cloudscraper25.create_scraper(
+scraper = cloudscraper.create_scraper(
     browser={
         'browser': 'chrome',
         'platform': 'android',
@@ -700,7 +697,7 @@ scraper = cloudscraper25.create_scraper(
 )
 
 # will give you only desktop firefox User-Agents on Windows
-scraper = cloudscraper25.create_scraper(
+scraper = cloudscraper.create_scraper(
     browser={
         'browser': 'firefox',
         'platform': 'windows',
@@ -711,7 +708,7 @@ scraper = cloudscraper25.create_scraper(
 # Custom will also try find the user-agent string in the browsers.json,
 # If a match is found, it will use the headers and cipherSuite from that "browser",
 # Otherwise a generic set of headers and cipherSuite will be used.
-scraper = cloudscraper25.create_scraper(
+scraper = cloudscraper.create_scraper(
     browser={
         'custom': 'ScraperBot/1.0',
     }
@@ -727,7 +724,7 @@ Prints out header and content information of the request for debugging.
 
 #### Parameters
 
-Can be set as an attribute via your `cloudscraper25` object or passed as an argument to `create_scraper()`, `get_tokens()`, `get_cookie_string()`.
+Can be set as an attribute via your `cloudscraper` object or passed as an argument to `create_scraper()`, `get_tokens()`, `get_cookie_string()`.
 
 |Parameter|Value|Default|
 |-------------|:-------------:|:-----:|
@@ -736,7 +733,7 @@ Can be set as an attribute via your `cloudscraper25` object or passed as an argu
 #### Example
 
 ```python
-scraper = cloudscraper25.create_scraper(debug=True)
+scraper = cloudscraper.create_scraper(debug=True)
 ```
 
 ------
@@ -749,7 +746,7 @@ Cloudflare IUAM challenge requires the browser to wait ~5 seconds before submitt
 
 #### Parameters
 
-Can be set as an attribute via your `cloudscraper25` object or passed as an argument to `create_scraper()`, `get_tokens()`, `get_cookie_string()`.
+Can be set as an attribute via your `cloudscraper` object or passed as an argument to `create_scraper()`, `get_tokens()`, `get_cookie_string()`.
 
 |Parameter|Value|Default|
 |-------------|:-------------:|:-----:|
@@ -758,7 +755,7 @@ Can be set as an attribute via your `cloudscraper25` object or passed as an argu
 #### Example
 
 ```python
-scraper = cloudscraper25.create_scraper(delay=10)
+scraper = cloudscraper.create_scraper(delay=10)
 ```
 
 ------
@@ -779,7 +776,7 @@ If you already have an existing Requests session, you can pass it to the functio
 
 ```python
 session = requests.session()
-scraper = cloudscraper25.create_scraper(sess=session)
+scraper = cloudscraper.create_scraper(sess=session)
 ```
 
 #### Note
@@ -796,7 +793,7 @@ sess = requests.session()
 To:
 
 ```python
-sess = cloudscraper25.create_scraper()
+sess = cloudscraper.create_scraper()
 ```
 
 ------
@@ -804,7 +801,7 @@ sess = cloudscraper25.create_scraper()
 ### JavaScript Engines and Interpreters
 
 #### Description
-cloudscraper25 currently supports the following JavaScript Engines/Interpreters
+cloudscraper currently supports the following JavaScript Engines/Interpreters
 
 - **[ChakraCore](https://github.com/microsoft/ChakraCore)**
 - **[js2py](https://github.com/PiotrDabkowski/Js2Py)** **(Default in enhanced version)**
@@ -814,7 +811,7 @@ cloudscraper25 currently supports the following JavaScript Engines/Interpreters
 
 
 #### Parameters
-Can be set as an attribute via your `cloudscraper25` object or passed as an argument to `create_scraper()`, `get_tokens()`, `get_cookie_string()`.
+Can be set as an attribute via your `cloudscraper` object or passed as an argument to `create_scraper()`, `get_tokens()`, `get_cookie_string()`.
 
 |Parameter|Value|Default|
 |-------------|:-------------:|:-----:|
@@ -823,7 +820,7 @@ Can be set as an attribute via your `cloudscraper25` object or passed as an argu
 #### Example
 
 ```python
-scraper = cloudscraper25.create_scraper(interpreter='nodejs')
+scraper = cloudscraper.create_scraper(interpreter='nodejs')
 ```
 
 #### Note
@@ -835,7 +832,7 @@ The enhanced version uses `js2py` as the default interpreter because it provides
 ### 3rd Party Captcha Solvers
 
 #### Description
-`cloudscraper25` currently supports the following 3rd party Captcha solvers, should you require them.
+`cloudscraper` currently supports the following 3rd party Captcha solvers, should you require them.
 
 - **[2captcha](https://www.2captcha.com/)**
 - **[anticaptcha](https://www.anti-captcha.com/)**
@@ -851,7 +848,7 @@ I am working on adding more 3rd party solvers, if you wish to have a service add
 
 ##### Required Parameters
 
-Can be set as an attribute via your `cloudscraper25` object or passed as an argument to `create_scraper()`, `get_tokens()`, `get_cookie_string()`.
+Can be set as an attribute via your `cloudscraper` object or passed as an argument to `create_scraper()`, `get_tokens()`, `get_cookie_string()`.
 
 |Parameter|Value|Default|
 |-------------|:-------------:|:-----:|
@@ -859,13 +856,13 @@ Can be set as an attribute via your `cloudscraper25` object or passed as an argu
 
 #### Turnstile Support
 
-Cloudflare Turnstile is a new CAPTCHA alternative that replaces traditional CAPTCHAs with a more user-friendly verification system. cloudscraper25 now supports solving Turnstile challenges using the same captcha providers you're already familiar with.
+Cloudflare Turnstile is a new CAPTCHA alternative that replaces traditional CAPTCHAs with a more user-friendly verification system. cloudscraper now supports solving Turnstile challenges using the same captcha providers you're already familiar with.
 
 ##### Example
 
 ```python
 # Using 2captcha to solve Turnstile challenges
-scraper = cloudscraper25.create_scraper(
+scraper = cloudscraper.create_scraper(
   captcha={
     'provider': '2captcha',
     'api_key': 'your_2captcha_api_key'
@@ -895,7 +892,7 @@ if proxies are set you can disable sending the proxies to 2captcha by setting `n
 ##### Example
 
 ```python
-scraper = cloudscraper25.create_scraper(
+scraper = cloudscraper.create_scraper(
   captcha={
     'provider': '2captcha',
     'api_key': 'your_2captcha_api_key'
@@ -922,7 +919,7 @@ if proxies are set you can disable sending the proxies to anticaptcha by setting
 ##### Example
 
 ```python
-scraper = cloudscraper25.create_scraper(
+scraper = cloudscraper.create_scraper(
   captcha={
     'provider': 'anticaptcha',
     'api_key': 'your_anticaptcha_api_key'
@@ -945,7 +942,7 @@ scraper = cloudscraper25.create_scraper(
 ##### Example
 
 ```python
-scraper = cloudscraper25.create_scraper(
+scraper = cloudscraper.create_scraper(
   captcha={
     'provider': 'capsolver',
     'api_key': 'your_captchaai_api_key'
@@ -972,7 +969,7 @@ if proxies are set you can disable sending the proxies to CapMonster by setting 
 ##### Example
 
 ```python
-scraper = cloudscraper25.create_scraper(
+scraper = cloudscraper.create_scraper(
   captcha={
     'provider': 'capmonster',
     'clientKey': 'your_capmonster_clientKey'
@@ -995,7 +992,7 @@ scraper = cloudscraper25.create_scraper(
 ##### Example
 
 ```python
-scraper = cloudscraper25.create_scraper(
+scraper = cloudscraper.create_scraper(
   captcha={
     'provider': 'deathbycaptcha',
     'username': 'your_deathbycaptcha_username',
@@ -1019,7 +1016,7 @@ scraper = cloudscraper25.create_scraper(
 ##### Example
 
 ```python
-scraper = cloudscraper25.create_scraper(
+scraper = cloudscraper.create_scraper(
   captcha={
     'provider': '9kw',
     'api_key': 'your_9kw_api_key',
@@ -1042,16 +1039,16 @@ Use this if you want the requests response payload without solving the Captcha.
 
 ##### Example
 ```python
-scraper = cloudscraper25.create_scraper(
+scraper = cloudscraper.create_scraper(
   captcha={'provider': 'return_response'}
 )
 ```
 
 ## Integration
 
-It's easy to integrate `cloudscraper25` with other applications and tools. Cloudflare uses two cookies as tokens: one to verify you made it past their challenge page and one to track your session. To bypass the challenge page, simply include both of these cookies (with the appropriate user-agent) in all HTTP requests you make.
+It's easy to integrate `cloudscraper` with other applications and tools. Cloudflare uses two cookies as tokens: one to verify you made it past their challenge page and one to track your session. To bypass the challenge page, simply include both of these cookies (with the appropriate user-agent) in all HTTP requests you make.
 
-To retrieve just the cookies (as a dictionary), use `cloudscraper25.get_tokens()`. To retrieve them as a full `Cookie` HTTP header, use `cloudscraper25.get_cookie_string()`.
+To retrieve just the cookies (as a dictionary), use `cloudscraper.get_tokens()`. To retrieve them as a full `Cookie` HTTP header, use `cloudscraper.get_cookie_string()`.
 
 `get_tokens` and `get_cookie_string` both accept Requests' usual keyword arguments (like `get_tokens(url, proxies={"http": "socks5://localhost:9050"})`).
 
@@ -1082,11 +1079,11 @@ Remember, you must always use the same user-agent when retrieving or using these
 If you do not wish to use a proxy, just don't pass the `proxies` keyword argument. These convenience functions support all of Requests' normal keyword arguments, like `params`, `data`, and `headers`.
 
 ```python
-import cloudscraper25
+import cloudscraper
 
 # Using a single proxy
 proxies = {"http": "http://localhost:8080", "https": "http://localhost:8080"}
-tokens, user_agent = cloudscraper25.get_tokens("http://somesite.com", proxies=proxies)
+tokens, user_agent = cloudscraper.get_tokens("http://somesite.com", proxies=proxies)
 print(tokens)
 # => {
     'cf_clearance': 'c8f913c707b818b47aa328d81cab57c349b1eee5-1426733163-3600',
@@ -1102,7 +1099,7 @@ rotating_proxies = [
     'http://user:pass@proxy3.example.com:8080'
 ]
 
-tokens, user_agent = cloudscraper25.get_tokens(
+tokens, user_agent = cloudscraper.get_tokens(
     "http://somesite.com",
     rotating_proxies=rotating_proxies,
     proxy_options={
@@ -1126,9 +1123,9 @@ tokens, user_agent = cloudscraper25.get_tokens(
 This is useful when crafting an HTTP request manually, or working with an external application or library that passes on raw cookie headers.
 
 ```python
-import cloudscraper25
+import cloudscraper
 
-cookie_value, user_agent = cloudscraper25.get_cookie_string('http://somesite.com')
+cookie_value, user_agent = cloudscraper.get_cookie_string('http://somesite.com')
 
 print('GET / HTTP/1.1\nCookie: {}\nUser-Agent: {}\n'.format(cookie_value, user_agent))
 
@@ -1141,25 +1138,25 @@ print('GET / HTTP/1.1\nCookie: {}\nUser-Agent: {}\n'.format(cookie_value, user_a
 
 #### curl example
 
-Here is an example of integrating cloudscraper25 with curl. As you can see, all you have to do is pass the cookies and user-agent to curl.
+Here is an example of integrating cloudscraper with curl. As you can see, all you have to do is pass the cookies and user-agent to curl.
 
 ```python
 import subprocess
-import cloudscraper25
+import cloudscraper
 
 # With get_tokens() cookie dict:
 
-# tokens, user_agent = cloudscraper25.get_tokens("http://somesite.com")
+# tokens, user_agent = cloudscraper.get_tokens("http://somesite.com")
 # cookie_arg = 'cf_clearance={}; __cfduid={}'.format(tokens['cf_clearance'], tokens['__cfduid'])
 
 # With get_cookie_string() cookie header; recommended for curl and similar external applications:
 
-cookie_arg, user_agent = cloudscraper25.get_cookie_string('http://somesite.com')
+cookie_arg, user_agent = cloudscraper.get_cookie_string('http://somesite.com')
 
 # With a custom user-agent string you can optionally provide:
 
 # ua = "Scraping Bot"
-# cookie_arg, user_agent = cloudscraper25.get_cookie_string("http://somesite.com", user_agent=ua)
+# cookie_arg, user_agent = cloudscraper.get_cookie_string("http://somesite.com", user_agent=ua)
 
 result = subprocess.check_output(
     [
@@ -1179,7 +1176,7 @@ Trimmed down version. Prints page contents of any site protected with Cloudflare
 
 ```python
 url = "http://somesite.com"
-cookie_arg, user_agent = cloudscraper25.get_cookie_string(url)
+cookie_arg, user_agent = cloudscraper.get_cookie_string(url)
 cmd = "curl --cookie {cookie_arg} -A {user_agent} {url}"
 print(
     subprocess.check_output(
@@ -1214,12 +1211,12 @@ Can be passed as an argument to `create_scraper()`.
 ```python
 # Some servers require the use of a more complex ecdh curve than the default "prime256v1"
 # It may can solve handshake failure
-scraper = cloudscraper25.create_scraper(ecdhCurve='secp384r1')
+scraper = cloudscraper.create_scraper(ecdhCurve='secp384r1')
 ```
 
 ```python
 # Manipulate server_hostname
-scraper = cloudscraper25.create_scraper(server_hostname='www.somesite.com')
+scraper = cloudscraper.create_scraper(server_hostname='www.somesite.com')
 scraper.get(
     'https://backend.hosting.com/',
     headers={'Host': 'www.somesite.com'}
@@ -1239,16 +1236,16 @@ This enhanced version of cloudscraper provides better capabilities for bypassing
 ## Recent Updates
 
 - **Codebase Cleanup**: Removed redundant code and consolidated to a single module
-- **Test Suite Updates**: All tests now use the cloudscraper25 module
+- **Test Suite Updates**: All tests now use the cloudscraper module
 - **Documentation**: Improved README with clearer examples and usage instructions
 
 ## Example Using All Enhanced Features
 
 ```python
-import cloudscraper25
+import cloudscraper
 
 # Create a scraper with all enhanced features
-scraper = cloudscraper25.create_scraper(
+scraper = cloudscraper.create_scraper(
     # Use js2py interpreter for better compatibility
     interpreter='js2py',
 
@@ -1371,10 +1368,10 @@ The library includes comprehensive test scripts to verify functionality:
 Quick test to verify the library is working:
 
 ```python
-import cloudscraper25
+import cloudscraper
 
 # Create a scraper instance
-scraper = cloudscraper25.create_scraper(browser='chrome')
+scraper = cloudscraper.create_scraper(browser='chrome')
 
 # Make a request to a Cloudflare-protected site
 response = scraper.get('https://example.com')
@@ -1387,7 +1384,7 @@ The library includes several test scripts:
 
 ```bash
 # Run the comprehensive test suite
-python test_cloudscraper25_comprehensive.py https://example-cloudflare-site.com
+python test_cloudscraper_comprehensive.py https://example-cloudflare-site.com
 
 # Test with a specific Cloudflare-protected site
 python test_cloudflare_site.py https://example-cloudflare-site.com --browser firefox --stealth
@@ -1407,5 +1404,5 @@ If you encounter issues:
 For issues or questions, please open an issue on the GitHub repository.
 
 ```bash
-pip install --upgrade cloudscraper25  # Always use the latest version
+pip install --upgrade cloudscraper  # Always use the latest version
 ```

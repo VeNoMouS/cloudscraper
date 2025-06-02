@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import cloudscraper25
+import cloudscraper
 import argparse
 import logging
 
@@ -36,7 +36,7 @@ def main():
         }
 
     # Create scraper with appropriate configuration
-    scraper = cloudscraper25.create_scraper(
+    scraper = cloudscraper.create_scraper(
         debug=args.debug,
         captcha=captcha_config
     )

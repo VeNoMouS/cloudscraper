@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Test script for Cloudflare v3 JavaScript VM challenge support in cloudscraper25.
+Test script for Cloudflare v3 JavaScript VM challenge support in cloudscraper.
 
 This script tests the new v3 challenge detection and handling capabilities.
 """
@@ -8,7 +8,7 @@ This script tests the new v3 challenge detection and handling capabilities.
 import sys
 import logging
 import argparse
-import cloudscraper25
+import cloudscraper
 
 # Configure logging
 logging.basicConfig(
@@ -71,7 +71,7 @@ def test_v3_with_different_interpreters():
         logger.info(f"\nTesting v3 challenges with {interpreter} interpreter")
         
         try:
-            scraper = cloudscraper25.create_scraper(
+            scraper = cloudscraper.create_scraper(
                 interpreter=interpreter,
                 debug=True,
                 delay=5  # Allow more time for complex v3 challenges
@@ -99,7 +99,7 @@ def test_v3_disabled():
     logger.info("Testing v3 challenge disabling")
     
     try:
-        scraper = cloudscraper25.create_scraper(
+        scraper = cloudscraper.create_scraper(
             disableCloudflareV3=True,
             debug=True
         )
@@ -131,11 +131,11 @@ def main():
     if args.debug:
         logging.getLogger().setLevel(logging.DEBUG)
     
-    logger.info(f"Testing cloudscraper25 version: {cloudscraper25.__version__}")
+    logger.info(f"Testing cloudscraper version: {cloudscraper.__version__}")
     logger.info("Starting Cloudflare v3 JavaScript VM challenge tests")
     
     # Create scraper with v3 support
-    scraper = cloudscraper25.create_scraper(
+    scraper = cloudscraper.create_scraper(
         interpreter=args.interpreter,
         debug=args.debug,
         delay=5  # Allow more time for complex v3 challenges

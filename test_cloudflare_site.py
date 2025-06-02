@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 """
-Simple test script for cloudscraper25 with a Cloudflare-protected site
+Simple test script for cloudscraper with a Cloudflare-protected site
 """
 
-import cloudscraper25
+import cloudscraper
 import argparse
 import sys
 import time
@@ -18,7 +18,7 @@ def test_cloudflare_site(url, use_stealth=False, browser_type='chrome'):
         use_stealth (bool): Whether to use stealth mode
         browser_type (str): Browser type to emulate ('chrome' or 'firefox')
     """
-    print(f"Testing cloudscraper25 version {cloudscraper25.__version__} on {url}")
+    print(f"Testing cloudscraper version {cloudscraper.__version__} on {url}")
     print(f"Browser: {browser_type}, Stealth mode: {'Enabled' if use_stealth else 'Disabled'}")
     
     # Configure scraper options
@@ -43,7 +43,7 @@ def test_cloudflare_site(url, use_stealth=False, browser_type='chrome'):
     try:
         # Create a scraper instance
         print("\nCreating scraper instance...")
-        scraper = cloudscraper25.create_scraper(**options)
+        scraper = cloudscraper.create_scraper(**options)
         
         # Make a request
         print(f"Making request to {url}...")
@@ -88,7 +88,7 @@ def test_cloudflare_site(url, use_stealth=False, browser_type='chrome'):
         return False
 
 def main():
-    parser = argparse.ArgumentParser(description='Test cloudscraper25 with a Cloudflare-protected site')
+    parser = argparse.ArgumentParser(description='Test cloudscraper with a Cloudflare-protected site')
     parser.add_argument('url', help='URL of the Cloudflare-protected site')
     parser.add_argument('-s', '--stealth', action='store_true', help='Enable stealth mode')
     parser.add_argument('-b', '--browser', choices=['chrome', 'firefox'], default='chrome', 

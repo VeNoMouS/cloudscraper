@@ -3,13 +3,13 @@
 
 """
 Example script demonstrating how to handle Cloudflare Turnstile challenges
-with cloudscraper25.
+with cloudscraper.
 
 Turnstile is Cloudflare's CAPTCHA alternative that provides a more
 user-friendly verification experience.
 
 This example shows how to:
-1. Configure cloudscraper25 with a CAPTCHA provider
+1. Configure cloudscraper with a CAPTCHA provider
 2. Access a site protected by Turnstile
 3. Handle the challenge automatically
 
@@ -20,7 +20,7 @@ Example:
     python turnstile_example.py https://example.com 2captcha your_api_key
 """
 
-import cloudscraper25
+import cloudscraper
 import argparse
 import logging
 
@@ -62,7 +62,7 @@ def main():
     logger.info("Creating cloudscraper instance with Turnstile support...")
 
     # Create scraper with Turnstile support
-    scraper = cloudscraper25.create_scraper(
+    scraper = cloudscraper.create_scraper(
         debug=args.debug,
         captcha=captcha_config
     )
