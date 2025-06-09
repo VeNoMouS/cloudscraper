@@ -2,6 +2,47 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.0.0] - 2025-01-09
+
+### 🚀 Major Release - Complete Library Modernization
+
+### ✨ New Features
+- **🛡️ Automatic 403 Error Recovery**: Intelligent session refresh when 403 errors occur after prolonged use
+- **📊 Session Health Monitoring**: Proactive session management with configurable refresh intervals
+- **🔄 Smart Session Refresh**: Automatic cookie clearing and fingerprint rotation
+- **🎯 Enhanced Stealth Mode**: Improved anti-detection with human-like behavior simulation
+- **📦 Modern Packaging**: Migrated to pyproject.toml for modern Python packaging
+- **🧪 Comprehensive Testing**: New test suite with pytest and GitHub Actions CI/CD
+- **🔧 Type Hints**: Added modern Python typing support
+
+### 🔧 Breaking Changes
+- **Minimum Python version**: Now requires Python 3.8+ (dropped 3.6, 3.7 support)
+- **Updated dependencies**: All dependencies upgraded to latest stable versions
+- **Removed legacy code**: Cleaned up Python 2 compatibility code
+- **Removed redundant files**: Cleaned up development artifacts and obsolete configurations
+
+### 📦 Dependencies Updated
+- `requests` >= 2.31.0 (was >= 2.9.2)
+- `requests-toolbelt` >= 1.0.0 (was >= 0.9.1)
+- `pyparsing` >= 3.1.0 (was >= 2.4.7)
+- `pyOpenSSL` >= 24.0.0 (was >= 22.0.0)
+- `pycryptodome` >= 3.20.0 (was >= 3.15.0)
+- `websocket-client` >= 1.7.0 (was >= 1.3.3)
+- `js2py` >= 0.74 (unchanged)
+- Added: `brotli` >= 1.1.0
+- Added: `certifi` >= 2024.2.2
+
+### 🗑️ Removed Files
+- Removed redundant test files and development artifacts
+- Removed obsolete CI/CD configurations (.travis.yml, tox.ini, etc.)
+- Removed legacy Makefile and setup.cfg
+- Cleaned up __pycache__ directories
+
+### 🔧 Configuration Options Added
+- `session_refresh_interval`: Time in seconds after which to refresh session (default: 3600)
+- `auto_refresh_on_403`: Whether to automatically refresh session on 403 errors (default: True)
+- `max_403_retries`: Maximum number of 403 retry attempts (default: 3)
+
 ## [2.7.0] - 2024-12-19
 
 ### 🎯 Major Fix
