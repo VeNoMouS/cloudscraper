@@ -350,6 +350,15 @@ class CloudScraper(Session):
             # Report failed proxy use if applicable
             if kwargs.get('proxies') and hasattr(self, 'proxy_manager'):
                 self.proxy_manager.report_failure(kwargs['proxies'])
+
+            # CRITICAL FIX: Always decrement concurrent request counter on exception
+            if self.current_concurrent_requests > 0:
+                self.current_concurrent_requests -= 1
+            raise e
+        except Exception as e:
+            # CRITICAL FIX: Always decrement concurrent request counter on any exception
+            if self.current_concurrent_requests > 0:
+                self.current_concurrent_requests -= 1
             raise e
 
         # ------------------------------------------------------------------------------- #
