@@ -24,9 +24,9 @@ class StealthMode:
         self.randomize_headers = True
         self.browser_quirks = True
         
-        # Default human-like delay ranges (in seconds)
-        self.min_delay = 1.0
-        self.max_delay = 5.0
+        # Default human-like delay ranges (in seconds) - More reasonable defaults
+        self.min_delay = 0.5
+        self.max_delay = 2.0
         
         # Browser quirks settings
         self.quirks = {
@@ -96,13 +96,18 @@ class StealthMode:
         if self.request_count > 0:
             # Calculate a random delay
             delay = random.uniform(self.min_delay, self.max_delay)
-            
-            # Add some randomness to make it look more human
+
+            # Add some randomness to make it look more human, but cap it
             if random.random() < 0.1:  # 10% chance of a longer pause
-                delay *= 2
-                
-            logging.debug(f"Applying human-like delay of {delay:.2f} seconds")
-            time.sleep(delay)
+                delay *= 1.5  # Reduced from 2x to 1.5x
+
+            # Cap maximum delay to prevent excessive waits
+            delay = min(delay, 10.0)  # Never wait more than 10 seconds
+
+            # Skip delay if it would be too short to matter
+            if delay >= 0.1:
+                logging.debug(f"Applying human-like delay of {delay:.2f} seconds")
+                time.sleep(delay)
 
     # ------------------------------------------------------------------------------- #
 
