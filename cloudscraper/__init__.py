@@ -416,18 +416,22 @@ class CloudScraper(Session):
                 self.last_403_time = time.time()
 
                 if self.debug:
-                    print(f'Received 403 error, attempting session refresh (attempt {self._403_retry_count}/{self.max_403_retries})')
+                    print(f'🛡️ Received 403 error, attempting session refresh (attempt {self._403_retry_count}/{self.max_403_retries})')
 
                 # Try to refresh the session and retry the request
                 if self._refresh_session(url):
-                    # Retry the original request
+                    if self.debug:
+                        print(f'🔄 Session refreshed successfully, retrying original request...')
+
+                    # Reset retry count on successful refresh and retry the original request
+                    self._403_retry_count = 0
                     return self.request(method, url, *args, **kwargs)
                 else:
                     if self.debug:
-                        print('Session refresh failed, returning 403 response')
+                        print('❌ Session refresh failed, returning 403 response')
             else:
                 if self.debug:
-                    print(f'Max 403 retries ({self.max_403_retries}) exceeded, returning 403 response')
+                    print(f'❌ Max 403 retries ({self.max_403_retries}) exceeded, returning 403 response')
 
         # Reset solve depth counter if no challenge was detected
         if not response.is_redirect and response.status_code not in [429, 503]:
@@ -470,10 +474,9 @@ class CloudScraper(Session):
             # Clear existing Cloudflare cookies
             self._clear_cloudflare_cookies()
 
-            # Reset session tracking
+            # Reset session tracking (but NOT the retry count yet)
             self.session_start_time = time.time()
             self.request_count = 0
-            self._403_retry_count = 0
 
             # Generate new user agent to avoid fingerprint detection
             if hasattr(self, 'user_agent'):
@@ -492,16 +495,24 @@ class CloudScraper(Session):
                 if self.debug:
                     print(f'Session refresh request status: {test_response.status_code}')
 
-                return test_response.status_code in [200, 301, 302, 304]
+                # Only return True if we got a successful response
+                success = test_response.status_code in [200, 301, 302, 304]
+
+                if success and self.debug:
+                    print('✅ Session refresh successful')
+                elif not success and self.debug:
+                    print(f'❌ Session refresh failed with status: {test_response.status_code}')
+
+                return success
 
             except Exception as e:
                 if self.debug:
-                    print(f'Session refresh failed: {e}')
+                    print(f'❌ Session refresh failed: {e}')
                 return False
 
         except Exception as e:
             if self.debug:
-                print(f'Error during session refresh: {e}')
+                print(f'❌ Error during session refresh: {e}')
             return False
 
     def _clear_cloudflare_cookies(self):
