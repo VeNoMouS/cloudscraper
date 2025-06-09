@@ -170,6 +170,14 @@ class CloudScraper(Session):
         self.max_403_retries = kwargs.pop('max_403_retries', 3)
         self._403_retry_count = 0
 
+        # Request throttling and TLS management
+        self.last_request_time = 0
+        self.min_request_interval = kwargs.pop('min_request_interval', 1.0)  # Minimum 1 second between requests
+        self.max_concurrent_requests = kwargs.pop('max_concurrent_requests', 1)  # Limit concurrent requests
+        self.current_concurrent_requests = 0
+        self.rotate_tls_ciphers = kwargs.pop('rotate_tls_ciphers', True)  # Enable TLS cipher rotation
+        self._cipher_rotation_count = 0
+
         # Proxy management
         proxy_options = kwargs.pop('proxy_options', {})
         self.proxy_manager = ProxyManager(
@@ -285,6 +293,13 @@ class CloudScraper(Session):
     # ------------------------------------------------------------------------------- #
 
     def request(self, method, url, *args, **kwargs):
+        # Apply request throttling to prevent TLS blocking
+        self._apply_request_throttling()
+
+        # Rotate TLS cipher suites to avoid detection
+        if self.rotate_tls_ciphers:
+            self._rotate_tls_cipher_suite()
+
         # Check if session needs refresh due to age
         if self._should_refresh_session():
             self._refresh_session(url)
@@ -301,6 +316,9 @@ class CloudScraper(Session):
 
         # Track request count
         self.request_count += 1
+
+        # Track concurrent requests
+        self.current_concurrent_requests += 1
 
         # ------------------------------------------------------------------------------- #
         # Pre-Hook the request via user defined function.
@@ -409,6 +427,13 @@ class CloudScraper(Session):
                 response = self.cloudflare_v1.Challenge_Response(response, **kwargs)
                 return response
 
+        # Reset solve depth counter if no challenge was detected
+        if not response.is_redirect and response.status_code not in [429, 503]:
+            self._solveDepthCnt = 0
+            # Reset 403 retry count on successful request (ONLY if not in retry mode)
+            if response.status_code == 200 and not hasattr(self, '_in_403_retry'):
+                self._403_retry_count = 0
+
         # Handle 403 errors with automatic session refresh
         if response.status_code == 403 and self.auto_refresh_on_403:
             if self._403_retry_count < self.max_403_retries:
@@ -423,9 +448,23 @@ class CloudScraper(Session):
                     if self.debug:
                         print(f'🔄 Session refreshed successfully, retrying original request...')
 
-                    # Reset retry count on successful refresh and retry the original request
-                    self._403_retry_count = 0
-                    return self.request(method, url, *args, **kwargs)
+                    # Mark that we're in a retry to prevent retry count reset
+                    self._in_403_retry = True
+                    try:
+                        # Retry the original request
+                        retry_response = self.request(method, url, *args, **kwargs)
+
+                        # If retry was successful, reset retry count and return
+                        if retry_response.status_code == 200:
+                            self._403_retry_count = 0
+                            if self.debug:
+                                print('✅ 403 retry successful, request completed')
+
+                        return retry_response
+                    finally:
+                        # Always clear the retry flag
+                        if hasattr(self, '_in_403_retry'):
+                            delattr(self, '_in_403_retry')
                 else:
                     if self.debug:
                         print('❌ Session refresh failed, returning 403 response')
@@ -433,12 +472,9 @@ class CloudScraper(Session):
                 if self.debug:
                     print(f'❌ Max 403 retries ({self.max_403_retries}) exceeded, returning 403 response')
 
-        # Reset solve depth counter if no challenge was detected
-        if not response.is_redirect and response.status_code not in [429, 503]:
-            self._solveDepthCnt = 0
-            # Reset 403 retry count on successful request
-            if response.status_code == 200:
-                self._403_retry_count = 0
+        # Decrement concurrent request counter
+        if self.current_concurrent_requests > 0:
+            self.current_concurrent_requests -= 1
 
         return response
 
@@ -532,6 +568,84 @@ class CloudScraper(Session):
         if self.debug:
             print('Cleared Cloudflare cookies for session refresh')
 
+    def _apply_request_throttling(self):
+        """
+        Apply request throttling to prevent TLS blocking from concurrent requests
+        """
+        current_time = time.time()
+
+        # Wait for minimum interval between requests
+        time_since_last_request = current_time - self.last_request_time
+        if time_since_last_request < self.min_request_interval:
+            sleep_time = self.min_request_interval - time_since_last_request
+            if self.debug:
+                print(f'⏱️ Request throttling: sleeping {sleep_time:.2f}s')
+            time.sleep(sleep_time)
+
+        # Wait if too many concurrent requests
+        while self.current_concurrent_requests >= self.max_concurrent_requests:
+            if self.debug:
+                print(f'🚦 Concurrent request limit reached ({self.current_concurrent_requests}/{self.max_concurrent_requests}), waiting...')
+            time.sleep(0.1)
+
+        self.last_request_time = time.time()
+
+    def _rotate_tls_cipher_suite(self):
+        """
+        Rotate TLS cipher suites to avoid detection patterns
+        """
+        if not hasattr(self, 'user_agent') or not hasattr(self.user_agent, 'cipherSuite'):
+            return
+
+        # Get available cipher suites for current browser
+        browser_name = getattr(self.user_agent, 'browser', 'chrome')
+
+        try:
+            # Get cipher suites from browsers.json
+            import json
+            import os
+            browsers_file = os.path.join(os.path.dirname(__file__), 'user_agent', 'browsers.json')
+
+            with open(browsers_file, 'r') as f:
+                browsers_data = json.load(f)
+
+            available_ciphers = browsers_data.get('cipherSuite', {}).get(browser_name, [])
+
+            if available_ciphers and len(available_ciphers) > 1:
+                # Rotate through cipher suites
+                self._cipher_rotation_count += 1
+                cipher_index = self._cipher_rotation_count % len(available_ciphers)
+
+                # Use a subset of ciphers to create variation
+                num_ciphers = min(8, len(available_ciphers))  # Use up to 8 ciphers
+                start_index = cipher_index % (len(available_ciphers) - num_ciphers + 1)
+                selected_ciphers = available_ciphers[start_index:start_index + num_ciphers]
+
+                new_cipher_suite = ':'.join(selected_ciphers)
+
+                if new_cipher_suite != self.cipherSuite:
+                    self.cipherSuite = new_cipher_suite
+
+                    # Update the HTTPS adapter with new cipher suite
+                    self.mount(
+                        'https://',
+                        CipherSuiteAdapter(
+                            cipherSuite=self.cipherSuite,
+                            ecdhCurve=self.ecdhCurve,
+                            server_hostname=self.server_hostname,
+                            source_address=self.source_address,
+                            ssl_context=self.ssl_context
+                        )
+                    )
+
+                    if self.debug:
+                        print(f'🔐 Rotated TLS cipher suite (rotation #{self._cipher_rotation_count})')
+                        print(f'    Using {len(selected_ciphers)} ciphers starting from index {start_index}')
+
+        except Exception as e:
+            if self.debug:
+                print(f'⚠️ TLS cipher rotation failed: {e}')
+
     # ------------------------------------------------------------------------------- #
 
     @classmethod
@@ -554,6 +668,9 @@ class CloudScraper(Session):
         - session_refresh_interval: Time in seconds after which to refresh session (default: 3600)
         - auto_refresh_on_403: Whether to automatically refresh session on 403 errors (default: True)
         - max_403_retries: Maximum number of 403 retry attempts (default: 3)
+        - min_request_interval: Minimum time in seconds between requests (default: 1.0)
+        - max_concurrent_requests: Maximum number of concurrent requests (default: 1)
+        - rotate_tls_ciphers: Whether to rotate TLS cipher suites to avoid detection (default: True)
         - disableCloudflareV3: Whether to disable Cloudflare v3 JavaScript VM challenge handling (default: False)
         - disableTurnstile: Whether to disable Cloudflare Turnstile challenge handling (default: False)
         """
