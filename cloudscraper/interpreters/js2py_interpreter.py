@@ -14,6 +14,8 @@ class ChallengeInterpreter(JavaScriptInterpreter):
 
     def __init__(self):
         super(ChallengeInterpreter, self).__init__('js2py')
+        # Disable pyimport to prevent sys variable conflicts
+        js2py.disable_pyimport()
         self.js_engine = js2py.EvalJs()
 
     # ------------------------------------------------------------------------------- #
@@ -52,13 +54,27 @@ class ChallengeInterpreter(JavaScriptInterpreter):
             # Add domain info for the challenge
             challenge = "var location = { href: 'https://" + domain + "/' };\n" + challenge
             
+            # Add necessary globals to prevent variable conflicts
+            self.js_engine.execute('''
+                var window = this;
+                var global = this;
+                var self = this;
+                if (typeof console === 'undefined') {
+                    var console = {
+                        log: function() {},
+                        warn: function() {},
+                        error: function() {}
+                    };
+                }
+            ''')
+
             # Execute the challenge in js2py
             self.js_engine.execute(challenge)
-            
+
             # Extract the answer from the JS context
             if hasattr(self.js_engine, 'a') and hasattr(self.js_engine.a, 'value'):
                 return self.js_engine.a.value
-            
+
             raise CloudflareSolveError("Failed to extract answer from Cloudflare challenge")
             
         except Exception as e:
