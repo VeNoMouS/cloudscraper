@@ -4,8 +4,8 @@ import logging
 import requests
 import sys
 import ssl
-import random
 import time
+from typing import Optional, Dict, Any, Union, List
 
 from requests.adapters import HTTPAdapter
 from requests.sessions import Session
@@ -18,15 +18,8 @@ try:
 except ImportError:
     pass
 
-try:
-    import copyreg
-except ImportError:
-    import copy_reg as copyreg
-
-try:
-    from urlparse import urlparse
-except ImportError:
-    from urllib.parse import urlparse
+import copyreg
+from urllib.parse import urlparse
 
 # ------------------------------------------------------------------------------- #
 
@@ -48,7 +41,7 @@ from .stealth import StealthMode
 
 # ------------------------------------------------------------------------------- #
 
-__version__ = '2.7.0'
+__version__ = '3.0.0'
 
 # ------------------------------------------------------------------------------- #
 
@@ -168,6 +161,15 @@ class CloudScraper(Session):
         self._solveDepthCnt = 0
         self.solveDepth = kwargs.pop('solveDepth', 3)
 
+        # Session health monitoring
+        self.session_start_time = time.time()
+        self.request_count = 0
+        self.last_403_time = 0
+        self.session_refresh_interval = kwargs.pop('session_refresh_interval', 3600)  # 1 hour default
+        self.auto_refresh_on_403 = kwargs.pop('auto_refresh_on_403', True)
+        self.max_403_retries = kwargs.pop('max_403_retries', 3)
+        self._403_retry_count = 0
+
         # Proxy management
         proxy_options = kwargs.pop('proxy_options', {})
         self.proxy_manager = ProxyManager(
@@ -283,6 +285,10 @@ class CloudScraper(Session):
     # ------------------------------------------------------------------------------- #
 
     def request(self, method, url, *args, **kwargs):
+        # Check if session needs refresh due to age
+        if self._should_refresh_session():
+            self._refresh_session(url)
+
         # Handle proxy rotation if no specific proxies are provided
         if not kwargs.get('proxies') and hasattr(self, 'proxy_manager') and self.proxy_manager.proxies:
             kwargs['proxies'] = self.proxy_manager.get_proxy()
@@ -292,6 +298,9 @@ class CloudScraper(Session):
         # Apply stealth techniques if enabled
         if self.enable_stealth:
             kwargs = self.stealth_mode.apply_stealth_techniques(method, url, **kwargs)
+
+        # Track request count
+        self.request_count += 1
 
         # ------------------------------------------------------------------------------- #
         # Pre-Hook the request via user defined function.
@@ -400,11 +409,117 @@ class CloudScraper(Session):
                 response = self.cloudflare_v1.Challenge_Response(response, **kwargs)
                 return response
 
+        # Handle 403 errors with automatic session refresh
+        if response.status_code == 403 and self.auto_refresh_on_403:
+            if self._403_retry_count < self.max_403_retries:
+                self._403_retry_count += 1
+                self.last_403_time = time.time()
+
+                if self.debug:
+                    print(f'Received 403 error, attempting session refresh (attempt {self._403_retry_count}/{self.max_403_retries})')
+
+                # Try to refresh the session and retry the request
+                if self._refresh_session(url):
+                    # Retry the original request
+                    return self.request(method, url, *args, **kwargs)
+                else:
+                    if self.debug:
+                        print('Session refresh failed, returning 403 response')
+            else:
+                if self.debug:
+                    print(f'Max 403 retries ({self.max_403_retries}) exceeded, returning 403 response')
+
         # Reset solve depth counter if no challenge was detected
         if not response.is_redirect and response.status_code not in [429, 503]:
             self._solveDepthCnt = 0
+            # Reset 403 retry count on successful request
+            if response.status_code == 200:
+                self._403_retry_count = 0
 
         return response
+
+    # ------------------------------------------------------------------------------- #
+    # Session health monitoring and refresh methods
+    # ------------------------------------------------------------------------------- #
+
+    def _should_refresh_session(self):
+        """
+        Check if the session should be refreshed based on age and other factors
+        """
+        current_time = time.time()
+        session_age = current_time - self.session_start_time
+
+        # Refresh if session is older than the configured interval
+        if session_age > self.session_refresh_interval:
+            return True
+
+        # Refresh if we've had recent 403 errors
+        if self.last_403_time > 0 and (current_time - self.last_403_time) < 60:
+            return True
+
+        return False
+
+    def _refresh_session(self, url):
+        """
+        Refresh the session by clearing cookies and re-establishing connection
+        """
+        try:
+            if self.debug:
+                print('Refreshing session due to staleness or 403 errors...')
+
+            # Clear existing Cloudflare cookies
+            self._clear_cloudflare_cookies()
+
+            # Reset session tracking
+            self.session_start_time = time.time()
+            self.request_count = 0
+            self._403_retry_count = 0
+
+            # Generate new user agent to avoid fingerprint detection
+            if hasattr(self, 'user_agent'):
+                self.user_agent.loadUserAgent()
+                self.headers.update(self.user_agent.headers)
+
+            # Make a simple request to re-establish session
+            try:
+                from urllib.parse import urlparse
+                parsed_url = urlparse(url)
+                base_url = f"{parsed_url.scheme}://{parsed_url.netloc}"
+
+                # Make a lightweight request to trigger challenge solving
+                test_response = super(CloudScraper, self).get(base_url, timeout=30)
+
+                if self.debug:
+                    print(f'Session refresh request status: {test_response.status_code}')
+
+                return test_response.status_code in [200, 301, 302, 304]
+
+            except Exception as e:
+                if self.debug:
+                    print(f'Session refresh failed: {e}')
+                return False
+
+        except Exception as e:
+            if self.debug:
+                print(f'Error during session refresh: {e}')
+            return False
+
+    def _clear_cloudflare_cookies(self):
+        """
+        Clear Cloudflare-specific cookies to force re-authentication
+        """
+        cf_cookie_names = ['cf_clearance', 'cf_chl_2', 'cf_chl_prog', 'cf_chl_rc_ni', 'cf_turnstile', '__cf_bm']
+
+        for cookie_name in cf_cookie_names:
+            # Remove cookies for all domains
+            for domain in list(self.cookies.list_domains()):
+                try:
+                    self.cookies.clear(domain, '/', cookie_name)
+                except:
+                    pass
+
+        if self.debug:
+            print('Cleared Cloudflare cookies for session refresh')
 
     # ------------------------------------------------------------------------------- #
 
@@ -425,6 +540,9 @@ class CloudScraper(Session):
             - human_like_delays: Whether to add random delays between requests
             - randomize_headers: Whether to randomize headers
             - browser_quirks: Whether to apply browser-specific quirks
+        - session_refresh_interval: Time in seconds after which to refresh session (default: 3600)
+        - auto_refresh_on_403: Whether to automatically refresh session on 403 errors (default: True)
+        - max_403_retries: Maximum number of 403 retry attempts (default: 3)
         - disableCloudflareV3: Whether to disable Cloudflare v3 JavaScript VM challenge handling (default: False)
         - disableTurnstile: Whether to disable Cloudflare Turnstile challenge handling (default: False)
         """
@@ -452,6 +570,9 @@ class CloudScraper(Session):
         - proxy_options: Dict with proxy configuration options
         - enable_stealth: Whether to enable stealth mode (default: True)
         - stealth_options: Dict with stealth mode configuration options
+        - session_refresh_interval: Time in seconds after which to refresh session (default: 3600)
+        - auto_refresh_on_403: Whether to automatically refresh session on 403 errors (default: True)
+        - max_403_retries: Maximum number of 403 retry attempts (default: 3)
         - disableCloudflareV3: Whether to disable Cloudflare v3 JavaScript VM challenge handling (default: False)
         - disableTurnstile: Whether to disable Cloudflare Turnstile challenge handling (default: False)
         """
@@ -472,6 +593,9 @@ class CloudScraper(Session):
                     'proxy_options',
                     'enable_stealth',
                     'stealth_options',
+                    'session_refresh_interval',
+                    'auto_refresh_on_403',
+                    'max_403_retries',
                     'disableCloudflareV3',
                     'disableTurnstile'
                 ] if field in kwargs
@@ -530,6 +654,9 @@ class CloudScraper(Session):
         - proxy_options: Dict with proxy configuration options
         - enable_stealth: Whether to enable stealth mode (default: True)
         - stealth_options: Dict with stealth mode configuration options
+        - session_refresh_interval: Time in seconds after which to refresh session (default: 3600)
+        - auto_refresh_on_403: Whether to automatically refresh session on 403 errors (default: True)
+        - max_403_retries: Maximum number of 403 retry attempts (default: 3)
         """
         tokens, user_agent = cls.get_tokens(url, **kwargs)
         return '; '.join('='.join(pair) for pair in tokens.items()), user_agent

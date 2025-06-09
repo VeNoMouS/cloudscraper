@@ -6,10 +6,25 @@
 
 **Enhanced by [Zied Boughdir](https://github.com/zinzied)**
 
-## Latest Release: v2.7.0 🚀
+## Latest Release: v3.0.0 🚀 - Major Upgrade
 
-### 🆕 Major New Features
-- **✅ Executable Compatibility Fix** - Complete solution for PyInstaller, cx_Freeze, and auto-py-to-exe conversion
+### 🆕 Major New Features in v3.0.0
+- **🛡️ Automatic 403 Error Recovery** - Intelligent session refresh when 403 errors occur after prolonged use
+- **📊 Session Health Monitoring** - Proactive session management with configurable refresh intervals
+- **🔄 Smart Session Refresh** - Automatic cookie clearing and fingerprint rotation
+- **🎯 Enhanced Stealth Mode** - Improved anti-detection with human-like behavior simulation
+- **🔧 Modern Python Support** - Python 3.8+ with latest dependency versions
+- **📦 Modern Packaging** - Uses pyproject.toml and modern build tools
+- **🧪 Comprehensive Testing** - New test suite with pytest and CI/CD integration
+- **🚀 Performance Improvements** - Optimized code with better error handling
+
+### 🔧 Breaking Changes
+- **Minimum Python version**: Now requires Python 3.8+
+- **Updated dependencies**: All dependencies upgraded to latest stable versions
+- **Removed legacy code**: Cleaned up Python 2 compatibility code
+
+### ✅ Previous Features (Still Available)
+- **Executable Compatibility Fix** - Complete solution for PyInstaller, cx_Freeze, and auto-py-to-exe conversion
 - **Cloudflare v3 JavaScript VM Challenge Support** - Handle the latest and most sophisticated Cloudflare protection
 - **Cloudflare Turnstile Challenge Support** - Support for Cloudflare's CAPTCHA alternative
 - **Enhanced JavaScript Interpreter Support** - Improved VM-based challenge execution
@@ -100,14 +115,16 @@ This makes the codebase cleaner and easier to maintain while ensuring backward c
 
 # Dependencies
 
-- Python 3.x
-- **[Requests](https://github.com/kennethreitz/requests)** >= 2.9.2
-- **[requests_toolbelt](https://pypi.org/project/requests-toolbelt/)** >= 0.9.1
-- **[pyparsing](https://pypi.org/project/pyparsing/)** >= 2.4.7
-- **[pyOpenSSL](https://pypi.org/project/pyOpenSSL/)** >= 22.0.0
-- **[pycryptodome](https://pypi.org/project/pycryptodome/)** >= 3.15.0
-- **[websocket-client](https://pypi.org/project/websocket-client/)** >= 1.3.3
+- **Python 3.8+** (Dropped support for Python 3.6 and 3.7)
+- **[Requests](https://github.com/psf/requests)** >= 2.31.0
+- **[requests_toolbelt](https://pypi.org/project/requests-toolbelt/)** >= 1.0.0
+- **[pyparsing](https://pypi.org/project/pyparsing/)** >= 3.1.0
+- **[pyOpenSSL](https://pypi.org/project/pyOpenSSL/)** >= 24.0.0
+- **[pycryptodome](https://pypi.org/project/pycryptodome/)** >= 3.20.0
+- **[websocket-client](https://pypi.org/project/websocket-client/)** >= 1.7.0
 - **[js2py](https://pypi.org/project/Js2Py/)** >= 0.74
+- **[brotli](https://pypi.org/project/Brotli/)** >= 1.1.0
+- **[certifi](https://pypi.org/project/certifi/)** >= 2024.2.2
 
 `python setup.py install` will install the Python dependencies automatically. The javascript interpreters and/or engines you decide to use are the only things you need to install yourself, excluding js2py which is part of the requirements as the default.
 
