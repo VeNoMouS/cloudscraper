@@ -11,7 +11,7 @@ with open('README.md', 'r', encoding='utf-8') as fp:
 
 setup(
     name = 'cloudscraper',
-    author = 'Zied Boughdir, VeNoMouS',
+    author = 'VeNoMouS, Zied Boughdir',
     author_email = 'venom@cloudscraper.io',
     version=VERSION,
     packages = ['cloudscraper', 'cloudscraper.captcha', 'cloudscraper.interpreters', 'cloudscraper.user_agent'],
