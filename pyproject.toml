@@ -9,10 +9,11 @@ description = "Enhanced Python module to bypass Cloudflare's anti-bot page with 
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
-    {name = "Zied Boughdir", email = "ziedboughdir@gmail.com"},
-    {name = "VeNoMouS"}
+    {name = "VeNoMouS", email = "venom@cloudscraper.io"},
+    {name = "Zied Boughdir", email = "ziedboughdir@gmail.com"}
 ]
 maintainers = [
+    {name = "Zied Boughdir", email = "venom@cloudscraper.io"},
     {name = "Zied Boughdir", email = "ziedboughdir@gmail.com"}
 ]
 keywords = [
@@ -79,10 +80,10 @@ test = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/zinzied/cloudscraper"
-Repository = "https://github.com/zinzied/cloudscraper.git"
-Issues = "https://github.com/zinzied/cloudscraper/issues"
-Changelog = "https://github.com/zinzied/cloudscraper/blob/master/CHANGELOG.md"
+Homepage = "https://github.com/venomous/cloudscraper"
+Repository = "https://github.com/venomous/cloudscraper.git"
+Issues = "https://github.com/venomous/cloudscraper/issues"
+Changelog = "https://github.com/venomous/cloudscraper/blob/master/CHANGELOG.md"
 
 [tool.setuptools.packages.find]
 include = ["cloudscraper*"]
