@@ -5,7 +5,6 @@ import requests
 import sys
 import ssl
 import time
-from typing import Optional, Dict, Any, Union, List
 
 from requests.adapters import HTTPAdapter
 from requests.sessions import Session
@@ -25,10 +24,7 @@ from urllib.parse import urlparse
 
 from .exceptions import (
     CloudflareLoopProtection,
-    CloudflareIUAMError,
-    CloudflareChallengeError,
-    CloudflareTurnstileError,
-    CloudflareV3Error
+    CloudflareIUAMError
 )
 
 from .cloudflare import Cloudflare
@@ -58,7 +54,7 @@ class CipherSuiteAdapter(HTTPAdapter):
         'source_address'
     ]
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         self.ssl_context = kwargs.pop('ssl_context', None)
         self.cipherSuite = kwargs.pop('cipherSuite', None)
         self.source_address = kwargs.pop('source_address', None)
@@ -186,21 +182,18 @@ class CloudScraper(Session):
             ban_time=proxy_options.get('ban_time', 300)
         )
 
-        # Stealth mode
-        self.stealth_mode = StealthMode(self)
+        # Stealth mode - now as a proper class with attributes
         self.enable_stealth = kwargs.pop('enable_stealth', True)
-
-        # Stealth mode configuration
         stealth_options = kwargs.pop('stealth_options', {})
-        if stealth_options:
-            if 'min_delay' in stealth_options and 'max_delay' in stealth_options:
-                self.stealth_mode.set_delay_range(
-                    stealth_options['min_delay'],
-                    stealth_options['max_delay']
-                )
-            self.stealth_mode.enable_human_like_delays(stealth_options.get('human_like_delays', True))
-            self.stealth_mode.enable_randomize_headers(stealth_options.get('randomize_headers', True))
-            self.stealth_mode.enable_browser_quirks(stealth_options.get('browser_quirks', True))
+
+        self.stealth_mode = StealthMode(
+            cloudscraper=self,
+            min_delay=stealth_options.get('min_delay', 0.5),
+            max_delay=stealth_options.get('max_delay', 2.0),
+            human_like_delays=stealth_options.get('human_like_delays', True),
+            randomize_headers=stealth_options.get('randomize_headers', True),
+            browser_quirks=stealth_options.get('browser_quirks', True)
+        )
 
         # Initialize the session
         super(CloudScraper, self).__init__(*args, **kwargs)
@@ -397,9 +390,9 @@ class CloudScraper(Session):
         if not self.disableTurnstile:
             # Check for Turnstile Challenge
             if self.turnstile.is_Turnstile_Challenge(response):
+                self._solveDepthCnt += 1
                 if self.debug:
                     print('Detected a Cloudflare Turnstile challenge.')
-                self._solveDepthCnt += 1
                 response = self.turnstile.handle_Turnstile_Challenge(response, **kwargs)
                 return response
 
@@ -407,24 +400,24 @@ class CloudScraper(Session):
         if not self.disableCloudflareV3:
             # Check for v3 JavaScript VM Challenge
             if self.cloudflare_v3.is_V3_Challenge(response):
+                self._solveDepthCnt += 1
                 if self.debug:
                     print('Detected a Cloudflare v3 JavaScript VM challenge.')
-                self._solveDepthCnt += 1
                 response = self.cloudflare_v3.handle_V3_Challenge(response, **kwargs)
                 return response
 
         # Check for Cloudflare v2 challenges (if not disabled)
         if not self.disableCloudflareV2:
             # Check for v2 Captcha Challenge
-            if self.cloudflare_v2.is_V2_Captcha_Challenge(response):
+            if self.cloudflare_v2.is_captcha_challenge(response):
                 self._solveDepthCnt += 1
-                response = self.cloudflare_v2.handle_V2_Captcha_Challenge(response, **kwargs)
+                response = self.cloudflare_v2.handle_captcha_challenge(response, **kwargs)
                 return response
 
             # Check for v2 JavaScript Challenge
-            if self.cloudflare_v2.is_V2_Challenge(response):
+            if self.cloudflare_v2.is_challenge(response):
                 self._solveDepthCnt += 1
-                response = self.cloudflare_v2.handle_V2_Challenge(response, **kwargs)
+                response = self.cloudflare_v2.handle_challenge(response, **kwargs)
                 return response
 
         # Check for Cloudflare v1 challenges (if not disabled)
@@ -449,14 +442,8 @@ class CloudScraper(Session):
                 self._403_retry_count += 1
                 self.last_403_time = time.time()
 
-                if self.debug:
-                    print(f'🛡️ Received 403 error, attempting session refresh (attempt {self._403_retry_count}/{self.max_403_retries})')
-
                 # Try to refresh the session and retry the request
                 if self._refresh_session(url):
-                    if self.debug:
-                        print(f'🔄 Session refreshed successfully, retrying original request...')
-
                     # Mark that we're in a retry to prevent retry count reset
                     self._in_403_retry = True
                     try:
@@ -466,7 +453,11 @@ class CloudScraper(Session):
                         # If retry was successful, reset retry count and return
                         if retry_response.status_code == 200:
                             self._403_retry_count = 0
-                            if self.debug:
+
+                        if self.debug:
+                            print(f'🛡️ Received 403 error, attempting session refresh (attempt {self._403_retry_count}/{self.max_403_retries})')
+                            print(f'🔄 Session refreshed successfully, retrying original request...')
+                            if retry_response.status_code == 200:
                                 print('✅ 403 retry successful, request completed')
 
                         return retry_response
@@ -476,6 +467,7 @@ class CloudScraper(Session):
                             delattr(self, '_in_403_retry')
                 else:
                     if self.debug:
+                        print(f'🛡️ Received 403 error, attempting session refresh (attempt {self._403_retry_count}/{self.max_403_retries})')
                         print('❌ Session refresh failed, returning 403 response')
             else:
                 if self.debug:
@@ -535,18 +527,19 @@ class CloudScraper(Session):
                 base_url = f"{parsed_url.scheme}://{parsed_url.netloc}"
 
                 # Make a lightweight request to trigger challenge solving
+                # Only store status code to avoid memory waste on large responses
                 test_response = super(CloudScraper, self).get(base_url, timeout=30)
-
-                if self.debug:
-                    print(f'Session refresh request status: {test_response.status_code}')
+                status_code = test_response.status_code
 
                 # Only return True if we got a successful response
-                success = test_response.status_code in [200, 301, 302, 304]
+                success = status_code in [200, 301, 302, 304]
 
-                if success and self.debug:
-                    print('✅ Session refresh successful')
-                elif not success and self.debug:
-                    print(f'❌ Session refresh failed with status: {test_response.status_code}')
+                if self.debug:
+                    print(f'Session refresh request status: {status_code}')
+                    if success:
+                        print('✅ Session refresh successful')
+                    else:
+                        print(f'❌ Session refresh failed with status: {status_code}')
 
                 return success
 
@@ -587,15 +580,16 @@ class CloudScraper(Session):
         time_since_last_request = current_time - self.last_request_time
         if time_since_last_request < self.min_request_interval:
             sleep_time = self.min_request_interval - time_since_last_request
+            time.sleep(sleep_time)
             if self.debug:
                 print(f'⏱️ Request throttling: sleeping {sleep_time:.2f}s')
-            time.sleep(sleep_time)
 
         # Wait if too many concurrent requests
-        while self.current_concurrent_requests >= self.max_concurrent_requests:
+        if self.current_concurrent_requests >= self.max_concurrent_requests:
             if self.debug:
                 print(f'🚦 Concurrent request limit reached ({self.current_concurrent_requests}/{self.max_concurrent_requests}), waiting...')
-            time.sleep(0.1)
+            while self.current_concurrent_requests >= self.max_concurrent_requests:
+                time.sleep(0.1)
 
         self.last_request_time = time.time()
 

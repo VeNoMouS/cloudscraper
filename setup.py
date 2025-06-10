@@ -3,7 +3,7 @@ import re
 from setuptools import setup
 from io import open
 
-with open(os.path.join(os.path.dirname(__file__), 'cloudscraper', '__init__.py')) as fp:
+with open(os.path.join(os.path.dirname(__file__), 'cloudscraper', '__init__.py'), 'r', encoding='utf-8') as fp:
     VERSION = re.match(r'.*__version__ = \'(.*?)\'', fp.read(), re.S).group(1)
 
 with open('README.md', 'r', encoding='utf-8') as fp:
@@ -40,7 +40,6 @@ setup(
         'pyparsing >= 3.1.0',
         'pyOpenSSL >= 24.0.0',
         'pycryptodome >= 3.20.0',
-        'websocket-client >= 1.7.0',
         'js2py >= 0.74',
         'brotli >= 1.1.0',
         'certifi >= 2024.2.2'

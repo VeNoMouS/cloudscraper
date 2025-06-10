@@ -11,22 +11,28 @@ class StealthMode:
     A class to implement stealth techniques to avoid detection as a scraper
     """
 
-    def __init__(self, cloudscraper):
+    def __init__(self, cloudscraper, min_delay=0.5, max_delay=2.0,
+                 human_like_delays=True, randomize_headers=True, browser_quirks=True):
         """
-        Initialize the stealth mode
-        
+        Initialize the stealth mode with proper attributes
+
         :param cloudscraper: The CloudScraper instance
+        :param min_delay: Minimum delay between requests in seconds
+        :param max_delay: Maximum delay between requests in seconds
+        :param human_like_delays: Whether to enable human-like delays
+        :param randomize_headers: Whether to randomize headers
+        :param browser_quirks: Whether to apply browser-specific quirks
         """
         self.cloudscraper = cloudscraper
         self.request_count = 0
         self.last_request_time = 0
-        self.human_like_delays = True
-        self.randomize_headers = True
-        self.browser_quirks = True
-        
-        # Default human-like delay ranges (in seconds) - More reasonable defaults
-        self.min_delay = 0.5
-        self.max_delay = 2.0
+
+        # Stealth configuration as proper attributes
+        self.min_delay = min_delay
+        self.max_delay = max_delay
+        self.human_like_delays = human_like_delays
+        self.randomize_headers = randomize_headers
+        self.browser_quirks = browser_quirks
         
         # Browser quirks settings
         self.quirks = {
@@ -190,43 +196,10 @@ class StealthMode:
         return kwargs
 
     # ------------------------------------------------------------------------------- #
+    # Configuration methods (kept for backward compatibility)
+    # ------------------------------------------------------------------------------- #
 
     def set_delay_range(self, min_delay, max_delay):
-        """
-        Set the range for random delays between requests
-        
-        :param min_delay: Minimum delay in seconds
-        :param max_delay: Maximum delay in seconds
-        """
+        """Set the range for random delays between requests"""
         self.min_delay = min_delay
         self.max_delay = max_delay
-        
-    # ------------------------------------------------------------------------------- #
-
-    def enable_human_like_delays(self, enabled=True):
-        """
-        Enable or disable human-like delays between requests
-        
-        :param enabled: Whether to enable human-like delays
-        """
-        self.human_like_delays = enabled
-        
-    # ------------------------------------------------------------------------------- #
-
-    def enable_randomize_headers(self, enabled=True):
-        """
-        Enable or disable header randomization
-        
-        :param enabled: Whether to enable header randomization
-        """
-        self.randomize_headers = enabled
-        
-    # ------------------------------------------------------------------------------- #
-
-    def enable_browser_quirks(self, enabled=True):
-        """
-        Enable or disable browser quirks
-        
-        :param enabled: Whether to enable browser quirks
-        """
-        self.browser_quirks = enabled

@@ -5,22 +5,12 @@ import time
 import json
 import logging
 import random
-import base64
 from copy import deepcopy
-from collections import OrderedDict
-
-# ------------------------------------------------------------------------------- #
-
-try:
-    from urlparse import urlparse, urljoin
-except ImportError:
-    from urllib.parse import urlparse, urljoin
+from urllib.parse import urlparse
 
 # ------------------------------------------------------------------------------- #
 
 from .exceptions import (
-    CloudflareCode1020,
-    CloudflareIUAMError,
     CloudflareSolveError,
     CloudflareChallengeError,
     CloudflareCaptchaError,
@@ -30,7 +20,6 @@ from .exceptions import (
 # ------------------------------------------------------------------------------- #
 
 from .captcha import Captcha
-from .interpreters import JavaScriptInterpreter
 
 # ------------------------------------------------------------------------------- #
 
@@ -46,7 +35,7 @@ class CloudflareV2():
     # ------------------------------------------------------------------------------- #
 
     @staticmethod
-    def is_V2_Challenge(resp):
+    def is_challenge(resp):
         try:
             return (
                 resp.headers.get('Server', '').startswith('cloudflare')
@@ -67,7 +56,7 @@ class CloudflareV2():
     # ------------------------------------------------------------------------------- #
 
     @staticmethod
-    def is_V2_Captcha_Challenge(resp):
+    def is_captcha_challenge(resp):
         try:
             return (
                 resp.headers.get('Server', '').startswith('cloudflare')
@@ -158,7 +147,7 @@ class CloudflareV2():
     # Handle the Cloudflare v2 challenge
     # ------------------------------------------------------------------------------- #
 
-    def handle_V2_Challenge(self, resp, **kwargs):
+    def handle_challenge(self, resp, **kwargs):
         try:
             # Extract challenge data
             challenge_info = self.extract_challenge_data(resp)
@@ -207,7 +196,7 @@ class CloudflareV2():
     # Handle the Cloudflare v2 captcha challenge
     # ------------------------------------------------------------------------------- #
 
-    def handle_V2_Captcha_Challenge(self, resp, **kwargs):
+    def handle_captcha_challenge(self, resp, **kwargs):
         try:
             # Check if captcha provider is configured
             if (

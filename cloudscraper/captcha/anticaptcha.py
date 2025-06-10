@@ -39,17 +39,16 @@ class captchaSolver(Captcha):
 
     @staticmethod
     def checkErrorStatus(response):
-        if response.status_code in [500, 502]:
+        status_code = response.status_code
+        if status_code in [500, 502]:
             raise CaptchaServiceUnavailable(
-                f'anticaptcha: Server Side Error {response.status_code}'
+                f'anticaptcha: Server Side Error {status_code}'
             )
 
         payload = response.json()
         if payload['errorId'] >= 1:
             if 'errorDescription' in payload:
-                raise CaptchaAPIError(
-                    payload['errorDescription']
-                )
+                raise CaptchaAPIError(payload['errorDescription'])
             else:
                 raise CaptchaAPIError(payload['errorCode'])
 
