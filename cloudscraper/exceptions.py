@@ -60,6 +60,18 @@ class CloudflareCaptchaProvider(CloudflareException):
     Raise an exception for no Captcha provider loaded for Cloudflare.
     """
 
+
+class CloudflareTurnstileError(CloudflareException):
+    """
+    Raise an error for problem with Cloudflare Turnstile challenge.
+    """
+
+
+class CloudflareV3Error(CloudflareException):
+    """
+    Raise an error for problem with Cloudflare v3 JavaScript VM challenge.
+    """
+
 # ------------------------------------------------------------------------------- #
 
 
