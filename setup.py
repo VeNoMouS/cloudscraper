@@ -12,7 +12,7 @@ with open('README.md', 'r', encoding='utf-8') as fp:
 setup(
     name = 'cloudscraper',
     author = 'Zied Boughdir, VeNoMouS',
-    author_email = 'ziedboughdir@gmail.com',
+    author_email = 'venom@cloudscraper.io',
     version=VERSION,
     packages = ['cloudscraper', 'cloudscraper.captcha', 'cloudscraper.interpreters', 'cloudscraper.user_agent'],
     py_modules = [],
@@ -20,7 +20,7 @@ setup(
     description = 'Enhanced Python module to bypass Cloudflare\'s anti-bot page with support for v2 challenges, proxy rotation, and stealth mode.',
     long_description=readme,
     long_description_content_type='text/markdown',
-    url = 'https://github.com/zinzied/cloudscraper',
+    url = 'https://github.com/venomous/cloudscraper',
     keywords = [
         'cloudflare',
         'scraping',
