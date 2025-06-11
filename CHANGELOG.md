@@ -13,6 +13,14 @@ All notable changes to this project will be documented in this file.
 - **🔄 Session Management**: Smart session refresh with automatic cookie clearing and fingerprint rotation
 - **📊 Real-World Verified**: 100% success rate against cloudflare.com, discord.com, and shopify.com
 
+### 🐛 **CRITICAL BUG FIX: Concurrent Request Hanging Issue**
+- **🔧 FIXED: Request Hanging Bug**: Resolved critical issue where requests would hang indefinitely after the first request
+- **🎯 Root Cause**: Concurrent request counter was not properly decremented when Cloudflare challenges caused early returns
+- **✅ Solution**: Complete refactor of concurrent request tracking with proper exception handling
+- **🛡️ Challenge Handler Fix**: All challenge types (Turnstile, v3, v2, v1) now properly manage the counter
+- **🔄 Session Refresh Fix**: Fixed deadlock in session refresh that could cause infinite waiting
+- **📊 Debug Enhancement**: Added detailed counter tracking in debug mode for troubleshooting
+
 ### ✨ New Anti-Detection Features
 - **🛡️ Automatic 403 Error Recovery**: Intelligent session refresh when 403 errors occur
 - **🔐 TLS Fingerprint Rotation**: Prevents cipher suite detection patterns
@@ -23,11 +31,12 @@ All notable changes to this project will be documented in this file.
 - **📦 Modern Packaging**: Migrated to pyproject.toml for modern Python packaging
 - **🧪 Comprehensive Testing**: New test suite with pytest and GitHub Actions CI/CD
 
-### � **Memory & Performance Optimizations**
+### ⚡ **Memory & Performance Optimizations**
 - **Memory Efficient**: Store only status codes instead of full response objects for large requests
 - **Optimized Debug Checks**: Single debug condition checks instead of multiple redundant checks
 - **Concurrent Request Management**: Proper counter handling to prevent infinite waiting loops
 - **Exception Safety**: Enhanced exception handling to always reset concurrent counters
+- **Request Flow Optimization**: Moved counter increment to just before actual HTTP request for better accuracy
 
 ### 🏷️ **Code Quality Improvements**
 - **Improved Naming Conventions**: `is_V2_Challenge()` → `is_challenge()`, `is_V2_Captcha_Challenge()` → `is_captcha_challenge()`
