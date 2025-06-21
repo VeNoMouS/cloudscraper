@@ -23,6 +23,7 @@ from .exceptions import (
     CloudflareChallengeError,
     CloudflareCaptchaError
 )
+from requests.exceptions import RequestException
 
 # ------------------------------------------------------------------------------- #
 
@@ -133,9 +134,10 @@ class CloudflareV3():
                 'vm_script': vm_script.group(1) if vm_script else None
             }
             
-        except Exception as e:
-            logging.error(f"Error extracting Cloudflare v3 challenge data: {str(e)}")
-            raise CloudflareChallengeError(f"Error extracting Cloudflare v3 challenge data: {str(e)}")
+        except (AttributeError, json.JSONDecodeError) as e:
+            raise CloudflareChallengeError(
+                f"Error extracting Cloudflare v3 challenge data: {e}"
+            ) from e
 
     # ------------------------------------------------------------------------------- #
     # Execute JavaScript VM challenge
@@ -268,9 +270,10 @@ class CloudflareV3():
             
             return payload
             
-        except Exception as e:
-            logging.error(f"Error generating v3 challenge payload: {str(e)}")
-            raise CloudflareChallengeError(f"Error generating v3 challenge payload: {str(e)}")
+        except AttributeError as e:
+            raise CloudflareChallengeError(
+                f"Error generating v3 challenge payload: {e}"
+            ) from e
 
     # ------------------------------------------------------------------------------- #
     # Handle the Cloudflare v3 JavaScript VM challenge
@@ -325,7 +328,8 @@ class CloudflareV3():
                 
             return challenge_response
             
-        except Exception as e:
-            logging.error(f"Error handling Cloudflare v3 challenge: {str(e)}")
-            raise CloudflareChallengeError(f"Error handling Cloudflare v3 challenge: {str(e)}")
+        except RequestException as e:
+            raise CloudflareChallengeError(
+                f"Error handling Cloudflare v3 challenge: {e}"
+            ) from e
 

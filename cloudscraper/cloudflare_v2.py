@@ -7,6 +7,7 @@ import logging
 import random
 from copy import deepcopy
 from urllib.parse import urlparse
+from requests.exceptions import RequestException
 
 # ------------------------------------------------------------------------------- #
 
@@ -105,9 +106,10 @@ class CloudflareV2():
                 'form_action': form_action.group(1)
             }
             
-        except Exception as e:
-            logging.error(f"Error extracting Cloudflare challenge data: {str(e)}")
-            raise CloudflareChallengeError(f"Error extracting Cloudflare challenge data: {str(e)}")
+        except (AttributeError, json.JSONDecodeError) as e:
+            raise CloudflareChallengeError(
+                f"Error extracting Cloudflare challenge data: {e}"
+            ) from e
 
     # ------------------------------------------------------------------------------- #
     # Generate the payload for the challenge response
@@ -139,9 +141,10 @@ class CloudflareV2():
                 
             return payload
             
-        except Exception as e:
-            logging.error(f"Error generating Cloudflare challenge payload: {str(e)}")
-            raise CloudflareChallengeError(f"Error generating Cloudflare challenge payload: {str(e)}")
+        except AttributeError as e:
+            raise CloudflareChallengeError(
+                f"Error generating Cloudflare challenge payload: {e}"
+            ) from e
 
     # ------------------------------------------------------------------------------- #
     # Handle the Cloudflare v2 challenge
@@ -188,9 +191,10 @@ class CloudflareV2():
                 
             return challenge_response
             
-        except Exception as e:
-            logging.error(f"Error handling Cloudflare v2 challenge: {str(e)}")
-            raise CloudflareChallengeError(f"Error handling Cloudflare v2 challenge: {str(e)}")
+        except RequestException as e:
+            raise CloudflareChallengeError(
+                f"Error handling Cloudflare v2 challenge: {e}"
+            ) from e
 
     # ------------------------------------------------------------------------------- #
     # Handle the Cloudflare v2 captcha challenge
@@ -267,6 +271,7 @@ class CloudflareV2():
                 
             return challenge_response
             
-        except Exception as e:
-            logging.error(f"Error handling Cloudflare v2 captcha challenge: {str(e)}")
-            raise CloudflareCaptchaError(f"Error handling Cloudflare v2 captcha challenge: {str(e)}")
+        except RequestException as e:
+            raise CloudflareCaptchaError(
+                f"Error handling Cloudflare v2 captcha challenge: {e}"
+            ) from e

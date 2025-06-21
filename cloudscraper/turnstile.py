@@ -25,6 +25,7 @@ from .exceptions import (
     CloudflareCaptchaProvider,
     CloudflareTurnstileError
 )
+from requests.exceptions import RequestException
 
 # ------------------------------------------------------------------------------- #
 
@@ -106,9 +107,10 @@ class CloudflareTurnstile():
                 'form_action': form_action_url
             }
             
-        except Exception as e:
-            logging.error(f"Error extracting Cloudflare Turnstile data: {str(e)}")
-            raise CloudflareTurnstileError(f"Error extracting Cloudflare Turnstile data: {str(e)}")
+        except AttributeError as e:
+            raise CloudflareTurnstileError(
+                f"Error extracting Cloudflare Turnstile data: {e}"
+            ) from e
 
     # ------------------------------------------------------------------------------- #
     # Handle the Cloudflare Turnstile challenge
@@ -185,6 +187,7 @@ class CloudflareTurnstile():
                 
             return challenge_response
             
-        except Exception as e:
-            logging.error(f"Error handling Cloudflare Turnstile challenge: {str(e)}")
-            raise CloudflareTurnstileError(f"Error handling Cloudflare Turnstile challenge: {str(e)}")
+        except RequestException as e:
+            raise CloudflareTurnstileError(
+                f"Error handling Cloudflare Turnstile challenge: {e}"
+            ) from e
