@@ -192,7 +192,9 @@ class CloudScraper(Session):
             max_delay=stealth_options.get('max_delay', 2.0),
             human_like_delays=stealth_options.get('human_like_delays', True),
             randomize_headers=stealth_options.get('randomize_headers', True),
-            browser_quirks=stealth_options.get('browser_quirks', True)
+            browser_quirks=stealth_options.get('browser_quirks', True),
+            simulate_viewport=stealth_options.get('simulate_viewport', True),
+            behavioral_patterns=stealth_options.get('behavioral_patterns', True)
         )
 
         # Initialize the session

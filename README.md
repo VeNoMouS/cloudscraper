@@ -12,7 +12,7 @@ A Python module to bypass Cloudflare's anti-bot page (also known as "I'm Under A
 - Supports all Cloudflare challenge types (v1, v2, v3, Turnstile)
 - Multiple JavaScript interpreters (js2py, nodejs, native)
 - Browser fingerprint emulation (Chrome, Firefox)
-- Stealth mode with human-like behavior
+- Stealth mode with anti-detection techniques
 - Proxy rotation support
 - Session management and persistence
 - CAPTCHA solver integration
@@ -105,7 +105,28 @@ scraper = cloudscraper.create_scraper(
         'max_delay': 5.0,
         'human_like_delays': True,
         'randomize_headers': True,
-        'browser_quirks': True
+        'browser_quirks': True,
+        'simulate_viewport': True,
+        'behavioral_patterns': True
+    }
+)
+```
+
+### Advanced Configuration
+
+Configure stealth options for better success rates:
+
+```python
+scraper = cloudscraper.create_scraper(
+    enable_stealth=True,
+    stealth_options={
+        'min_delay': 1.0,
+        'max_delay': 4.0,
+        'human_like_delays': True,
+        'randomize_headers': True,
+        'browser_quirks': True,
+        'simulate_viewport': True,
+        'behavioral_patterns': True
     }
 )
 ```
@@ -219,7 +240,8 @@ scraper = cloudscraper.create_scraper(
         'min_delay': 2.0,
         'max_delay': 5.0,
         'human_like_delays': True,
-        'randomize_headers': True
+        'randomize_headers': True,
+        'browser_quirks': True
     },
     browser='chrome',
     debug=True
@@ -331,7 +353,9 @@ scraper = cloudscraper.create_scraper(
     stealth_options={
         'min_delay': 2.0,
         'max_delay': 5.0,
-        'human_like_delays': True
+        'human_like_delays': True,
+        'randomize_headers': True,
+        'browser_quirks': True
     }
 )
 ```
