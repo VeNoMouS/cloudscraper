@@ -3,7 +3,7 @@ import re
 from setuptools import setup
 from io import open
 
-with open(os.path.join(os.path.dirname(__file__), 'cloudscraper', '__init__.py')) as fp:
+with open(os.path.join(os.path.dirname(__file__), 'cloudscraper', '__init__.py'), encoding="utf-8") as fp:
     VERSION = re.match(r'.*__version__ = \'(.*?)\'', fp.read(), re.S).group(1)
 
 with open('README.md', 'r', encoding='utf-8') as fp:
