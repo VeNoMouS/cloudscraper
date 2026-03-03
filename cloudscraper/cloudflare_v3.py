@@ -1,156 +1,173 @@
-# Cloudflare v3 JavaScript VM Challenge Handler
+# -*- coding: utf-8 -*-
+"""
+cloudscraper.cloudflare_v3
+==========================
 
-import re
-import time
+This module contains the CloudflareV3 challenge handler for JavaScript VM challenges.
+
+Classes:
+    - CloudflareV3: Handler for Cloudflare v3 JavaScript VM challenges
+"""
+
+from __future__ import annotations
+
 import json
 import logging
 import random
-from copy import deepcopy
+import re
+import time
 from collections import OrderedDict
+from copy import deepcopy
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
-# ------------------------------------------------------------------------------- #
+from urllib.parse import urlparse
 
-try:
-    from urlparse import urlparse, urljoin
-except ImportError:
-    from urllib.parse import urlparse, urljoin
-
-# ------------------------------------------------------------------------------- #
-
+from .base import ChallengeHandler
+from .constants import (
+    CLOUDFLARE_CHALLENGE_STATUS_CODES,
+    DEFAULT_REQUEST_DELAY
+)
 from .exceptions import (
     CloudflareIUAMError,
     CloudflareSolveError,
     CloudflareChallengeError,
     CloudflareCaptchaError
 )
-
-# ------------------------------------------------------------------------------- #
-
 from .interpreters import JavaScriptInterpreter
 
-# ------------------------------------------------------------------------------- #
+if TYPE_CHECKING:
+    from requests import Response
 
 
-class CloudflareV3():
+logger = logging.getLogger(__name__)
 
-    def __init__(self, cloudscraper):
-        self.cloudscraper = cloudscraper
-        self.delay = self.cloudscraper.delay or random.uniform(1.0, 5.0)
 
-    # ------------------------------------------------------------------------------- #
-    # Check if the response contains a Cloudflare v3 JavaScript VM challenge
-    # ------------------------------------------------------------------------------- #
+# Pre-compiled regex patterns
+_RE_V3_CHALLENGE = re.compile(
+    r'cpo\.src\s*=\s*[\'"]/cdn-cgi/challenge-platform/\S+orchestrate/jsch/v3',
+    re.M | re.S
+)
+_RE_V3_CTX = re.compile(r'window\._cf_chl_ctx\s*=', re.M | re.S)
+_RE_V3_FORM = re.compile(
+    r'<form[^>]*id="challenge-form"[^>]*action="[^"]*__cf_chl_rt_tk=',
+    re.M | re.S
+)
+_RE_CHALLENGE_CTX = re.compile(r'window\._cf_chl_ctx\s*=\s*({.*?});', re.DOTALL)
+_RE_CHALLENGE_OPT = re.compile(r'window\._cf_chl_opt\s*=\s*({.*?});', re.DOTALL)
+_RE_FORM_ACTION = re.compile(r'<form[^>]*id="challenge-form"[^>]*action="([^"]+)"', re.DOTALL)
+_RE_VM_SCRIPT = re.compile(r'<script[^>]*>\s*(.*?window\._cf_chl_enter.*?)</script>', re.DOTALL)
+_RE_R_TOKEN = re.compile(r'name="r" value="([^"]+)"')
+_RE_INPUT_FIELDS = re.compile(r'<input[^>]*name="([^"]+)"[^>]*value="([^"]*)"')
 
-    @staticmethod
-    def is_V3_Challenge(resp):
+
+class CloudflareV3(ChallengeHandler):
+    """
+    Handler for Cloudflare v3 JavaScript VM challenges.
+    """
+    
+    def __init__(self, cloudscraper: Any, delay: Optional[float] = None) -> None:
+        super().__init__(cloudscraper, delay)
+        self.delay = delay or getattr(cloudscraper, 'delay', None) or random.uniform(1.0, 5.0)
+    
+    def is_challenge(self, resp: Response) -> bool:
         try:
             return (
                 resp.headers.get('Server', '').startswith('cloudflare')
-                and resp.status_code in [403, 429, 503]
+                and resp.status_code in CLOUDFLARE_CHALLENGE_STATUS_CODES
                 and (
-                    # Look for v3 challenge platform indicators
-                    re.search(
-                        r'''cpo\.src\s*=\s*['"]/cdn-cgi/challenge-platform/\S+orchestrate/jsch/v3''',
-                        resp.text,
-                        re.M | re.S
-                    ) or
-                    # Look for JavaScript VM indicators
-                    re.search(
-                        r'window\._cf_chl_ctx\s*=',
-                        resp.text,
-                        re.M | re.S
-                    ) or
-                    # Look for modern challenge form with v3 patterns
-                    re.search(
-                        r'<form[^>]*id="challenge-form"[^>]*action="[^"]*__cf_chl_rt_tk=',
-                        resp.text,
-                        re.M | re.S
-                    )
+                    _RE_V3_CHALLENGE.search(resp.text)
+                    or _RE_V3_CTX.search(resp.text)
+                    or _RE_V3_FORM.search(resp.text)
                 )
             )
         except AttributeError:
-            pass
-
+            logger.debug("Error checking v3 challenge: %s", getattr(resp, 'status_code', 'unknown'))
         return False
-
-    # ------------------------------------------------------------------------------- #
-    # Extract v3 challenge data from the page
-    # ------------------------------------------------------------------------------- #
-
-    def extract_v3_challenge_data(self, resp):
+    
+    def handle_challenge(self, resp: Response, **kwargs: Any) -> Response:
         try:
-            # Extract the challenge context
-            challenge_ctx = re.search(
-                r'window\._cf_chl_ctx\s*=\s*({.*?});',
-                resp.text,
-                re.DOTALL
+            if getattr(self.cloudscraper, 'debug', False):
+                logger.debug('Handling Cloudflare v3 JavaScript VM challenge.')
+            
+            challenge_info = self._extract_v3_challenge_data(resp)
+            time.sleep(self.delay)
+            
+            url_parsed = urlparse(resp.url)
+            challenge_answer = self._execute_vm_challenge(challenge_info, url_parsed.netloc)
+            payload = self._generate_v3_payload(challenge_info, resp, challenge_answer)
+            
+            challenge_url = challenge_info['form_action']
+            if not challenge_url.startswith('http'):
+                challenge_url = f"{url_parsed.scheme}://{url_parsed.netloc}{challenge_url}"
+            
+            cloudflare_kwargs = deepcopy(kwargs)
+            cloudflare_kwargs['allow_redirects'] = False
+            cloudflare_kwargs['headers'] = cloudflare_kwargs.get('headers', {})
+            cloudflare_kwargs['headers'].update({
+                'Origin': f'{url_parsed.scheme}://{url_parsed.netloc}',
+                'Referer': resp.url,
+                'Content-Type': 'application/x-www-form-urlencoded'
+            })
+            
+            challenge_response = self.cloudscraper.request(
+                'POST', challenge_url, data=payload, **cloudflare_kwargs
             )
             
-            if challenge_ctx:
+            if challenge_response.status_code == 403:
+                raise CloudflareSolveError("Failed to solve Cloudflare v3 challenge")
+            
+            return challenge_response
+            
+        except CloudflareChallengeError:
+            raise
+        except Exception as e:
+            logger.error("Error handling Cloudflare v3 challenge: %s", str(e))
+            raise CloudflareChallengeError(f"Error handling Cloudflare v3 challenge: {e}")
+    
+    def _extract_v3_challenge_data(self, resp: Response) -> Dict[str, Any]:
+        try:
+            ctx_match = _RE_CHALLENGE_CTX.search(resp.text)
+            ctx_data = {}
+            if ctx_match:
                 try:
-                    ctx_data = json.loads(challenge_ctx.group(1))
+                    ctx_data = json.loads(ctx_match.group(1))
                 except json.JSONDecodeError:
-                    ctx_data = {}
-            else:
-                ctx_data = {}
+                    pass
             
-            # Extract the challenge options
-            challenge_opt = re.search(
-                r'window\._cf_chl_opt\s*=\s*({.*?});',
-                resp.text,
-                re.DOTALL
-            )
-            
-            if challenge_opt:
+            opt_match = _RE_CHALLENGE_OPT.search(resp.text)
+            opt_data = {}
+            if opt_match:
                 try:
-                    opt_data = json.loads(challenge_opt.group(1))
+                    opt_data = json.loads(opt_match.group(1))
                 except json.JSONDecodeError:
-                    opt_data = {}
-            else:
-                opt_data = {}
+                    pass
             
-            # Extract the form action URL
-            form_action = re.search(
-                r'<form[^>]*id="challenge-form"[^>]*action="([^"]+)"',
-                resp.text,
-                re.DOTALL
-            )
-            
-            if not form_action:
+            form_match = _RE_FORM_ACTION.search(resp.text)
+            if not form_match:
                 raise CloudflareChallengeError("Could not find Cloudflare v3 challenge form")
             
-            # Extract JavaScript VM challenge script
-            vm_script = re.search(
-                r'<script[^>]*>\s*(.*?window\._cf_chl_enter.*?)</script>',
-                resp.text,
-                re.DOTALL
-            )
+            vm_match = _RE_VM_SCRIPT.search(resp.text)
             
             return {
                 'ctx_data': ctx_data,
                 'opt_data': opt_data,
-                'form_action': form_action.group(1),
-                'vm_script': vm_script.group(1) if vm_script else None
+                'form_action': form_match.group(1),
+                'vm_script': vm_match.group(1) if vm_match else None
             }
             
+        except CloudflareChallengeError:
+            raise
         except Exception as e:
-            logging.error(f"Error extracting Cloudflare v3 challenge data: {str(e)}")
-            raise CloudflareChallengeError(f"Error extracting Cloudflare v3 challenge data: {str(e)}")
-
-    # ------------------------------------------------------------------------------- #
-    # Execute JavaScript VM challenge
-    # ------------------------------------------------------------------------------- #
-
-    def execute_vm_challenge(self, challenge_data, domain):
+            logger.error("Error extracting Cloudflare v3 challenge data: %s", str(e))
+            raise CloudflareChallengeError(f"Error extracting Cloudflare v3 challenge data: {e}")
+    
+    def _execute_vm_challenge(self, challenge_data: Dict[str, Any], domain: str) -> str:
         try:
             if not challenge_data.get('vm_script'):
-                # Fallback to basic challenge response
-                return self.generate_fallback_response(challenge_data)
+                return self._generate_fallback_answer(challenge_data)
             
-            # Prepare the JavaScript environment for VM execution
             vm_script = challenge_data['vm_script']
             
-            # Create a more sophisticated JavaScript context for v3 challenges
             js_context = f"""
             var window = {{
                 location: {{ 
@@ -186,82 +203,64 @@ class CloudflareV3():
             
             {vm_script}
             
-            // Extract the challenge answer
             if (typeof window._cf_chl_answer !== 'undefined') {{
                 window._cf_chl_answer;
             }} else if (typeof _cf_chl_answer !== 'undefined') {{
                 _cf_chl_answer;
             }} else {{
-                // Fallback calculation
                 Math.random().toString(36).substring(2, 15);
             }}
             """
             
-            # Execute the JavaScript using the configured interpreter
             try:
-                result = JavaScriptInterpreter.dynamicImport(
-                    self.cloudscraper.interpreter
-                ).eval(js_context, domain)
+                interpreter = getattr(self.cloudscraper, 'interpreter', 'js2py')
+                result = JavaScriptInterpreter.dynamicImport(interpreter).eval(js_context, domain)
                 
-                return str(result) if result is not None else self.generate_fallback_response(challenge_data)
-                
+                if result is not None:
+                    return str(result)
             except Exception as js_error:
-                logging.warning(f"JavaScript execution failed: {str(js_error)}, using fallback")
-                return self.generate_fallback_response(challenge_data)
+                logger.warning("JavaScript execution failed: %s, using fallback", str(js_error))
+            
+            return self._generate_fallback_answer(challenge_data)
             
         except Exception as e:
-            logging.error(f"Error executing v3 VM challenge: {str(e)}")
-            return self.generate_fallback_response(challenge_data)
-
-    # ------------------------------------------------------------------------------- #
-    # Generate fallback response for v3 challenges
-    # ------------------------------------------------------------------------------- #
-
-    def generate_fallback_response(self, challenge_data):
-        """Generate a fallback response when VM execution fails"""
-        # Use challenge context data to generate a plausible response
+            logger.error("Error executing v3 VM challenge: %s", str(e))
+            return self._generate_fallback_answer(challenge_data)
+    
+    def _generate_fallback_answer(self, challenge_data: Dict[str, Any]) -> str:
         ctx_data = challenge_data.get('ctx_data', {})
         opt_data = challenge_data.get('opt_data', {})
         
-        # Generate a response based on available data
         if 'chlPageData' in opt_data:
-            # Use page data for calculation
             page_data = opt_data['chlPageData']
-            response = str(hash(page_data) % 1000000)
+            return str(hash(page_data) % 1000000)
         elif 'cvId' in ctx_data:
-            # Use challenge ID for calculation
             cv_id = ctx_data['cvId']
-            response = str(hash(cv_id) % 1000000)
+            return str(hash(cv_id) % 1000000)
         else:
-            # Generate a random response
-            response = str(random.randint(100000, 999999))
-        
-        return response
-
-    # ------------------------------------------------------------------------------- #
-    # Generate v3 challenge payload
-    # ------------------------------------------------------------------------------- #
-
-    def generate_v3_challenge_payload(self, challenge_data, resp, challenge_answer):
+            return str(random.randint(100000, 999999))
+    
+    def _generate_v3_payload(
+        self, 
+        challenge_data: Dict[str, Any], 
+        resp: Response, 
+        challenge_answer: str
+    ) -> OrderedDict:
         try:
-            # Extract required tokens from the page
-            r_token = re.search(r'name="r" value="([^"]+)"', resp.text)
-            if not r_token:
+            r_match = _RE_R_TOKEN.search(resp.text)
+            if not r_match:
                 raise CloudflareChallengeError("Could not find 'r' token")
             
-            # Extract other form fields
             form_fields = {}
-            for field_match in re.finditer(r'<input[^>]*name="([^"]+)"[^>]*value="([^"]*)"', resp.text):
+            for field_match in _RE_INPUT_FIELDS.finditer(resp.text):
                 field_name, field_value = field_match.groups()
-                if field_name not in ['jschl_answer']:  # Don't include the answer field yet
+                if field_name not in ['jschl_answer']:
                     form_fields[field_name] = field_value
             
-            # Build the payload
             payload = OrderedDict()
-            payload['r'] = r_token.group(1)
+            payload['r'] = r_match.group(1)
             payload['jschl_answer'] = challenge_answer
             
-            # Add other form fields
             for field_name, field_value in form_fields.items():
                 if field_name not in payload:
                     payload[field_name] = field_value
@@ -269,63 +268,5 @@ class CloudflareV3():
             return payload
             
         except Exception as e:
-            logging.error(f"Error generating v3 challenge payload: {str(e)}")
-            raise CloudflareChallengeError(f"Error generating v3 challenge payload: {str(e)}")
-
-    # ------------------------------------------------------------------------------- #
-    # Handle the Cloudflare v3 JavaScript VM challenge
-    # ------------------------------------------------------------------------------- #
-
-    def handle_V3_Challenge(self, resp, **kwargs):
-        try:
-            if self.cloudscraper.debug:
-                print('Handling Cloudflare v3 JavaScript VM challenge.')
-            
-            # Extract challenge data
-            challenge_info = self.extract_v3_challenge_data(resp)
-            
-            # Wait for the specified delay
-            time.sleep(self.delay)
-            
-            # Execute the JavaScript VM challenge
-            url_parsed = urlparse(resp.url)
-            challenge_answer = self.execute_vm_challenge(challenge_info, url_parsed.netloc)
-            
-            # Generate the challenge payload
-            payload = self.generate_v3_challenge_payload(challenge_info, resp, challenge_answer)
-            
-            # Prepare the request
-            challenge_url = challenge_info['form_action']
-            if not challenge_url.startswith('http'):
-                challenge_url = f"{url_parsed.scheme}://{url_parsed.netloc}{challenge_url}"
-            
-            # Add browser-like behavior
-            cloudflare_kwargs = deepcopy(kwargs)
-            cloudflare_kwargs['allow_redirects'] = False
-            
-            # Update headers to look more like a browser
-            cloudflare_kwargs['headers'] = cloudflare_kwargs.get('headers', {})
-            cloudflare_kwargs['headers'].update({
-                'Origin': f'{url_parsed.scheme}://{url_parsed.netloc}',
-                'Referer': resp.url,
-                'Content-Type': 'application/x-www-form-urlencoded'
-            })
-            
-            # Submit the challenge
-            challenge_response = self.cloudscraper.request(
-                'POST',
-                challenge_url,
-                data=payload,
-                **cloudflare_kwargs
-            )
-            
-            # Handle the response
-            if challenge_response.status_code == 403:
-                raise CloudflareSolveError("Failed to solve Cloudflare v3 challenge")
-                
-            return challenge_response
-            
-        except Exception as e:
-            logging.error(f"Error handling Cloudflare v3 challenge: {str(e)}")
-            raise CloudflareChallengeError(f"Error handling Cloudflare v3 challenge: {str(e)}")
-
+            logger.error("Error generating v3 challenge payload: %s", str(e))
+            raise CloudflareChallengeError(f"Error generating v3 challenge payload: {e}")
